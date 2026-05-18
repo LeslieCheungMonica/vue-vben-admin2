@@ -37,6 +37,36 @@ const task = ref<TaskApi.TaskItem | null>(null);
 const FLUSH_INTERVAL = 150;
 
 const displayItems = shallowRef<PartState[]>([]);
+
+const mergedDisplayItems = computed(() => {
+  const result: (
+    | { type: 'merged-reasoning'; texts: string[]; ids: string[] }
+    | PartState
+  )[] = [];
+  let current:
+    | { type: 'merged-reasoning'; texts: string[]; ids: string[] }
+    | null = null;
+
+  for (const item of displayItems.value) {
+    if (item.type === 'reasoning') {
+      if (current) {
+        current.texts.push(item.text);
+        current.ids.push(item.id);
+      } else {
+        current = {
+          type: 'merged-reasoning',
+          texts: [item.text],
+          ids: [item.id],
+        };
+        result.push(current);
+      }
+    } else {
+      current = null;
+      result.push(item);
+    }
+  }
+  return result;
+});
 const eventStreamConnected = ref(false);
 
 let eventSource: EventSource | null = null;
@@ -232,7 +262,7 @@ function processEvent(data: any) {
       part.text = partData.text || part.text;
     } else if (partType === 'tool') {
       const tool = partData.tool || partData.toolName;
-      if (tool === 'grep') {
+      if (tool === 'grep' || tool === 'glob') {
         part.hidden = true;
         return;
       }
@@ -884,7 +914,7 @@ onUnmounted(() => {
           class="flex-1 overflow-y-auto p-4"
           style="min-height: 400px; max-height: 540px"
         >
-          <template v-if="displayItems.length === 0">
+          <template v-if="mergedDisplayItems.length === 0">
             <div class="pt-16 text-center text-gray-400">
               <div class="mb-2 text-3xl">⚡</div>
               <div>
@@ -895,17 +925,17 @@ onUnmounted(() => {
 
           <div class="space-y-3">
             <div
-              v-for="item in displayItems"
-              :key="item.id"
+              v-for="item in mergedDisplayItems"
+              :key="item.type === 'merged-reasoning' ? item.ids[0] : item.id"
               class="animate-fade-in"
             >
-              <!-- reasoning block -->
+              <!-- merged reasoning block -->
               <div
-                v-if="item.type === 'reasoning'"
+                v-if="item.type === 'merged-reasoning'"
                 class="rounded-lg border border-blue-100 bg-blue-50/60 p-3"
               >
                 <div
-                  class="mb-1 flex items-center gap-1.5 text-xs text-blue-400"
+                  class="mb-1.5 flex items-center gap-1.5 text-xs text-blue-400"
                 >
                   <span>💭</span>
                   <span>推理中</span>
@@ -914,11 +944,18 @@ onUnmounted(() => {
                   ></span>
                 </div>
                 <div
-                  class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700"
+                  class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2"
                 >
-                  {{ item.text }}
+                  <template
+                    v-for="(text, tIdx) in item.texts"
+                    :key="tIdx"
+                  >
+                    <div v-if="text.trim()" class="text-gray-700">
+                      {{ text }}
+                    </div>
+                  </template>
                   <span
-                    class="inline-block h-3.5 w-1 animate-pulse bg-blue-300 align-text-bottom"
+                    class="inline-block h-3.5 w-0.5 animate-pulse bg-blue-300 align-text-bottom"
                   ></span>
                 </div>
               </div>

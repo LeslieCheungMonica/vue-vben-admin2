@@ -11,6 +11,13 @@ export default defineConfig(async () => {
             rewrite: (path) => path.replace(/^\/api/, ''),
             target: 'http://localhost:7654',
             ws: true,
+            configure: (proxy) => {
+              proxy.on('proxyReq', (proxyReq, req) => {
+                if (req.url?.includes('event_stream')) {
+                  proxyReq.setHeader('accept-encoding', 'identity');
+                }
+              });
+            },
           },
           '/api': {
             changeOrigin: true,
