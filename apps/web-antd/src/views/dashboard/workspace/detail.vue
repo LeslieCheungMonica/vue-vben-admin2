@@ -4,15 +4,18 @@ import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Descriptions, Tag } from 'ant-design-vue';
+import { Descriptions, Modal, Tag } from 'ant-design-vue';
 
 import {
   getTaskListApi,
   getAuthVulnListApi,
   getBizDataApi,
+  getBizVulnListApi,
+  getBizVulnExploitListApi,
 } from '#/api/core/task';
 import type { TaskApi } from '#/api/core/task';
 import type { AuthVulnItem } from '#/api/core/task';
+import type { BizVulnExploitItem } from '#/api/core/task';
 
 interface PartState {
   id: string;
@@ -26,6 +29,7 @@ interface PartState {
   toolOutput?: string;
   stepType?: 'start' | 'finish';
   hidden?: boolean;
+  hideContent?: boolean;
   updatedAt: number;
 }
 
@@ -266,6 +270,9 @@ function processEvent(data: any) {
         part.hidden = true;
         return;
       }
+      if (tool === 'read' || tool === 'bash') {
+        part.hideContent = true;
+      }
       part.type = 'tool';
       part.toolName = tool;
       part.toolCallId = partData.callID;
@@ -463,7 +470,6 @@ watch(activeStep, (step) => {
     attack_graph: 'recon_graph',
     auth: 'auth_vuln',
     auth_exploit: 'auth_vuln_exploit',
-    biz: 'biz_recon',
   };
   const stage = pdfStages[step];
   if (stage) {
@@ -499,6 +505,33 @@ watch(activeStep, (step) => {
   }
 });
 
+const bizVulnExploitList = ref<BizVulnExploitItem[]>([]);
+const bizVulnExploitLoading = ref(false);
+const selectedBizName = ref<string | null>(null);
+const showBizModuleList = ref(true);
+
+async function loadBizVulnExploitList(bizName: string) {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  bizVulnExploitLoading.value = true;
+  selectedBizName.value = bizName;
+  showBizModuleList.value = false;
+  try {
+    const res = await getBizVulnExploitListApi(taskId, bizName);
+    bizVulnExploitList.value = res.items || [];
+  } catch {
+    bizVulnExploitList.value = [];
+  } finally {
+    bizVulnExploitLoading.value = false;
+  }
+}
+
+function backToBizModuleList() {
+  showBizModuleList.value = true;
+  selectedBizName.value = null;
+  bizVulnExploitList.value = [];
+}
+
 const bizData = ref<any[]>([]);
 const bizDataLoading = ref(false);
 const bizCollapsed = ref(new Set<string>());
@@ -527,16 +560,73 @@ async function loadBizData() {
   }
 }
 
+const bizVulnResSet = ref(new Set<string>());
+
+async function loadBizVulnList() {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  try {
+    const res = await getBizVulnListApi(taskId);
+    const items = res.items || [];
+    bizVulnResSet.value = new Set(items.map((i) => i.res).filter(Boolean));
+  } catch {
+    bizVulnResSet.value = new Set();
+  }
+}
+
 watch(activeStep, (step) => {
-  if (step === 'biz_surface') {
+  if (step === 'biz_surface' || step === 'biz' || step === 'biz_vuln_list') {
     loadBizData();
   }
+  if (step === 'biz') {
+    loadBizVulnList();
+  }
+  if (step === 'biz_vuln_list') {
+    loadBizVulnList();
+    showBizModuleList.value = true;
+    selectedBizName.value = null;
+    bizVulnExploitList.value = [];
+  }
 });
+
+const reportModalVisible = ref(false);
+const reportModalPdfUrl = ref<string | null>(null);
+const reportModalLoading = ref(false);
+
+async function openReportPdf(bizName: string) {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  reportModalLoading.value = true;
+  reportModalVisible.value = true;
+  reportModalPdfUrl.value = null;
+  try {
+    const url = `/api/wape/biz_report_pdf/${taskId}/${encodeURIComponent(bizName)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('PDF not found');
+    const blob = await resp.blob();
+    reportModalPdfUrl.value = URL.createObjectURL(blob);
+  } catch {
+    reportModalPdfUrl.value = null;
+  } finally {
+    reportModalLoading.value = false;
+  }
+}
+
+function closeReportPdf() {
+  reportModalVisible.value = false;
+  if (reportModalPdfUrl.value) {
+    URL.revokeObjectURL(reportModalPdfUrl.value);
+    reportModalPdfUrl.value = null;
+  }
+}
 
 onUnmounted(() => {
   disconnectEventStream();
   if (pdfUrl.value) {
     URL.revokeObjectURL(pdfUrl.value);
+  }
+  if (reportModalPdfUrl.value) {
+    URL.revokeObjectURL(reportModalPdfUrl.value);
   }
 });
 </script>
@@ -643,8 +733,7 @@ onUnmounted(() => {
               activeStep === 'attack_surface' ||
               activeStep === 'attack_graph' ||
               activeStep === 'auth' ||
-              activeStep === 'auth_exploit' ||
-              activeStep === 'biz'
+              activeStep === 'auth_exploit'
             "
             class="flex h-full flex-col"
           >
@@ -677,7 +766,7 @@ onUnmounted(() => {
           </div>
 
           <div
-            v-else-if="activeStep === 'biz_surface'"
+            v-else-if="activeStep === 'biz_surface' || activeStep === 'biz'"
             class="flex h-full w-full flex-1 flex-col overflow-y-auto p-4"
           >
             <div
@@ -725,7 +814,13 @@ onUnmounted(() => {
                     <div
                       v-for="(item, idx) in modules"
                       :key="idx"
-                      class="rounded bg-gray-50 p-2 text-xs text-gray-600"
+                      class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                      :class="
+                        bizVulnResSet.has(item.module_name)
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                          : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                      "
+                      @click="openReportPdf(item.module_name)"
                     >
                       <div class="font-medium">{{ item.module_name }}</div>
                       <div
@@ -864,6 +959,210 @@ onUnmounted(() => {
           </div>
 
           <div
+            v-else-if="activeStep === 'biz_vuln_list'"
+            class="flex h-full w-full flex-1 flex-col overflow-y-auto"
+          >
+            <div v-if="showBizModuleList" class="p-4">
+              <div class="mb-3 text-sm font-medium text-gray-700">
+                选择业务模块查看漏洞
+              </div>
+              <div v-if="bizDataLoading" class="flex items-center justify-center py-8 text-sm text-gray-400">
+                加载业务数据中...
+              </div>
+              <div v-else-if="bizData.length === 0" class="flex items-center justify-center py-8 text-sm text-gray-400">
+                暂无业务数据
+              </div>
+              <div v-else class="space-y-4">
+                <template v-for="(group, gIdx) in bizData" :key="gIdx">
+                  <div
+                    v-for="(modules, category) in group"
+                    :key="category"
+                    class="rounded border border-gray-200 bg-white shadow-sm"
+                  >
+                    <div
+                      class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
+                      @click="toggleBizCollapse(gIdx + '-' + category)"
+                    >
+                      <div class="text-sm font-medium text-gray-700 capitalize">
+                        {{ String(category).replace(/_/g, ' ') }}
+                        <span class="ml-2 text-xs font-normal text-gray-400"
+                          >({{ modules.length }})</span
+                        >
+                      </div>
+                      <span
+                        class="text-xs text-gray-400 transition-transform duration-200"
+                        :class="{
+                          'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
+                        }"
+                      >
+                        ▸
+                      </span>
+                    </div>
+                    <div
+                      v-if="!bizCollapsed.has(gIdx + '-' + category)"
+                      class="space-y-2 border-t border-gray-100 px-4 py-3"
+                    >
+                      <div
+                        v-for="(item, idx) in modules"
+                        :key="idx"
+                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                        :class="
+                          bizVulnResSet.has(item.module_name)
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                        "
+                        @click="loadBizVulnExploitList(item.module_name)"
+                      >
+                        <div class="font-medium">{{ item.module_name }}</div>
+                        <div
+                          v-if="item.module_path"
+                          class="mt-1 font-mono text-gray-400"
+                        >
+                          {{ item.module_path }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div v-else class="flex h-full flex-col">
+              <div class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2">
+                <button
+                  class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                  @click="backToBizModuleList"
+                >
+                  ← 返回模块列表
+                </button>
+                <span class="text-xs font-medium text-gray-600">
+                  {{ selectedBizName }}
+                </span>
+              </div>
+              <div
+                v-if="bizVulnExploitLoading"
+                class="flex flex-1 items-center justify-center text-sm text-gray-400"
+              >
+                加载漏洞列表中...
+              </div>
+              <div
+                v-else-if="bizVulnExploitList.length === 0"
+                class="flex flex-1 items-center justify-center text-sm text-gray-400"
+              >
+                暂无业务漏洞
+              </div>
+              <div v-else class="flex-1 space-y-3 overflow-y-auto p-2">
+                <div
+                  v-for="vuln in bizVulnExploitList"
+                  :key="vuln.id"
+                  class="rounded border border-gray-200 bg-white p-4 shadow-sm"
+                >
+                  <div class="mb-2 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-sm font-medium text-gray-700">{{
+                        vuln.vuln_id
+                      }}</span>
+                      <Tag
+                        :color="
+                          vuln.severity === 'critical' || vuln.severity === '严重'
+                            ? 'error'
+                            : vuln.severity === 'high' || vuln.severity === '高'
+                              ? 'warning'
+                              : vuln.severity === 'medium' || vuln.severity === '中'
+                                ? 'orange'
+                                : 'green'
+                        "
+                      >
+                        {{ vuln.severity }}
+                      </Tag>
+                      <Tag
+                        :color="
+                          vuln.status === '成功利用' || vuln.status === 'confirmed'
+                            ? 'success'
+                            : 'default'
+                        "
+                      >
+                        {{ vuln.status }}
+                      </Tag>
+                    </div>
+                    <span class="text-xs text-gray-400">{{
+                      vuln.create_time
+                    }}</span>
+                  </div>
+                  <div class="mb-2 text-sm font-medium text-gray-800">
+                    {{ vuln.title }}
+                  </div>
+                  <div class="mb-2 text-xs text-gray-500">
+                    <span class="font-medium">漏洞类型:</span>
+                    {{ vuln.vuln_type }}
+                  </div>
+                  <div v-if="vuln.category" class="mb-2 text-xs text-gray-500">
+                    <span class="font-medium">分类:</span> {{ vuln.category }}
+                  </div>
+                  <div v-if="vuln.location" class="mb-2 text-xs text-gray-500">
+                    <span class="font-medium">位置:</span> {{ vuln.location }}
+                  </div>
+                  <div
+                    v-if="vuln.vuln_detail"
+                    class="mb-2 rounded bg-gray-50 p-2 text-xs text-gray-600"
+                  >
+                    <span class="font-medium">详情:</span> {{ vuln.vuln_detail }}
+                  </div>
+                  <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500">
+                    <span class="font-medium">影响:</span> {{ vuln.impact }}
+                  </div>
+                  <div
+                    v-if="vuln.prerequisites"
+                    class="mb-2 text-xs text-gray-500"
+                  >
+                    <span class="font-medium">前置条件:</span>
+                    {{ vuln.prerequisites }}
+                  </div>
+                  <div v-if="vuln.exploit_steps" class="mb-2">
+                    <div class="mb-1 text-xs font-medium text-gray-500">
+                      利用步骤:
+                    </div>
+                    <div
+                      class="rounded bg-gray-50 p-2 text-xs text-gray-600 space-y-1"
+                    >
+                      <template
+                        v-for="(line, idx) in vuln.exploit_steps.split(
+                          /(?:\n|;)/,
+                        )"
+                        :key="idx"
+                      >
+                        <div v-if="line.trim()" class="flex items-start gap-2">
+                          <div
+                            v-if="/^\d/.test(line.trim())"
+                            class="flex items-start gap-2"
+                          >
+                            <span
+                              class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] text-blue-600"
+                            >
+                              {{ line.trim().charAt(0) }}
+                            </span>
+                            <span class="break-words">{{
+                              line.trim().replace(/^\d+[.):]?\s*/, '')
+                            }}</span>
+                          </div>
+                          <div v-else class="ml-6 break-words">
+                            {{ line.trim() }}
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                  <div
+                    v-if="vuln.evidence"
+                    class="rounded bg-green-50 p-2 text-xs text-green-700"
+                  >
+                    <span class="font-medium">证据:</span> {{ vuln.evidence }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
             style="width: 100%"
             v-else
             class="rounded border border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-400"
@@ -987,16 +1286,30 @@ onUnmounted(() => {
                   </Tag>
                 </div>
                 <div
-                  v-if="item.toolInput"
+                  v-if="item.toolInput && !item.hideContent"
                   class="mb-1 rounded bg-gray-100 p-2 text-xs text-gray-600 font-mono"
                 >
                   {{ item.toolInput }}
                 </div>
                 <div
-                  v-if="item.toolOutput"
+                  v-if="item.toolInput && item.hideContent"
+                  class="mb-1 truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono"
+                  :title="item.toolInput"
+                >
+                  {{ item.toolInput.slice(0, 80) }}...
+                </div>
+                <div
+                  v-if="item.toolOutput && !item.hideContent"
                   class="rounded bg-green-50 p-2 text-xs text-green-700 font-mono whitespace-pre-wrap"
                 >
                   {{ item.toolOutput }}
+                </div>
+                <div
+                  v-if="item.toolOutput && item.hideContent"
+                  class="truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono"
+                  :title="item.toolOutput"
+                >
+                  {{ item.toolOutput.slice(0, 80) }}...
                 </div>
               </div>
 
@@ -1028,6 +1341,33 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <Modal
+      :open="reportModalVisible"
+      title="业务报告"
+      width="80%"
+      :footer="null"
+      @cancel="closeReportPdf"
+    >
+      <div
+        v-if="reportModalLoading"
+        class="flex items-center justify-center py-20 text-gray-400 text-sm"
+      >
+        加载报告中...
+      </div>
+      <iframe
+        v-else-if="reportModalPdfUrl"
+        :src="reportModalPdfUrl"
+        class="h-full w-full rounded border-0"
+        style="min-height: 600px"
+      ></iframe>
+      <div
+        v-else
+        class="flex items-center justify-center py-20 text-gray-400 text-sm"
+      >
+        暂无报告
+      </div>
+    </Modal>
   </Page>
   <Page v-else-if="!loading" description="未找到任务" title="任务详情">
     <div class="pt-20 text-center text-gray-400">未找到对应任务信息</div>

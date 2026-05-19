@@ -20,6 +20,7 @@ export namespace TaskApi {
     resource_path: string;
     status: 'run-except' | 'running' | 'stopped' | 'wait-to-start';
     created_at: string;
+    api_call_sample?: string;
   }
 
   export interface TaskListResult {
@@ -39,6 +40,7 @@ export namespace TaskApi {
     success_condition?: string;
     core_biz_domain?: string;
     core_biz_sub_domain_demo?: string;
+    api_call_sample?: string;
   }
 
   export interface TaskCreateResult {
@@ -64,6 +66,7 @@ export namespace TaskApi {
     success_condition?: string;
     core_biz_domain?: string;
     core_biz_sub_domain_demo?: string;
+    api_call_sample?: string;
   }
 
   export interface AuthVulnItem {
@@ -89,9 +92,48 @@ export namespace TaskApi {
     items: AuthVulnItem[];
     message: string;
   }
+
+  export interface BizVulnItem {
+    id: number;
+    title: string;
+    res: string;
+  }
+
+  export interface BizVulnListResult {
+    status: string;
+    items: BizVulnItem[];
+    message: string;
+  }
+
+  export interface BizVulnExploitItem {
+    id: number;
+    task_id: string;
+    biz_name: string;
+    vuln_type: string;
+    create_time: string;
+    vuln_id: string;
+    title: string;
+    severity: string;
+    status: string;
+    category: string;
+    vuln_detail: string;
+    location: string;
+    blockers: string;
+    impact: string;
+    prerequisites: string;
+    exploit_steps: string;
+    evidence: string;
+  }
+
+  export interface BizVulnExploitListResult {
+    status: string;
+    items: BizVulnExploitItem[];
+    message: string;
+  }
 }
 
 export type AuthVulnItem = TaskApi.AuthVulnItem;
+export type BizVulnExploitItem = TaskApi.BizVulnExploitItem;
 
 export async function getTaskListApi(taskIdKeyword?: string) {
   const params: Record<string, string> = {};
@@ -148,5 +190,25 @@ export async function getBizDataApi(taskId: string) {
   const { data } = await baseRequestClient.post<
     ApiResponse<{ data: any[]; message: string; status: string }>
   >('/wape/biz_data', { task_id: taskId });
+  return data;
+}
+
+export async function getBizVulnListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<TaskApi.BizVulnListResult>
+  >('/wape/biz_vuln_list', { task_id: taskId });
+  return data;
+}
+
+export async function getBizVulnExploitListApi(
+  taskId: string,
+  bizName: string,
+) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<TaskApi.BizVulnExploitListResult>
+  >('/wape/biz_vuln_exploit_list', {
+    task_id: taskId,
+    biz_name: bizName,
+  });
   return data;
 }

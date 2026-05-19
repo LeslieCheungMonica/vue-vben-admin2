@@ -55,6 +55,7 @@ const createForm = ref<TaskApi.TaskCreateParams>({
   success_condition: '',
   core_biz_domain: '',
   core_biz_sub_domain_demo: '',
+  api_call_sample: '',
 });
 
 const editModalVisible = ref(false);
@@ -118,6 +119,7 @@ function openCreateModal() {
     success_condition: '',
     core_biz_domain: '',
     core_biz_sub_domain_demo: '',
+    api_call_sample: '',
   };
   createModalVisible.value = true;
   fetchResources();
@@ -213,6 +215,7 @@ function openEditModal(record: TaskApi.TaskItem) {
     success_condition: record.success_condition,
     core_biz_domain: record.core_biz_domain,
     core_biz_sub_domain_demo: record.core_biz_sub_domain_demo,
+    api_call_sample: record.api_call_sample || '',
   };
   editModalVisible.value = true;
 }
@@ -396,73 +399,92 @@ onMounted(() => {
       title="创建扫描任务"
       @ok="handleCreate"
     >
-      <Form layout="vertical">
-        <Form.Item label="选择资源" required>
-          <Select
-            v-model:value="createForm.resource_id"
-            :options="
-              resources.map((r) => ({
-                label: `${r.code}:${r.version} - ${r.description || '无描述'}`,
-                value: r.id,
-              }))
-            "
-            placeholder="请选择已上传的资源"
-          />
-        </Form.Item>
-        <Form.Item label="任务名称" required>
-          <Input
-            v-model:value="createForm.task_name"
-            placeholder="例如: myapp-安全扫描"
-          />
-        </Form.Item>
-        <Form.Item label="目标 Web 地址" required>
-          <Input
-            v-model:value="createForm.web_url"
-            placeholder="例如: https://example.com"
-          />
-        </Form.Item>
-        <Form.Item label="项目描述" required>
-          <Input.TextArea
-            v-model:value="createForm.code_desc"
-            placeholder="描述项目背景和功能"
-            :rows="2"
-          />
-        </Form.Item>
-        <Form.Item label="扫描范围" required>
-          <Checkbox.Group :options="scopeOptions" @change="handleScopeChange" />
-        </Form.Item>
-        <Form.Item label="重点关注领域">
-          <Input
-            v-model:value="createForm.focus"
-            placeholder="例如: 认证授权"
-          />
-        </Form.Item>
-        <Form.Item label="登录流程说明">
-          <Input.TextArea
-            v-model:value="createForm.login_flow"
-            placeholder="例如: 表单登录，输入用户名密码后提交 POST /api/login"
-            :rows="2"
-          />
-        </Form.Item>
-        <Form.Item label="登录成功判断条件">
-          <Input
-            v-model:value="createForm.success_condition"
-            placeholder="例如: 返回200且body包含token字段"
-          />
-        </Form.Item>
-        <Form.Item label="核心业务域">
-          <Input
-            v-model:value="createForm.core_biz_domain"
-            placeholder="例如: 订单系统"
-          />
-        </Form.Item>
-        <Form.Item label="子业务域示例">
-          <Input
-            v-model:value="createForm.core_biz_sub_domain_demo"
-            placeholder="例如: 创建订单、支付回调"
-          />
-        </Form.Item>
-      </Form>
+      <Tabs type="card">
+        <Tabs.TabPane key="basic" tab="基础信息">
+          <Form layout="vertical">
+            <Form.Item label="选择资源" required>
+              <Select
+                v-model:value="createForm.resource_id"
+                :options="
+                  resources.map((r) => ({
+                    label: `${r.code}:${r.version} - ${r.description || '无描述'}`,
+                    value: r.id,
+                  }))
+                "
+                placeholder="请选择已上传的资源"
+              />
+            </Form.Item>
+            <Form.Item label="任务名称" required>
+              <Input
+                v-model:value="createForm.task_name"
+                placeholder="例如: myapp-安全扫描"
+              />
+            </Form.Item>
+            <Form.Item label="目标 Web 地址" required>
+              <Input
+                v-model:value="createForm.web_url"
+                placeholder="例如: https://example.com"
+              />
+            </Form.Item>
+            <Form.Item label="项目描述" required>
+              <Input.TextArea
+                v-model:value="createForm.code_desc"
+                placeholder="描述项目背景和功能"
+                :rows="2"
+              />
+            </Form.Item>
+            <Form.Item label="扫描范围" required>
+              <Checkbox.Group :options="scopeOptions" @change="handleScopeChange" />
+            </Form.Item>
+          </Form>
+        </Tabs.TabPane>
+        <Tabs.TabPane key="intel" tab="情报指导">
+          <Form layout="vertical">
+            <Form.Item label="重点关注领域">
+              <Input.TextArea
+                v-model:value="createForm.focus"
+                placeholder="例如: 认证授权"
+                :rows="3"
+              />
+            </Form.Item>
+            <Form.Item label="登录流程说明">
+              <Input.TextArea
+                v-model:value="createForm.login_flow"
+                placeholder="例如: 表单登录，输入用户名密码后提交 POST /api/login"
+                :rows="3"
+              />
+            </Form.Item>
+            <Form.Item label="登录成功判断条件">
+              <Input.TextArea
+                v-model:value="createForm.success_condition"
+                placeholder="例如: 返回200且body包含token字段"
+                :rows="3"
+              />
+            </Form.Item>
+            <Form.Item label="核心业务域">
+              <Input.TextArea
+                v-model:value="createForm.core_biz_domain"
+                placeholder="例如: 订单系统"
+                :rows="3"
+              />
+            </Form.Item>
+            <Form.Item label="子业务域示例">
+              <Input.TextArea
+                v-model:value="createForm.core_biz_sub_domain_demo"
+                placeholder="例如: 创建订单、支付回调"
+                :rows="3"
+              />
+            </Form.Item>
+            <Form.Item label="API 调用样例">
+              <Input.TextArea
+                v-model:value="createForm.api_call_sample"
+                placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
+                :rows="5"
+              />
+            </Form.Item>
+          </Form>
+        </Tabs.TabPane>
+      </Tabs>
     </Modal>
 
     <Modal
@@ -536,6 +558,13 @@ onMounted(() => {
               <Input.TextArea
                 v-model:value="editForm.core_biz_sub_domain_demo"
                 :rows="3"
+              />
+            </Form.Item>
+            <Form.Item label="API 调用样例">
+              <Input.TextArea
+                v-model:value="editForm.api_call_sample"
+                placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
+                :rows="5"
               />
             </Form.Item>
           </Form>
