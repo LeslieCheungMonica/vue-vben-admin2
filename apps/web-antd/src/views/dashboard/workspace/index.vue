@@ -55,7 +55,7 @@ const createForm = ref<TaskApi.TaskCreateParams>({
   success_condition: '',
   core_biz_domain: '',
   core_biz_sub_domain_demo: '',
-  api_call_sample: '',
+  api_example: '',
 });
 
 const editModalVisible = ref(false);
@@ -119,7 +119,7 @@ function openCreateModal() {
     success_condition: '',
     core_biz_domain: '',
     core_biz_sub_domain_demo: '',
-    api_call_sample: '',
+    api_example: '',
   };
   createModalVisible.value = true;
   fetchResources();
@@ -215,7 +215,7 @@ function openEditModal(record: TaskApi.TaskItem) {
     success_condition: record.success_condition,
     core_biz_domain: record.core_biz_domain,
     core_biz_sub_domain_demo: record.core_biz_sub_domain_demo,
-    api_call_sample: record.api_call_sample || '',
+    api_example: record.api_example || '',
   };
   editModalVisible.value = true;
 }
@@ -477,7 +477,7 @@ onMounted(() => {
             </Form.Item>
             <Form.Item label="API 调用样例">
               <Input.TextArea
-                v-model:value="createForm.api_call_sample"
+                v-model:value="createForm.api_example"
                 placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
                 :rows="5"
               />
@@ -562,7 +562,7 @@ onMounted(() => {
             </Form.Item>
             <Form.Item label="API 调用样例">
               <Input.TextArea
-                v-model:value="editForm.api_call_sample"
+                v-model:value="editForm.api_example"
                 placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
                 :rows="5"
               />

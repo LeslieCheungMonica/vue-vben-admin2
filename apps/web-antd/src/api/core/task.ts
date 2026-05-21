@@ -20,7 +20,7 @@ export namespace TaskApi {
     resource_path: string;
     status: 'run-except' | 'running' | 'stopped' | 'wait-to-start';
     created_at: string;
-    api_call_sample?: string;
+    api_example?: string;
   }
 
   export interface TaskListResult {
@@ -40,7 +40,7 @@ export namespace TaskApi {
     success_condition?: string;
     core_biz_domain?: string;
     core_biz_sub_domain_demo?: string;
-    api_call_sample?: string;
+    api_example?: string;
   }
 
   export interface TaskCreateResult {
@@ -66,7 +66,7 @@ export namespace TaskApi {
     success_condition?: string;
     core_biz_domain?: string;
     core_biz_sub_domain_demo?: string;
-    api_call_sample?: string;
+    api_example?: string;
   }
 
   export interface AuthVulnItem {
