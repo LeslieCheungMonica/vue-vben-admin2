@@ -442,7 +442,7 @@ const pdfUrl = ref<string | null>(null);
 const pdfLoading = ref(false);
 
 function getReportPdfUrl(taskId: string, stage: string) {
-  return `/api/wape/report_pdf/${taskId}/${stage}`;
+  return `/api/wape/report_pdf/${taskId}/${stage}?time=${new Date().getTime()}`;
 }
 
 async function loadPdf(stage: string) {
@@ -545,7 +545,7 @@ async function loadBizExploitPdf(bizName: string) {
   showBizExploitModuleList.value = false;
   bizExploitPdfUrl.value = null;
   try {
-    const url = `/api/wape/biz_exploit_report_pdf/${taskId}/${encodeURIComponent(bizName)}`;
+    const url = `/api/wape/biz_exploit_report_pdf/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('PDF not found');
     const blob = await resp.blob();
@@ -642,7 +642,7 @@ async function openReportPdf(bizName: string) {
   reportModalVisible.value = true;
   reportModalPdfUrl.value = null;
   try {
-    const url = `/api/wape/biz_report_pdf/${taskId}/${encodeURIComponent(bizName)}`;
+    const url = `/api/wape/biz_report_pdf/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('PDF not found');
     const blob = await resp.blob();

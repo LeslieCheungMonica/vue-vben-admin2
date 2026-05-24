@@ -80,9 +80,10 @@ const statusColorMap: Record<string, string> = {
 };
 
 const statusLabelMap: Record<string, string> = {
-  'wait-to-start': '等待启动',
+  'wait-to-start': '待运行',
   running: '运行中',
   stopped: '已停止',
+  finish: '执行完成',
   'run-except': '执行异常',
 };
 
@@ -273,6 +274,8 @@ function handleDelete(record: TaskApi.TaskItem) {
   });
 }
 
+const SCAN_SCOPE_LIST = ['auth', 'authz', 'inject', 'ssrf', 'xss', 'biz'];
+
 const columns = [
   {
     dataIndex: 'task_id',
@@ -292,10 +295,10 @@ const columns = [
     dataIndex: 'web_url',
     key: 'web_url',
     title: '目标地址',
-    width: 160,
+    width: 200,
     ellipsis: true,
   },
-  { dataIndex: 'scan_scope', key: 'scan_scope', title: '扫描范围', width: 140 },
+  { dataIndex: 'scan_scope', key: 'scan_scope', title: '扫描范围', width: 350 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 100 },
   { dataIndex: 'created_at', key: 'created_at', title: '创建时间', width: 160 },
   { key: 'action', title: '操作', width: 180, fixed: 'right' },
@@ -352,9 +355,18 @@ onMounted(() => {
               {{ statusLabelMap[record.status] || record.status }}
             </Tag>
           </template>
+          <template v-if="column.key === 'web_url'">
+            <Tooltip :title="record.web_url">
+              <span class="truncate block max-w-[180px]">{{ record.web_url }}</span>
+            </Tooltip>
+          </template>
           <template v-if="column.key === 'scan_scope'">
             <Space :size="4" wrap>
-              <Tag v-for="s in record.scan_scope.split(',')" :key="s">
+              <Tag
+                v-for="s in SCAN_SCOPE_LIST"
+                :key="s"
+                :color="record.scan_scope?.split(',').includes(s) ? 'green' : 'default'"
+              >
                 {{ s }}
               </Tag>
             </Space>
@@ -362,7 +374,7 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Space :size="4">
               <Tooltip
-                v-if="record.status === 'wait-to-start' || !record.status"
+                v-if="record.status === 'wait-to-start' || record.status === 'finish' || !record.status"
                 title="启动任务"
               >
                 <Button
@@ -375,6 +387,9 @@ onMounted(() => {
               </Tooltip>
               <Tooltip v-else-if="record.status === 'running'" title="停止任务">
                 <Button size="small" @click="handleStop(record)">停止</Button>
+              </Tooltip>
+              <Tooltip v-else-if="record.status === 'stopped'" title="继续任务">
+                <Button size="small" type="primary" @click="handleStart(record)">继续</Button>
               </Tooltip>
               <span v-else class="text-gray-300 text-xs cursor-not-allowed"
                 >—</span
