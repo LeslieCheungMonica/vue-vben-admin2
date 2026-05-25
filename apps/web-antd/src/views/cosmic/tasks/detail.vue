@@ -349,13 +349,12 @@ onUnmounted(() => {
             </template>
           </Tree>
         </div>
-      </div>
 
-      <!-- Evidence detail panel -->
+      <!-- Evidence detail panel (overlay inside left panel) -->
       <div
         v-if="selectedEvidence"
-        class="flex flex-col rounded border transition-all duration-300 overflow-hidden"
-        :style="{ width: '0', minWidth: '420px', marginLeft: '8px' }"
+        class="absolute right-0 top-0 z-20 flex flex-col rounded-l-lg border border-r-0 bg-white shadow-xl transition-all duration-300 overflow-hidden"
+        :style="{ width: '440px', height: '100%' }"
       >
         <!-- Header -->
         <div class="flex items-center justify-between border-b bg-gradient-to-r from-blue-50 to-white px-4 py-3">
@@ -444,6 +443,7 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       <!-- Resize handle -->
