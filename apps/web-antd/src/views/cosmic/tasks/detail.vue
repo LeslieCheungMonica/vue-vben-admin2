@@ -93,7 +93,14 @@ async function fetchDetail() {
         children: res.tree,
       };
       antTreeData.value = treeData.value.children.map((c) => toAntTree(c, treeData.value!.name));
-      expandedKeys.value = [treeData.value.name];
+      const keys = [treeData.value.name];
+      let node: CosmicApi.TaskDetailNode | undefined = { name: treeData.value.name, children: res.tree };
+      for (let i = 0; i < 4; i++) {
+        if (!node?.children?.length) break;
+        node = node.children[0];
+        keys.push(`${keys[i]}-${node.name}`);
+      }
+      expandedKeys.value = keys;
     } else {
       treeData.value = null;
       antTreeData.value = [];
@@ -111,6 +118,13 @@ function handleSelect(keys: string[], info: any) {
   const node = info.node as AntTreeNode;
   if (node.isLeaf && node.evidence) {
     selectedEvidence.value = node.evidence;
+  } else if (!node.isLeaf) {
+    const key = node.key;
+    if (expandedKeys.value.includes(key)) {
+      expandedKeys.value = expandedKeys.value.filter((k) => k !== key);
+    } else {
+      expandedKeys.value = [...expandedKeys.value, key];
+    }
   }
 }
 
@@ -311,7 +325,7 @@ onUnmounted(() => {
           >
             <template #title="{ key: treeKey, title, isLeaf, status, evidence }">
               <div class="flex items-center gap-2 py-0.5">
-                <span v-if="!isLeaf" class="text-base shrink-0">📁</span>
+                <span v-if="!isLeaf" class="text-base shrink-0">📂</span>
                 <span v-else class="text-base shrink-0">📄</span>
                 <span
                   v-if="status === 'exists'"
