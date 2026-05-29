@@ -22,7 +22,9 @@ function parseEnvConfig(): MenuConfig | null {
   try {
     return JSON.parse(raw) as MenuConfig;
   } catch {
-    console.warn('[menu config] Failed to parse VITE_MENU_CONFIG, using defaults');
+    console.warn(
+      '[menu config] Failed to parse VITE_MENU_CONFIG, using defaults',
+    );
     return null;
   }
 }

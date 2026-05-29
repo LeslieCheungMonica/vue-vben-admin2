@@ -43,7 +43,10 @@ function applyMenuConfig(routes: RouteRecordRaw[]): RouteRecordRaw[] {
         children: route.children.map((child: RouteRecordRaw) => {
           const childName = child.name as string;
           if (parentItem.children![childName] === false) {
-            return { ...child, meta: { ...child.meta, hideInMenu: true } } as RouteRecordRaw;
+            return {
+              ...child,
+              meta: { ...child.meta, hideInMenu: true },
+            } as RouteRecordRaw;
           }
           return child;
         }),

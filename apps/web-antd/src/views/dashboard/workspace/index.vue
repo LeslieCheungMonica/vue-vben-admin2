@@ -357,7 +357,9 @@ onMounted(() => {
           </template>
           <template v-if="column.key === 'web_url'">
             <Tooltip :title="record.web_url">
-              <span class="truncate block max-w-[180px]">{{ record.web_url }}</span>
+              <span class="truncate block max-w-[180px]">{{
+                record.web_url
+              }}</span>
             </Tooltip>
           </template>
           <template v-if="column.key === 'scan_scope'">
@@ -365,7 +367,11 @@ onMounted(() => {
               <Tag
                 v-for="s in SCAN_SCOPE_LIST"
                 :key="s"
-                :color="record.scan_scope?.split(',').includes(s) ? 'green' : 'default'"
+                :color="
+                  record.scan_scope?.split(',').includes(s)
+                    ? 'green'
+                    : 'default'
+                "
               >
                 {{ s }}
               </Tag>
@@ -374,7 +380,12 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Space :size="4">
               <Tooltip
-                v-if="record.status === 'wait-to-start' || record.status === 'finish' || record.status === 'run-except' || !record.status"
+                v-if="
+                  record.status === 'wait-to-start' ||
+                  record.status === 'finish' ||
+                  record.status === 'run-except' ||
+                  !record.status
+                "
                 title="启动任务"
               >
                 <Button
@@ -389,7 +400,9 @@ onMounted(() => {
                 <Button size="small" @click="handleStop(record)">停止</Button>
               </Tooltip>
               <Tooltip v-else-if="record.status === 'stopped'" title="继续任务">
-                <Button size="small" type="primary" @click="handleStart(record)">继续</Button>
+                <Button size="small" type="primary" @click="handleStart(record)"
+                  >继续</Button
+                >
               </Tooltip>
               <span v-else class="text-gray-300 text-xs cursor-not-allowed"
                 >—</span
@@ -449,7 +462,10 @@ onMounted(() => {
               />
             </Form.Item>
             <Form.Item label="扫描范围" required>
-              <Checkbox.Group :options="scopeOptions" @change="handleScopeChange" />
+              <Checkbox.Group
+                :options="scopeOptions"
+                @change="handleScopeChange"
+              />
             </Form.Item>
           </Form>
         </Tabs.TabPane>

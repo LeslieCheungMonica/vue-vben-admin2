@@ -18,18 +18,10 @@ import {
   Tooltip,
 } from 'ant-design-vue';
 
-import {
-  createCosmicTaskApi,
-  deleteCosmicTaskApi,
-  exportCosmicReportApi,
-  getCosmicResourceListApi,
-  getCosmicTaskListApi,
-  type CosmicApi,
-  startCosmicTaskApi,
-  stopCosmicTaskApi,
-  updateCosmicTaskApi,
-} from '#/api/core/cosmic';
-import { getResourceListApi, type ResourceApi } from '#/api/core/resource';
+import { createCosmicTaskApi, deleteCosmicTaskApi, exportCosmicReportApi, getCosmicResourceListApi, getCosmicTaskListApi, startCosmicTaskApi, stopCosmicTaskApi, updateCosmicTaskApi } from '#/api/core/cosmic';
+import type { CosmicApi } from '#/api/core/cosmic';
+import { getResourceListApi } from '#/api/core/resource';
+import type { ResourceApi } from '#/api/core/resource';
 
 const router = useRouter();
 
@@ -89,7 +81,11 @@ async function fetchTasks() {
 }
 
 async function openCreateModal() {
-  createForm.value = { code_resource_id: 0, cosmic_resource_id: 0, task_name: '' };
+  createForm.value = {
+    code_resource_id: 0,
+    cosmic_resource_id: 0,
+    task_name: '',
+  };
   try {
     const [codeRes, cosmicRes] = await Promise.all([
       getResourceListApi(),
@@ -236,8 +232,20 @@ async function handleExport(taskId: string, taskName: string) {
 }
 
 const columns = [
-  { dataIndex: 'task_id', key: 'task_id', title: '任务 ID', width: 220, ellipsis: true },
-  { dataIndex: 'task_name', key: 'task_name', title: '任务名称', width: 200, ellipsis: true },
+  {
+    dataIndex: 'task_id',
+    key: 'task_id',
+    title: '任务 ID',
+    width: 220,
+    ellipsis: true,
+  },
+  {
+    dataIndex: 'task_name',
+    key: 'task_name',
+    title: '任务名称',
+    width: 200,
+    ellipsis: true,
+  },
   { dataIndex: 'status', key: 'status', title: '状态', width: 100 },
   { dataIndex: 'created_at', key: 'created_at', title: '创建时间', width: 180 },
   { key: 'action', title: '操作', width: 300 },
@@ -253,7 +261,9 @@ onMounted(() => {
     <Card class="mb-5">
       <div class="flex items-center justify-between">
         <Space>
-          <span class="text-sm text-gray-500">共 {{ tasks.length }} 个任务</span>
+          <span class="text-sm text-gray-500"
+            >共 {{ tasks.length }} 个任务</span
+          >
         </Space>
         <Button type="primary" @click="openCreateModal">创建任务</Button>
       </div>
@@ -276,7 +286,9 @@ onMounted(() => {
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'task_id'">
             <Tooltip :title="record.task_id">
-              <span class="truncate block max-w-[200px]">{{ record.task_id }}</span>
+              <span class="truncate block max-w-[200px]">{{
+                record.task_id
+              }}</span>
             </Tooltip>
           </template>
           <template v-if="column.key === 'status'">
@@ -287,31 +299,38 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Space :size="4">
               <Tooltip
-                v-if="record.status === 'pending' || record.status === 'stopped' || record.status === 'finish' || record.status === 'run-except'"
+                v-if="
+                  record.status === 'pending' ||
+                  record.status === 'stopped' ||
+                  record.status === 'finish' ||
+                  record.status === 'run-except'
+                "
                 title="启动任务"
               >
-                <Button size="small" type="primary" @click="handleStart(record)">
+                <Button
+                  size="small"
+                  type="primary"
+                  @click="handleStart(record)"
+                >
                   启动
                 </Button>
               </Tooltip>
-              <Tooltip
-                v-if="record.status === 'running'"
-                title="停止任务"
-              >
-                <Button size="small" @click="handleStop(record)">
-                  停止
-                </Button>
+              <Tooltip v-if="record.status === 'running'" title="停止任务">
+                <Button size="small" @click="handleStop(record)"> 停止 </Button>
               </Tooltip>
-              <Tooltip
-                title="导出报告"
-              >
-                <Button size="small" @click="handleExport(record.task_id, record.task_name)">
+              <Tooltip title="导出报告">
+                <Button
+                  size="small"
+                  @click="handleExport(record.task_id, record.task_name)"
+                >
                   导出报告
                 </Button>
               </Tooltip>
               <Button size="small" @click="showDetail(record)">详情</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
-              <Button danger size="small" @click="handleDelete(record)">删除</Button>
+              <Button danger size="small" @click="handleDelete(record)"
+                >删除</Button
+              >
             </Space>
           </template>
         </template>
@@ -396,7 +415,10 @@ onMounted(() => {
           />
         </Form.Item>
         <Form.Item label="任务名称" required>
-          <Input v-model:value="editForm.task_name" placeholder="例如: SDC COSMIC 评估" />
+          <Input
+            v-model:value="editForm.task_name"
+            placeholder="例如: SDC COSMIC 评估"
+          />
         </Form.Item>
       </Form>
     </Modal>

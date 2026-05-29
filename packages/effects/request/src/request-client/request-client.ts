@@ -63,9 +63,10 @@ class RequestClient {
       },
       responseReturn: 'raw',
       // 默认超时时间
-      timeout: 10_000,
+      timeout: 20_000,
     };
     const { ...axiosConfig } = options;
+    console.log(888888, options)
     const requestConfig = merge(axiosConfig, defaultConfig);
     requestConfig.paramsSerializer = getParamsSerializer(
       requestConfig.paramsSerializer,
