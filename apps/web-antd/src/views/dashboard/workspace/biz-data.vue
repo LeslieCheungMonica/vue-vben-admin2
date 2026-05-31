@@ -273,7 +273,7 @@ onMounted(() => {
             <template v-else>
               <span class="type-tag">
                 <template v-if="nodeType === 'string'">
-                  <span class="type-tag-icon str-icon">"</span>
+                  <span class="type-tag-icon str-icon"></span>
                 </template>
                 <template v-else-if="nodeType === 'number'">
                   <span class="type-tag-icon num-icon">#</span>
