@@ -301,7 +301,7 @@ const columns = [
   { dataIndex: 'scan_scope', key: 'scan_scope', title: '扫描范围', width: 350 },
   { dataIndex: 'status', key: 'status', title: '状态', width: 100 },
   { dataIndex: 'created_at', key: 'created_at', title: '创建时间', width: 160 },
-  { key: 'action', title: '操作', width: 180, fixed: 'right' },
+  { key: 'action', title: '操作', width: 260, fixed: 'right' as const },
 ];
 
 onMounted(() => {
@@ -407,6 +407,7 @@ onMounted(() => {
               <span v-else class="text-gray-300 text-xs cursor-not-allowed"
                 >—</span
               >
+              <Button size="small" @click="router.push(`/dashboard/task/biz-data/${record.task_id}`)">业务范围</Button>
               <Button size="small" @click="showDetail(record)">详情</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
               <Button danger size="small" @click="handleDelete(record)"

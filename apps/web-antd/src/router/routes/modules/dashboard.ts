@@ -40,6 +40,15 @@ const routes: RouteRecordRaw[] = [
           title: '任务详情',
         },
       },
+      {
+        name: 'BizData',
+        path: 'task/biz-data/:taskId',
+        component: () => import('#/views/dashboard/workspace/biz-data.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '业务范围',
+        },
+      },
     ],
   },
 ];
