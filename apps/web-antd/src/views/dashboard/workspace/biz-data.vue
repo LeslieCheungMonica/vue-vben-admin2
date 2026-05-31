@@ -6,7 +6,7 @@ import { Page } from '@vben/common-ui';
 
 import { Button, Card, Checkbox, message, Spin, Tree } from 'ant-design-vue';
 
-import { getBizDataApi, getTaskListApi } from '#/api/core/task';
+import { bizVulnScanScopeSelectApi, getBizDataApi, getBizVulnScanScopeSelectListApi, getTaskListApi } from '#/api/core/task';
 
 interface TreeNode {
   title: string;
@@ -15,6 +15,8 @@ interface TreeNode {
   nodeType?: string;
   rawValue?: string;
   children?: TreeNode[];
+  bizName?: string;
+  modulePath?: string;
 }
 
 let nodeIdCounter = 0;
@@ -28,16 +30,7 @@ function buildTree(data: any, _parentKey = ''): TreeNode[] {
       const id = ++nodeIdCounter;
       return [{ title: '(array) 空', key: `n${id}`, isLeaf: true, nodeType: 'array' }];
     }
-    return data.map((item) => {
-      const id = ++nodeIdCounter;
-      const key = `n${id}`;
-      if (typeof item === 'object' && item !== null) {
-        return { title: '', key, children: buildTree(item, key), nodeType: 'array' };
-      }
-      const val = item === null ? 'null' : String(item);
-      const type = item === null ? 'null' : typeof item;
-      return { title: '', key, isLeaf: true, nodeType: type, rawValue: val };
-    });
+    return data.flatMap((item) => buildTree(item));
   }
   if (typeof data === 'object') {
     const entries = Object.entries(data);
@@ -52,7 +45,7 @@ function buildTree(data: any, _parentKey = ''): TreeNode[] {
       const mp = String(hasModulePath[1] ?? '');
       const combined = mn && mp ? `${mn}/${mp}` : (mn || mp);
       const id = ++nodeIdCounter;
-      const result = entries.filter(([k]) => k !== 'module_name' && k !== 'module_path').map(([k, v]) => {
+      const result: TreeNode[] = entries.filter(([k]) => k !== 'module_name' && k !== 'module_path').map(([k, v]) => {
         const nid = ++nodeIdCounter;
         const nkey = `n${nid}`;
         if (typeof v === 'object' && v !== null) {
@@ -62,7 +55,7 @@ function buildTree(data: any, _parentKey = ''): TreeNode[] {
         const type = v === null ? 'null' : typeof v;
         return { title: k, key: nkey, isLeaf: true, nodeType: type, rawValue: val };
       });
-      result.unshift({ title: combined, key: `n${id}`, isLeaf: true, nodeType: 'string', rawValue: combined });
+      result.unshift({ title: combined, key: `n${id}`, isLeaf: true, nodeType: 'string', rawValue: combined, bizName: mn, modulePath: mp });
       return result;
     }
     return entries.map(([k, v]) => {
@@ -163,18 +156,69 @@ async function fetchData() {
     allLeafKeys.value = collectLeafKeys(treeData.value);
   } catch {
     message.error('获取业务数据失败');
+  }
+  try {
+    const selectRes = await getBizVulnScanScopeSelectListApi(tid);
+    const selectedKeys: string[] = [];
+    if (selectRes.items) {
+      const selectedSet = new Set<string>();
+      for (const entry of selectRes.items) {
+        for (const modules of Object.values(entry)) {
+          for (const m of modules) {
+            selectedSet.add(`${m.module_name}|${m.module_path}`);
+          }
+        }
+      }
+      function walk(nodes: TreeNode[]) {
+        for (const node of nodes) {
+          if (node.bizName && node.modulePath != null && selectedSet.has(`${node.bizName}|${node.modulePath}`)) {
+            selectedKeys.push(node.key);
+          }
+          if (node.children) walk(node.children);
+        }
+      }
+      walk(treeData.value);
+    }
+    checkedKeys.value = selectedKeys;
+  } catch {
+    // optional: silently ignore if select-list API fails
   } finally {
     loading.value = false;
   }
 }
 
-function handleSave() {
+function findNodesByKeys(nodes: TreeNode[], keys: Set<string>): TreeNode[] {
+  const result: TreeNode[] = [];
+  for (const node of nodes) {
+    if (keys.has(node.key)) result.push(node);
+    if (node.children) result.push(...findNodesByKeys(node.children, keys));
+  }
+  return result;
+}
+
+async function handleSave() {
   const selected = checkedKeys.value;
   if (selected.length === 0) {
     message.warning('请先选择需要保存的数据');
     return;
   }
-  message.success(`已保存 ${selected.length} 项数据`);
+  const keySet = new Set(selected);
+  const matchedNodes = findNodesByKeys(treeData.value, keySet).filter((n) => n.bizName);
+  if (matchedNodes.length === 0) {
+    message.warning('未选择有效的业务数据项');
+    return;
+  }
+  const items = matchedNodes.map((n) => ({
+    biz_name: n.bizName!,
+    module_path: n.modulePath || '',
+    option: 'select' as const,
+  }));
+  try {
+    await bizVulnScanScopeSelectApi(taskId.value, items);
+    message.success(`已保存 ${items.length} 项业务范围数据`);
+  } catch {
+    message.error('保存业务范围数据失败');
+  }
 }
 
 watch(taskId, () => {

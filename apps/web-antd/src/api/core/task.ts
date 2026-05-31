@@ -200,6 +200,23 @@ export async function getBizVulnListApi(taskId: string) {
   return data;
 }
 
+export async function bizVulnScanScopeSelectApi(
+  taskId: string,
+  items: { biz_name: string; option: 'select' | 'cancel'; module_path?: string; domain?: string }[],
+) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; message: string }>
+  >('/wape/biz_vuln_scan_scope_select', { task_id: taskId, items });
+  return data;
+}
+
+export async function getBizVulnScanScopeSelectListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; items: Record<string, { module_name: string; module_path: string }[]>[] }>
+  >('/wape/biz_vuln_scan_scope_select_list', { task_id: taskId });
+  return data;
+}
+
 export async function getBizVulnExploitListApi(
   taskId: string,
   bizName: string,
