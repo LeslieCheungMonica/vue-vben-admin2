@@ -12,6 +12,7 @@ import {
   getBizDataApi,
   getBizVulnListApi,
   getBizVulnExploitListApi,
+  getBizVulnScanScopeSelectListApi,
 } from '#/api/core/task';
 import type { TaskApi } from '#/api/core/task';
 import type { AuthVulnItem } from '#/api/core/task';
@@ -594,6 +595,20 @@ async function loadBizData() {
   }
 }
 
+async function loadBizScopeSelectData() {
+  const tid = route.params.taskId as string;
+  if (!tid) return;
+  bizDataLoading.value = true;
+  try {
+    const res = await getBizVulnScanScopeSelectListApi(tid);
+    bizData.value = res.items || [];
+  } catch {
+    bizData.value = [];
+  } finally {
+    bizDataLoading.value = false;
+  }
+}
+
 const bizVulnResSet = ref(new Set<string>());
 
 async function loadBizVulnList() {
@@ -609,13 +624,11 @@ async function loadBizVulnList() {
 }
 
 watch(activeStep, (step) => {
-  if (
-    step === 'biz_surface' ||
-    step === 'biz' ||
-    step === 'biz_vuln_list' ||
-    step === 'biz_exploit'
-  ) {
+  if (step === 'biz_surface') {
     loadBizData();
+  }
+  if (step === 'biz' || step === 'biz_vuln_list' || step === 'biz_exploit') {
+    loadBizScopeSelectData();
   }
   if (step === 'biz') {
     loadBizVulnList();

@@ -17,10 +17,11 @@ interface TreeNode {
   children?: TreeNode[];
   bizName?: string;
   modulePath?: string;
+  domain?: string;
 }
 
 let nodeIdCounter = 0;
-function buildTree(data: any, _parentKey = ''): TreeNode[] {
+function buildTree(data: any, _parentKey = '', domain?: string): TreeNode[] {
   if (data === null || data === undefined) {
     const id = ++nodeIdCounter;
     return [{ title: 'null', key: `n${id}`, isLeaf: true, nodeType: 'null', rawValue: 'null' }];
@@ -30,7 +31,7 @@ function buildTree(data: any, _parentKey = ''): TreeNode[] {
       const id = ++nodeIdCounter;
       return [{ title: '(array) 空', key: `n${id}`, isLeaf: true, nodeType: 'array' }];
     }
-    return data.flatMap((item) => buildTree(item));
+    return data.flatMap((item) => buildTree(item, '', domain));
   }
   if (typeof data === 'object') {
     const entries = Object.entries(data);
@@ -49,20 +50,21 @@ function buildTree(data: any, _parentKey = ''): TreeNode[] {
         const nid = ++nodeIdCounter;
         const nkey = `n${nid}`;
         if (typeof v === 'object' && v !== null) {
-          return { title: k, key: nkey, children: buildTree(v, nkey), nodeType: 'object' };
+          return { title: k, key: nkey, children: buildTree(v, nkey, domain), nodeType: 'object' };
         }
         const val = v === null ? 'null' : String(v);
         const type = v === null ? 'null' : typeof v;
         return { title: k, key: nkey, isLeaf: true, nodeType: type, rawValue: val };
       });
-      result.unshift({ title: combined, key: `n${id}`, isLeaf: true, nodeType: 'string', rawValue: combined, bizName: mn, modulePath: mp });
+      result.unshift({ title: combined, key: `n${id}`, isLeaf: true, nodeType: 'string', rawValue: combined, bizName: mn, modulePath: mp, domain });
       return result;
     }
     return entries.map(([k, v]) => {
       const id = ++nodeIdCounter;
       const key = `n${id}`;
       if (typeof v === 'object' && v !== null) {
-        return { title: k, key, children: buildTree(v, key), nodeType: 'object' };
+        const nextDomain = Array.isArray(v) ? k : domain;
+        return { title: k, key, children: buildTree(v, key, nextDomain), nodeType: 'object' };
       }
       const val = v === null ? 'null' : String(v);
       const type = v === null ? 'null' : typeof v;
@@ -211,6 +213,7 @@ async function handleSave() {
   const items = matchedNodes.map((n) => ({
     biz_name: n.bizName!,
     module_path: n.modulePath || '',
+    domain: n.domain || undefined,
     option: 'select' as const,
   }));
   try {
