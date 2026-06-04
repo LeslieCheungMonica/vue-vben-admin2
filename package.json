@@ -107,6 +107,6 @@
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
-    "@rolldown/binding-darwin-arm64": "1.0.0-rc.17"
+    "@rolldown/binding-darwin-arm64": "1.1.0"
   }
 }
