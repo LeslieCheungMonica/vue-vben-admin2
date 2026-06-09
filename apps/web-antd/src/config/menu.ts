@@ -16,17 +16,15 @@ const defaultConfig: MenuConfig = {
   Cosmic: true,
 };
 
-function parseEnvConfig(): MenuConfig | null {
-  const raw = import.meta.env.VITE_MENU_CONFIG as string | undefined;
-  if (!raw) return null;
+async function fetchMenuConfig(): Promise<MenuConfig> {
   try {
-    return JSON.parse(raw) as MenuConfig;
+    const res = await fetch('/setting.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as MenuConfig;
   } catch {
-    console.warn(
-      '[menu config] Failed to parse VITE_MENU_CONFIG, using defaults',
-    );
-    return null;
+    console.warn('[menu config] Failed to fetch /setting.json, using defaults');
+    return defaultConfig;
   }
 }
 
-export const menuConfig: MenuConfig = parseEnvConfig() ?? defaultConfig;
+export const menuConfig: MenuConfig = await fetchMenuConfig();
