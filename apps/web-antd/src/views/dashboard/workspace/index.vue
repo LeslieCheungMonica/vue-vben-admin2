@@ -56,6 +56,7 @@ const createForm = ref<TaskApi.TaskCreateParams>({
   core_biz_domain: '',
   core_biz_sub_domain_demo: '',
   api_example: '',
+  skip_exploit: 'no',
 });
 
 const editModalVisible = ref(false);
@@ -121,6 +122,7 @@ function openCreateModal() {
     core_biz_domain: '',
     core_biz_sub_domain_demo: '',
     api_example: '',
+    skip_exploit: 'no',
   };
   createModalVisible.value = true;
   fetchResources();
@@ -217,6 +219,7 @@ function openEditModal(record: TaskApi.TaskItem) {
     core_biz_domain: record.core_biz_domain,
     core_biz_sub_domain_demo: record.core_biz_sub_domain_demo,
     api_example: record.api_example || '',
+    skip_exploit: record.skip_exploit || 'no',
   };
   editModalVisible.value = true;
 }
@@ -514,6 +517,12 @@ onMounted(() => {
                 :rows="5"
               />
             </Form.Item>
+            <Form.Item label="跳过利用阶段">
+              <Select v-model:value="createForm.skip_exploit">
+                <Select.Option value="no">否</Select.Option>
+                <Select.Option value="yes">是</Select.Option>
+              </Select>
+            </Form.Item>
           </Form>
         </Tabs.TabPane>
       </Tabs>
@@ -598,6 +607,12 @@ onMounted(() => {
                 placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
                 :rows="5"
               />
+            </Form.Item>
+            <Form.Item label="跳过利用阶段">
+              <Select v-model:value="editForm.skip_exploit">
+                <Select.Option value="no">否</Select.Option>
+                <Select.Option value="yes">是</Select.Option>
+              </Select>
             </Form.Item>
           </Form>
         </Tabs.TabPane>

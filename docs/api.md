@@ -115,6 +115,7 @@ curl -X POST http://127.0.0.1:7654/wape/resource_list \
 | success_condition | string | 否 | 登录成功判断条件 |
 | core_biz_domain | string | 否 | 核心业务域 |
 | core_biz_sub_domain_demo | string | 否 | 子业务域示例 |
+| skip_exploit | string | 否 | 是否跳过利用阶段，`yes` 或 `no`，默认 `no` |
 
 ```bash
 curl -X POST http://127.0.0.1:7654/wape/task_create \
@@ -129,7 +130,8 @@ curl -X POST http://127.0.0.1:7654/wape/task_create \
     "login_flow": "表单登录，输入用户名密码后提交POST /api/login",
     "success_condition": "返回200且body包含token字段",
     "core_biz_domain": "订单系统",
-    "core_biz_sub_domain_demo": "创建订单、支付回调"
+    "core_biz_sub_domain_demo": "创建订单、支付回调",
+    "skip_exploit": "no"
   }'
 ```
 
@@ -213,6 +215,8 @@ curl -X POST http://127.0.0.1:7654/wape/task_list \
       "core_biz_domain": "",
       "core_biz_sub_domain_demo": "",
       "resource_path": "/tmp/resource_uploads/myapp/v1.0/myapp",
+      "api_example": "",
+      "skip_exploit": "no",
       "status": "running",
       "created_at": "2025-05-16 01:01:01"
     }
@@ -290,6 +294,7 @@ curl -X POST http://127.0.0.1:7654/wape/task_stop \
 | success_condition | string | 否 | 登录成功条件 |
 | core_biz_domain | string | 否 | 核心业务域 |
 | core_biz_sub_domain_demo | string | 否 | 子业务域示例 |
+| skip_exploit | string | 否 | 是否跳过利用阶段，`yes` 或 `no` |
 
 ```bash
 curl -X POST http://127.0.0.1:7654/wape/task_update \
@@ -298,7 +303,8 @@ curl -X POST http://127.0.0.1:7654/wape/task_update \
     "task_id": "wape-20250516010101",
     "task_name": "新任务名称",
     "web_url": "https://new.example.com",
-    "focus": "新的关注领域"
+    "focus": "新的关注领域",
+    "skip_exploit": "yes"
   }'
 ```
 
