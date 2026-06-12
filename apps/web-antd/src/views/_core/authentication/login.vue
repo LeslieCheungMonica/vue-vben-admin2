@@ -55,9 +55,10 @@ const formSchema = computed((): VbenFormSchema[] => {
             const findUser = MOCK_USER_OPTIONS.find(
               (item) => item.value === values.selectAccount,
             );
+            console.log("12333333333", findUser)
             if (findUser) {
               form.setValues({
-                password: '123456',
+                password: '',
                 username: findUser.value,
               });
             }

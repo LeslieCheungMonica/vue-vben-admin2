@@ -15,14 +15,14 @@ export interface TimezoneOption {
 export const MOCK_USERS: UserInfo[] = [
   {
     id: 0,
-    password: '123456',
+    password: 'G7#kL9$mQ2@pR5',
     realName: 'Vben',
     roles: ['super'],
     username: 'vben',
   },
   {
     id: 1,
-    password: '123456',
+    password: 'xN8&vJ3%wE6^tY1',
     realName: 'Admin',
     roles: ['admin'],
     username: 'admin',
@@ -30,7 +30,7 @@ export const MOCK_USERS: UserInfo[] = [
   },
   {
     id: 2,
-    password: '123456',
+    password: 'A123456',
     realName: 'Jack',
     roles: ['user'],
     username: 'jack',
