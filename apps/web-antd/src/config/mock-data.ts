@@ -30,7 +30,7 @@ export const MOCK_USERS: UserInfo[] = [
   },
   {
     id: 2,
-    password: 'A123456',
+    password: '123456',
     realName: 'Jack',
     roles: ['user'],
     username: 'jack',

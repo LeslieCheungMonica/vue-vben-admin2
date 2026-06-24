@@ -66,10 +66,10 @@ const editForm = ref<TaskApi.TaskUpdateParams>({ task_id: '' });
 
 const scopeOptions = [
   { label: '认证漏洞 (auth)', value: 'auth' },
-  { label: '越权 (zuthz)', value: 'zuthz' },
-  { label: '注入 (inject)', value: 'inject' },
+  { label: '越权 (authz)', value: 'authz' },
+  { label: '注入 (injection)', value: 'injection' },
   { label: 'SSRF', value: 'ssrf' },
-  { label: 'XSS (xxs)', value: 'xxs' },
+  { label: 'XSS (xss)', value: 'xss' },
   { label: '业务逻辑 (biz)', value: 'biz' },
 ];
 
