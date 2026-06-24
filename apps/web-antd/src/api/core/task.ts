@@ -189,6 +189,34 @@ export async function getAuthVulnListApi(taskId: string) {
   return data;
 }
 
+export async function getAuthzVulnListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<TaskApi.AuthVulnListResult>
+  >('/wape/authz_vuln_list', { task_id: taskId });
+  return data;
+}
+
+export async function getInjectionVulnListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<TaskApi.AuthVulnListResult>
+  >('/wape/injection_vuln_list', { task_id: taskId });
+  return data;
+}
+
+export async function getSsrfVulnListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<TaskApi.AuthVulnListResult>
+  >('/wape/ssrf_vuln_list', { task_id: taskId });
+  return data;
+}
+
+export async function getXssVulnListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<TaskApi.AuthVulnListResult>
+  >('/wape/xss_vuln_list', { task_id: taskId });
+  return data;
+}
+
 export async function getBizDataApi(taskId: string) {
   const { data } = await baseRequestClient.post<
     ApiResponse<{ data: any[]; message: string; status: string }>

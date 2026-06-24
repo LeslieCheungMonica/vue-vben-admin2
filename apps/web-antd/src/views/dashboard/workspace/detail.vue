@@ -9,6 +9,10 @@ import { Descriptions, Modal, Tag } from 'ant-design-vue';
 import {
   getTaskListApi,
   getAuthVulnListApi,
+  getAuthzVulnListApi,
+  getInjectionVulnListApi,
+  getSsrfVulnListApi,
+  getXssVulnListApi,
   getBizDataApi,
   getBizVulnListApi,
   getBizVulnExploitListApi,
@@ -88,9 +92,9 @@ function toggleRight() {
 
 const leftPanelStyle = computed(() => {
   if (rightCollapsed.value) {
-    return { width: '100%', maxHeight: '600px' };
+    return { width: '100%', };
   }
-  return { width: `${leftWidth.value}%`, maxHeight: '600px' };
+  return { width: `${leftWidth.value}%`, };
 });
 
 const rightPanelStyle = computed(() => {
@@ -139,25 +143,37 @@ const flowSteps = [
     key: 'authz',
     label: '授权漏洞扫描',
     icon: '🛡️',
-    children: [{ key: 'authz_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+    children: [
+      { key: 'authz_vuln_list', label: '授权漏洞列表', icon: '📋' },
+      { key: 'authz_exploit', label: '漏洞攻击利用', icon: '⚡' },
+    ],
   },
   {
     key: 'injection',
     label: '注入漏洞扫描',
     icon: '💉',
-    children: [{ key: 'injection_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+    children: [
+      { key: 'injection_vuln_list', label: '注入漏洞列表', icon: '📋' },
+      { key: 'injection_exploit', label: '漏洞攻击利用', icon: '⚡' },
+    ],
   },
   {
     key: 'ssrf',
     label: 'SSRF漏洞扫描',
     icon: '🌐',
-    children: [{ key: 'ssrf_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+    children: [
+      { key: 'ssrf_vuln_list', label: 'SSRF漏洞列表', icon: '📋' },
+      { key: 'ssrf_exploit', label: '漏洞攻击利用', icon: '⚡' },
+    ],
   },
   {
     key: 'xss',
     label: 'XSS漏洞扫描',
     icon: '📝',
-    children: [{ key: 'xss_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+    children: [
+      { key: 'xss_vuln_list', label: 'XSS漏洞列表', icon: '📋' },
+      { key: 'xss_exploit', label: '漏洞攻击利用', icon: '⚡' },
+    ],
   },
   {
     key: 'biz',
@@ -198,12 +214,16 @@ function getStepDesc(key: string) {
     auth_vuln_list: '查看认证漏洞列表',
     auth_exploit: '对认证漏洞进行可利用性验证',
     authz: '检测授权相关漏洞',
+    authz_vuln_list: '查看授权漏洞列表',
     authz_exploit: '对授权漏洞进行可利用性验证',
     injection: '检测注入类漏洞',
+    injection_vuln_list: '查看注入漏洞列表',
     injection_exploit: '对注入漏洞进行可利用性验证',
     ssrf: '检测SSRF漏洞',
+    ssrf_vuln_list: '查看SSRF漏洞列表',
     ssrf_exploit: '对SSRF漏洞进行可利用性验证',
     xss: '检测XSS漏洞',
+    xss_vuln_list: '查看XSS漏洞列表',
     xss_exploit: '对XSS漏洞进行可利用性验证',
     biz: '检测业务逻辑漏洞',
     biz_vuln_list: '查看业务漏洞列表',
@@ -471,6 +491,14 @@ watch(activeStep, (step) => {
     attack_graph: 'recon_graph',
     auth: 'auth_vuln',
     auth_exploit: 'auth_vuln_exploit',
+    authz: 'authz_vuln',
+    authz_exploit: 'authz_vuln_exploit',
+    injection: 'injection_vuln',
+    injection_exploit: 'injection_vuln_exploit',
+    ssrf: 'ssrf_vuln',
+    ssrf_exploit: 'ssrf_vuln_exploit',
+    xss: 'xss_vuln',
+    xss_exploit: 'xss_vuln_exploit',
   };
   const stage = pdfStages[step];
   if (stage) {
@@ -500,9 +528,89 @@ async function loadAuthVulnList() {
   }
 }
 
+const authzVulnList = ref<AuthVulnItem[]>([]);
+const authzVulnLoading = ref(false);
+
+async function loadAuthzVulnList() {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  authzVulnLoading.value = true;
+  try {
+    const res = await getAuthzVulnListApi(taskId);
+    authzVulnList.value = res.items || [];
+  } catch {
+    authzVulnList.value = [];
+  } finally {
+    authzVulnLoading.value = false;
+  }
+}
+
+const injectionVulnList = ref<AuthVulnItem[]>([]);
+const injectionVulnLoading = ref(false);
+
+async function loadInjectionVulnList() {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  injectionVulnLoading.value = true;
+  try {
+    const res = await getInjectionVulnListApi(taskId);
+    injectionVulnList.value = res.items || [];
+  } catch {
+    injectionVulnList.value = [];
+  } finally {
+    injectionVulnLoading.value = false;
+  }
+}
+
+const ssrfVulnList = ref<AuthVulnItem[]>([]);
+const ssrfVulnLoading = ref(false);
+
+async function loadSsrfVulnList() {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  ssrfVulnLoading.value = true;
+  try {
+    const res = await getSsrfVulnListApi(taskId);
+    ssrfVulnList.value = res.items || [];
+  } catch {
+    ssrfVulnList.value = [];
+  } finally {
+    ssrfVulnLoading.value = false;
+  }
+}
+
+const xssVulnList = ref<AuthVulnItem[]>([]);
+const xssVulnLoading = ref(false);
+
+async function loadXssVulnList() {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  xssVulnLoading.value = true;
+  try {
+    const res = await getXssVulnListApi(taskId);
+    xssVulnList.value = res.items || [];
+  } catch {
+    xssVulnList.value = [];
+  } finally {
+    xssVulnLoading.value = false;
+  }
+}
+
 watch(activeStep, (step) => {
   if (step === 'auth_vuln_list') {
     loadAuthVulnList();
+  }
+  if (step === 'authz_vuln_list') {
+    loadAuthzVulnList();
+  }
+  if (step === 'injection_vuln_list') {
+    loadInjectionVulnList();
+  }
+  if (step === 'ssrf_vuln_list') {
+    loadSsrfVulnList();
+  }
+  if (step === 'xss_vuln_list') {
+    loadXssVulnList();
   }
 });
 
@@ -788,7 +896,15 @@ onUnmounted(() => {
               activeStep === 'attack_surface' ||
               activeStep === 'attack_graph' ||
               activeStep === 'auth' ||
-              activeStep === 'auth_exploit'
+              activeStep === 'auth_exploit' ||
+              activeStep === 'authz' ||
+              activeStep === 'authz_exploit' ||
+              activeStep === 'injection' ||
+              activeStep === 'injection_exploit' ||
+              activeStep === 'ssrf' ||
+              activeStep === 'ssrf_exploit' ||
+              activeStep === 'xss' ||
+              activeStep === 'xss_exploit'
             "
             class="flex h-full flex-col"
           >
@@ -892,24 +1008,24 @@ onUnmounted(() => {
           </div>
 
           <div
-            v-else-if="activeStep === 'auth_vuln_list'"
+            v-else-if="activeStep === 'auth_vuln_list' || activeStep === 'authz_vuln_list' || activeStep === 'injection_vuln_list' || activeStep === 'ssrf_vuln_list' || activeStep === 'xss_vuln_list'"
             class="flex h-full w-full flex-1 flex-col overflow-y-auto"
           >
             <div
-              v-if="authVulnLoading"
+              v-if="activeStep === 'auth_vuln_list' ? authVulnLoading : activeStep === 'authz_vuln_list' ? authzVulnLoading : activeStep === 'injection_vuln_list' ? injectionVulnLoading : activeStep === 'ssrf_vuln_list' ? ssrfVulnLoading : xssVulnLoading"
               class="flex flex-1 items-center justify-center text-gray-400 text-sm"
             >
               加载漏洞列表中...
             </div>
             <div
-              v-else-if="authVulnList.length === 0"
+              v-else-if="(activeStep === 'auth_vuln_list' ? authVulnList : activeStep === 'authz_vuln_list' ? authzVulnList : activeStep === 'injection_vuln_list' ? injectionVulnList : activeStep === 'ssrf_vuln_list' ? ssrfVulnList : xssVulnList).length === 0"
               class="flex flex-1 items-center justify-center text-gray-400 text-sm"
             >
-              暂无认证漏洞
+              暂无{{ activeStep === 'auth_vuln_list' ? '认证' : activeStep === 'authz_vuln_list' ? '授权' : activeStep === 'injection_vuln_list' ? '注入' : activeStep === 'ssrf_vuln_list' ? 'SSRF' : 'XSS' }}漏洞
             </div>
             <div v-else class="space-y-3 p-2">
               <div
-                v-for="vuln in authVulnList"
+                v-for="vuln in (activeStep === 'auth_vuln_list' ? authVulnList : activeStep === 'authz_vuln_list' ? authzVulnList : activeStep === 'injection_vuln_list' ? injectionVulnList : activeStep === 'ssrf_vuln_list' ? ssrfVulnList : xssVulnList)"
                 :key="vuln.id"
                 class="rounded border border-gray-200 bg-white p-4 shadow-sm"
               >
