@@ -92,9 +92,9 @@ function toggleRight() {
 
 const leftPanelStyle = computed(() => {
   if (rightCollapsed.value) {
-    return { width: '100%', };
+    return { width: '100%', maxHeight: 'calc(100vh - 246px)' };
   }
-  return { width: `${leftWidth.value}%`, };
+  return { width: `${leftWidth.value}%`, maxHeight: 'calc(100vh - 246px)' };
 });
 
 const rightPanelStyle = computed(() => {
