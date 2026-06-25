@@ -8,11 +8,7 @@ import { Descriptions, Modal, Tag } from 'ant-design-vue';
 
 import {
   getTaskListApi,
-  getAuthVulnListApi,
-  getAuthzVulnListApi,
-  getInjectionVulnListApi,
-  getSsrfVulnListApi,
-  getXssVulnListApi,
+  getCommonVulnListApi,
   getBizDataApi,
   getBizVulnListApi,
   getBizVulnExploitListApi,
@@ -519,7 +515,7 @@ async function loadAuthVulnList() {
   if (!taskId) return;
   authVulnLoading.value = true;
   try {
-    const res = await getAuthVulnListApi(taskId);
+    const res = await getCommonVulnListApi(taskId, 'auth');
     authVulnList.value = res.items || [];
   } catch {
     authVulnList.value = [];
@@ -536,7 +532,7 @@ async function loadAuthzVulnList() {
   if (!taskId) return;
   authzVulnLoading.value = true;
   try {
-    const res = await getAuthzVulnListApi(taskId);
+    const res = await getCommonVulnListApi(taskId, 'authz');
     authzVulnList.value = res.items || [];
   } catch {
     authzVulnList.value = [];
@@ -553,7 +549,7 @@ async function loadInjectionVulnList() {
   if (!taskId) return;
   injectionVulnLoading.value = true;
   try {
-    const res = await getInjectionVulnListApi(taskId);
+    const res = await getCommonVulnListApi(taskId, 'injection');
     injectionVulnList.value = res.items || [];
   } catch {
     injectionVulnList.value = [];
@@ -570,7 +566,7 @@ async function loadSsrfVulnList() {
   if (!taskId) return;
   ssrfVulnLoading.value = true;
   try {
-    const res = await getSsrfVulnListApi(taskId);
+    const res = await getCommonVulnListApi(taskId, 'ssrf');
     ssrfVulnList.value = res.items || [];
   } catch {
     ssrfVulnList.value = [];
@@ -587,7 +583,7 @@ async function loadXssVulnList() {
   if (!taskId) return;
   xssVulnLoading.value = true;
   try {
-    const res = await getXssVulnListApi(taskId);
+    const res = await getCommonVulnListApi(taskId, 'xss');
     xssVulnList.value = res.items || [];
   } catch {
     xssVulnList.value = [];

@@ -665,3 +665,58 @@ curl -X POST http://127.0.0.1:7654/wape/biz_vuln_scan_scope_select_list \
   ]
 }
 ```
+
+---
+
+## 22. 通用漏洞列表查询
+
+**POST** `/wape/common_vuln_list`
+
+查询指定任务的通用漏洞列表，支持 5 类漏洞类型。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| task_id | string | 是 | 任务 ID |
+| vuln_type | string | 是 | 漏洞类型：`auth`、`authz`、`injection`、`ssrf`、`xss` |
+
+**vuln_type 对应表:**
+
+| vuln_type | 数据库表 |
+|----------|----------|
+| `auth` | wape_auth_vuln_detail |
+| `authz` | wape_authz_vuln_detail |
+| `injection` | wape_injection_vuln_detail |
+| `ssrf` | wape_ssrf_vuln_detail |
+| `xss` | wape_xss_vuln_detail |
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/common_vuln_list \
+  -H "Content-Type: application/json" \
+  -d '{"task_id": "wape-20250516010101", "vuln_type": "auth"}'
+```
+
+```json
+{
+  "status": "completed",
+  "items": [
+    {
+      "id": 1,
+      "task_id": "wape-20250516010101",
+      "vuln_type": "session hijacking",
+      "create_time": "2025-05-16 02:30:00",
+      "vuln_id": "AUTH-001",
+      "title": "会话固定攻击",
+      "severity": "high",
+      "status": "confirmed",
+      "vuln_detail": "...",
+      "location": "...",
+      "blockers": "...",
+      "impact": "...",
+      "prerequisites": "...",
+      "exploit_steps": "...",
+      "evidence": "..."
+    }
+  ],
+  "message": "查询到 1 条 auth 漏洞"
+}
+```
