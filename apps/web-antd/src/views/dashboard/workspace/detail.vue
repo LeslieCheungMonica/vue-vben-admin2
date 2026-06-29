@@ -457,9 +457,15 @@ watch(
 
 const pdfUrl = ref<string | null>(null);
 const pdfLoading = ref(false);
+const htmlUrl = ref<string | null>(null);
+const htmlLoading = ref(false);
 
 function getReportPdfUrl(taskId: string, stage: string) {
   return `/api/wape/report_pdf/${taskId}/${stage}?time=${new Date().getTime()}`;
+}
+
+function getReportHtmlUrl(taskId: string, stage: string) {
+  return `/api/wape/report_html/${taskId}/${stage}?time=${new Date().getTime()}`;
 }
 
 async function loadPdf(stage: string) {
@@ -480,10 +486,27 @@ async function loadPdf(stage: string) {
   }
 }
 
+async function loadHtml(stage: string) {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  htmlUrl.value = null;
+  htmlLoading.value = true;
+  try {
+    const url = getReportHtmlUrl(taskId, stage);
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTML not found');
+    let text = await resp.text();
+    text = text.replace('<head>', '<head><style>body{font-size:10px!important;line-height:1.5!important;}</style>');
+    htmlUrl.value = text;
+  } catch {
+    htmlUrl.value = null;
+  } finally {
+    htmlLoading.value = false;
+  }
+}
+
 watch(activeStep, (step) => {
   const pdfStages: Record<string, string> = {
-    vuln_recon: 'pre_recon',
-    attack_surface: 'recon',
     attack_graph: 'recon_graph',
     auth: 'auth_vuln',
     auth_exploit: 'auth_vuln_exploit',
@@ -496,13 +519,20 @@ watch(activeStep, (step) => {
     xss: 'xss_vuln',
     xss_exploit: 'xss_vuln_exploit',
   };
-  const stage = pdfStages[step];
-  if (stage) {
-    loadPdf(stage);
+  if (step === 'vuln_recon' || step === 'attack_surface') {
+    loadHtml(step === 'vuln_recon' ? 'pre_recon' : 'recon');
   } else {
-    if (pdfUrl.value) {
-      URL.revokeObjectURL(pdfUrl.value);
-      pdfUrl.value = null;
+    if (htmlUrl.value) {
+      htmlUrl.value = null;
+    }
+    const stage = pdfStages[step];
+    if (stage) {
+      loadPdf(stage);
+    } else {
+      if (pdfUrl.value) {
+        URL.revokeObjectURL(pdfUrl.value);
+        pdfUrl.value = null;
+      }
     }
   }
 });
@@ -905,10 +935,30 @@ onUnmounted(() => {
             class="flex h-full flex-col"
           >
             <div
-              v-if="pdfLoading"
+              v-if="(activeStep === 'vuln_recon' || activeStep === 'attack_surface') ? htmlLoading : pdfLoading"
               class="flex flex-1 items-center justify-center text-gray-400 text-sm"
             >
               加载报告中...
+            </div>
+            <div
+              v-else-if="(activeStep === 'vuln_recon' || activeStep === 'attack_surface') && htmlUrl"
+              class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
+            >
+              <div class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100">
+                <span>{{ activeStep === 'vuln_recon' ? '🔍' : '🎯' }}</span>
+                <span>{{ activeStep === 'vuln_recon' ? '漏洞侦查报告' : '攻击面测绘报告' }}</span>
+              </div>
+              <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
+                <div class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0" style="display:flex;flex-direction:column">
+                  <div style="flex:1;min-height:400px;position:relative">
+                    <iframe
+                      :srcdoc="htmlUrl"
+                      class="border-0"
+                      style="position:absolute;inset:0;width:100%;height:100%"
+                    ></iframe>
+                  </div>
+                </div>
+              </div>
             </div>
             <iframe
               v-else-if="pdfUrl"
