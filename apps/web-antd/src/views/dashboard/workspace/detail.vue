@@ -812,7 +812,7 @@ onUnmounted(() => {
             >
               流程
             </div>
-            <div class="relative">
+            <div class="relative" style="max-height: 100%; overflow: auto;">
               <div
                 class="absolute left-[9px] top-2 h-[calc(100%-12px)] w-0.5 bg-gray-200"
               ></div>
