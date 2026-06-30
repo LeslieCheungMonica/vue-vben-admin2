@@ -54,13 +54,16 @@ const mergedDisplayItems = computed(() => {
 
   for (const item of displayItems.value) {
     if (item.type === 'reasoning') {
+      const trimmed = item.text.trim();
+      if (!trimmed || /^<\/?thinking>\s*<\/?thinking>?\s*$/.test(trimmed)) continue;
       if (current) {
-        current.texts.push(item.text);
+        const cleaned = item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n');
+        current.texts.push(cleaned);
         current.ids.push(item.id);
       } else {
         current = {
           type: 'merged-reasoning',
-          texts: [item.text],
+          texts: [item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n')],
           ids: [item.id],
         };
         result.push(current);
