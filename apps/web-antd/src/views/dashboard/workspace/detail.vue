@@ -97,7 +97,7 @@ const rightPanelStyle = computed(() => {
   if (rightCollapsed.value) {
     return { width: '0', minWidth: '0', overflow: 'hidden', border: 'none' };
   }
-  return { width: `calc(${100 - leftWidth.value}%)` };
+  return { width: `calc(${100 - leftWidth.value}%)`, maxHeight: 'calc(100vh - 247px)' };
 });
 
 const activeStep = ref('vuln_recon');
@@ -508,6 +508,10 @@ async function loadHtml(stage: string) {
 watch(activeStep, (step) => {
   const pdfStages: Record<string, string> = {
     attack_graph: 'recon_graph',
+  };
+  const htmlStages: Record<string, string> = {
+    vuln_recon: 'pre_recon',
+    attack_surface: 'recon',
     auth: 'auth_vuln',
     auth_exploit: 'auth_vuln_exploit',
     authz: 'authz_vuln',
@@ -519,8 +523,8 @@ watch(activeStep, (step) => {
     xss: 'xss_vuln',
     xss_exploit: 'xss_vuln_exploit',
   };
-  if (step === 'vuln_recon' || step === 'attack_surface') {
-    loadHtml(step === 'vuln_recon' ? 'pre_recon' : 'recon');
+  if (htmlStages[step]) {
+    loadHtml(htmlStages[step]);
   } else {
     if (htmlUrl.value) {
       htmlUrl.value = null;
@@ -935,18 +939,18 @@ onUnmounted(() => {
             class="flex h-full flex-col"
           >
             <div
-              v-if="(activeStep === 'vuln_recon' || activeStep === 'attack_surface') ? htmlLoading : pdfLoading"
+              v-if="htmlLoading"
               class="flex flex-1 items-center justify-center text-gray-400 text-sm"
             >
               加载报告中...
             </div>
             <div
-              v-else-if="(activeStep === 'vuln_recon' || activeStep === 'attack_surface') && htmlUrl"
+              v-else-if="htmlUrl"
               class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
             >
               <div class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100">
-                <span>{{ activeStep === 'vuln_recon' ? '🔍' : '🎯' }}</span>
-                <span>{{ activeStep === 'vuln_recon' ? '漏洞侦查报告' : '攻击面测绘报告' }}</span>
+                <span>{{ activeStep === 'vuln_recon' ? '🔍' : activeStep === 'attack_surface' ? '🎯' : activeStep === 'auth' ? '🔐' : activeStep === 'auth_exploit' ? '🔐' : activeStep === 'authz' ? '🛡️' : activeStep === 'authz_exploit' ? '🛡️' : activeStep === 'injection' ? '💉' : activeStep === 'injection_exploit' ? '💉' : activeStep === 'ssrf' ? '🌐' : activeStep === 'ssrf_exploit' ? '🌐' : activeStep === 'xss' ? '📝' : '📝' }}</span>
+                <span>{{ activeStep === 'vuln_recon' ? '漏洞侦查报告' : activeStep === 'attack_surface' ? '攻击面测绘报告' : activeStep === 'auth' ? '认证漏洞扫描报告' : activeStep === 'auth_exploit' ? '认证漏洞利用报告' : activeStep === 'authz' ? '授权漏洞扫描报告' : activeStep === 'authz_exploit' ? '授权漏洞利用报告' : activeStep === 'injection' ? '注入漏洞扫描报告' : activeStep === 'injection_exploit' ? '注入漏洞利用报告' : activeStep === 'ssrf' ? 'SSRF漏洞扫描报告' : activeStep === 'ssrf_exploit' ? 'SSRF漏洞利用报告' : activeStep === 'xss' ? 'XSS漏洞扫描报告' : 'XSS漏洞利用报告' }}</span>
               </div>
               <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
                 <div class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0" style="display:flex;flex-direction:column">
@@ -1529,7 +1533,7 @@ onUnmounted(() => {
         <div
           ref="eventStreamContainer"
           class="flex-1 overflow-y-auto p-4"
-          style="min-height: 400px; max-height: 540px"
+          style="min-height: 400px; max-height: 100%"
         >
           <template v-if="mergedDisplayItems.length === 0">
             <div class="pt-16 text-center text-gray-400">
