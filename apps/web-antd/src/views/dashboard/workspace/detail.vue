@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Descriptions, Modal, Tag } from 'ant-design-vue';
+import { Descriptions, Tag } from 'ant-design-vue';
 
 import {
   getTaskListApi,
@@ -674,38 +674,36 @@ function backToBizModuleList() {
   bizVulnExploitList.value = [];
 }
 
-const bizExploitPdfUrl = ref<string | null>(null);
-const bizExploitPdfLoading = ref(false);
+const bizExploitHtmlUrl = ref<string | null>(null);
+const bizExploitHtmlLoading = ref(false);
 const selectedBizExploitName = ref<string | null>(null);
 const showBizExploitModuleList = ref(true);
 
-async function loadBizExploitPdf(bizName: string) {
+async function loadBizExploitHtml(bizName: string) {
   const taskId = route.params.taskId as string;
   if (!taskId) return;
-  bizExploitPdfLoading.value = true;
+  bizExploitHtmlLoading.value = true;
   selectedBizExploitName.value = bizName;
   showBizExploitModuleList.value = false;
-  bizExploitPdfUrl.value = null;
+  bizExploitHtmlUrl.value = null;
   try {
-    const url = `/api/wape/biz_exploit_report_pdf/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
+    const url = `/api/wape/biz_exploit_report_html/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error('PDF not found');
-    const blob = await resp.blob();
-    bizExploitPdfUrl.value = URL.createObjectURL(blob);
+    if (!resp.ok) throw new Error('HTML not found');
+    let text = await resp.text();
+    text = text.replace('<head>', '<head><style>body{font-size:10px!important;line-height:1.5!important;}</style>');
+    bizExploitHtmlUrl.value = text;
   } catch {
-    bizExploitPdfUrl.value = null;
+    bizExploitHtmlUrl.value = null;
   } finally {
-    bizExploitPdfLoading.value = false;
+    bizExploitHtmlLoading.value = false;
   }
 }
 
 function backBizExploitToModuleList() {
   showBizExploitModuleList.value = true;
   selectedBizExploitName.value = null;
-  if (bizExploitPdfUrl.value) {
-    URL.revokeObjectURL(bizExploitPdfUrl.value);
-    bizExploitPdfUrl.value = null;
-  }
+  bizExploitHtmlUrl.value = null;
 }
 
 const bizData = ref<any[]>([]);
@@ -785,44 +783,42 @@ watch(activeStep, (step) => {
   }
 });
 
-const reportModalVisible = ref(false);
-const reportModalPdfUrl = ref<string | null>(null);
-const reportModalLoading = ref(false);
+const bizReportHtmlUrl = ref<string | null>(null);
+const bizReportHtmlLoading = ref(false);
+const selectedBizReportName = ref<string | null>(null);
+const showBizReportModuleList = ref(true);
 
-async function openReportPdf(bizName: string) {
+async function loadBizReportHtml(bizName: string) {
   const taskId = route.params.taskId as string;
   if (!taskId) return;
-  reportModalLoading.value = true;
-  reportModalVisible.value = true;
-  reportModalPdfUrl.value = null;
+  bizReportHtmlLoading.value = true;
+  selectedBizReportName.value = bizName;
+  showBizReportModuleList.value = false;
+  bizReportHtmlUrl.value = null;
   try {
-    const url = `/api/wape/biz_report_pdf/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
+    const url = `/api/wape/biz_report_html/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error('PDF not found');
-    const blob = await resp.blob();
-    reportModalPdfUrl.value = URL.createObjectURL(blob);
+    if (!resp.ok) throw new Error('HTML not found');
+    let text = await resp.text();
+    text = text.replace('<head>', '<head><style>body{font-size:10px!important;line-height:1.5!important;}</style>');
+    bizReportHtmlUrl.value = text;
   } catch {
-    reportModalPdfUrl.value = null;
+    bizReportHtmlUrl.value = null;
   } finally {
-    reportModalLoading.value = false;
+    bizReportHtmlLoading.value = false;
   }
 }
 
-function closeReportPdf() {
-  reportModalVisible.value = false;
-  if (reportModalPdfUrl.value) {
-    URL.revokeObjectURL(reportModalPdfUrl.value);
-    reportModalPdfUrl.value = null;
-  }
+function backBizReportToModuleList() {
+  showBizReportModuleList.value = true;
+  selectedBizReportName.value = null;
+  bizReportHtmlUrl.value = null;
 }
 
 onUnmounted(() => {
   disconnectEventStream();
   if (pdfUrl.value) {
     URL.revokeObjectURL(pdfUrl.value);
-  }
-  if (reportModalPdfUrl.value) {
-    URL.revokeObjectURL(reportModalPdfUrl.value);
   }
 });
 </script>
@@ -990,7 +986,7 @@ onUnmounted(() => {
           </div>
 
           <div
-            v-else-if="activeStep === 'biz_surface' || activeStep === 'biz'"
+            v-else-if="activeStep === 'biz_surface'"
             class="flex h-full w-full flex-1 flex-col overflow-y-auto p-4"
           >
             <div
@@ -1044,7 +1040,6 @@ onUnmounted(() => {
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
                           : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
                       "
-                      @click="openReportPdf(item.module_name)"
                     >
                       <div class="font-medium">{{ item.module_name }}</div>
                       <div
@@ -1057,6 +1052,121 @@ onUnmounted(() => {
                   </div>
                 </div>
               </template>
+            </div>
+          </div>
+
+          <div
+            v-else-if="activeStep === 'biz'"
+            class="flex h-full w-full flex-1 flex-col overflow-hidden"
+          >
+            <div v-if="showBizReportModuleList" class="flex h-full flex-col overflow-y-auto p-4">
+              <div class="mb-3 text-sm font-medium text-gray-700">
+                选择业务模块查看漏洞报告
+              </div>
+              <div v-if="bizDataLoading" class="flex items-center justify-center py-8 text-sm text-gray-400">
+                加载业务数据中...
+              </div>
+              <div v-else-if="bizData.length === 0" class="flex items-center justify-center py-8 text-sm text-gray-400">
+                暂无业务数据
+              </div>
+              <div v-else class="space-y-4">
+                <template v-for="(group, gIdx) in bizData" :key="gIdx">
+                  <div
+                    v-for="(modules, category) in group"
+                    :key="category"
+                    class="rounded border border-gray-200 bg-white shadow-sm"
+                  >
+                    <div
+                      class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
+                      @click="toggleBizCollapse(gIdx + '-' + category)"
+                    >
+                      <div class="text-sm font-medium text-gray-700 capitalize">
+                        {{ String(category).replace(/_/g, ' ') }}
+                        <span class="ml-2 text-xs font-normal text-gray-400"
+                          >({{ modules.length }})</span
+                        >
+                      </div>
+                      <span
+                        class="text-xs text-gray-400 transition-transform duration-200"
+                        :class="{
+                          'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
+                        }"
+                      >
+                        ▸
+                      </span>
+                    </div>
+                    <div
+                      v-if="!bizCollapsed.has(gIdx + '-' + category)"
+                      class="space-y-2 border-t border-gray-100 px-4 py-3"
+                    >
+                      <div
+                        v-for="(item, idx) in modules"
+                        :key="idx"
+                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                        :class="
+                          bizVulnResSet.has(item.module_name)
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                        "
+                        @click="loadBizReportHtml(item.module_name)"
+                      >
+                        <div class="font-medium">{{ item.module_name }}</div>
+                        <div
+                          v-if="item.module_path"
+                          class="mt-1 font-mono text-gray-400"
+                        >
+                          {{ item.module_path }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div v-else class="flex h-full flex-col">
+              <div class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2">
+                <button
+                  class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                  @click="backBizReportToModuleList"
+                >
+                  ← 返回模块列表
+                </button>
+                <span class="text-xs font-medium text-gray-600">
+                  {{ selectedBizReportName }} - 漏洞报告
+                </span>
+              </div>
+              <div
+                v-if="bizReportHtmlLoading"
+                class="flex flex-1 items-center justify-center text-sm text-gray-400"
+              >
+                加载报告中...
+              </div>
+              <div
+                v-else-if="bizReportHtmlUrl"
+                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
+              >
+                <div class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100">
+                  <span>⚙️</span>
+                  <span>{{ selectedBizReportName }} - 漏洞报告</span>
+                </div>
+                <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
+                  <div class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0" style="display:flex;flex-direction:column">
+                    <div style="flex:1;min-height:400px;position:relative">
+                      <iframe
+                        :srcdoc="bizReportHtmlUrl"
+                        class="border-0"
+                        style="position:absolute;inset:0;width:100%;height:100%"
+                      ></iframe>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                v-else
+                class="flex flex-1 items-center justify-center text-sm text-gray-400"
+              >
+                暂无报告
+              </div>
             </div>
           </div>
 
@@ -1439,7 +1549,7 @@ onUnmounted(() => {
                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                             : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
                         "
-                        @click="loadBizExploitPdf(item.module_name)"
+                        @click="loadBizExploitHtml(item.module_name)"
                       >
                         <div class="font-medium">{{ item.module_name }}</div>
                         <div
@@ -1467,17 +1577,31 @@ onUnmounted(() => {
                 </span>
               </div>
               <div
-                v-if="bizExploitPdfLoading"
+                v-if="bizExploitHtmlLoading"
                 class="flex flex-1 items-center justify-center text-sm text-gray-400"
               >
                 加载报告中...
               </div>
-              <iframe
-                v-else-if="bizExploitPdfUrl"
-                :src="bizExploitPdfUrl"
-                class="h-full w-full rounded border-0"
-                style="min-height: 500px"
-              ></iframe>
+              <div
+                v-else-if="bizExploitHtmlUrl"
+                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
+              >
+                <div class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100">
+                  <span>⚡</span>
+                  <span>{{ selectedBizExploitName }} - 漏洞利用报告</span>
+                </div>
+                <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
+                  <div class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0" style="display:flex;flex-direction:column">
+                    <div style="flex:1;min-height:400px;position:relative">
+                      <iframe
+                        :srcdoc="bizExploitHtmlUrl"
+                        class="border-0"
+                        style="position:absolute;inset:0;width:100%;height:100%"
+                      ></iframe>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div
                 v-else
                 class="flex flex-1 items-center justify-center text-sm text-gray-400"
@@ -1666,33 +1790,6 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-
-    <Modal
-      :open="reportModalVisible"
-      title="业务报告"
-      width="80%"
-      :footer="null"
-      @cancel="closeReportPdf"
-    >
-      <div
-        v-if="reportModalLoading"
-        class="flex items-center justify-center py-20 text-gray-400 text-sm"
-      >
-        加载报告中...
-      </div>
-      <iframe
-        v-else-if="reportModalPdfUrl"
-        :src="reportModalPdfUrl"
-        class="h-full w-full rounded border-0"
-        style="min-height: 600px"
-      ></iframe>
-      <div
-        v-else
-        class="flex items-center justify-center py-20 text-gray-400 text-sm"
-      >
-        暂无报告
-      </div>
-    </Modal>
   </Page>
   <Page v-else-if="!loading" description="未找到任务" title="任务详情">
     <div class="pt-20 text-center text-gray-400">未找到对应任务信息</div>
