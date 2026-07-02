@@ -489,6 +489,33 @@ async function loadPdf(stage: string) {
   }
 }
 
+async function replaceImagesWithBase64(html: string, taskId: string): Promise<string> {
+  const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+  const matches = [...html.matchAll(imgRegex)];
+  if (!matches.length) return html;
+  const replacements = await Promise.all(matches.map(async ([, src]) => {
+    try {
+      const resp = await fetch('/api/wape/image_to_base64', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relative_path: src, task_id: taskId }),
+      });
+      if (!resp.ok) return { src, base64: src };
+      const data = await resp.json();
+      const ext = src.toLowerCase().split('.').pop();
+      const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'gif' ? 'image/gif' : 'image/svg+xml';
+      return { src, base64: data.base64 ? `data:${mime};base64,${data.base64}` : src };
+    } catch {
+      return { src, base64: src };
+    }
+  }));
+  let result = html;
+  for (const { src, base64 } of replacements) {
+    result = result.replaceAll(src, base64);
+  }
+  return result;
+}
+
 async function loadHtml(stage: string) {
   const taskId = route.params.taskId as string;
   if (!taskId) return;
@@ -499,6 +526,7 @@ async function loadHtml(stage: string) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
+    text = await replaceImagesWithBase64(text, taskId);
     text = text.replace('<head>', '<head><style>body{font-size:10px!important;line-height:1.5!important;}</style>');
     htmlUrl.value = text;
   } catch {
@@ -691,6 +719,7 @@ async function loadBizExploitHtml(bizName: string) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
+    text = await replaceImagesWithBase64(text, taskId);
     text = text.replace('<head>', '<head><style>body{font-size:10px!important;line-height:1.5!important;}</style>');
     bizExploitHtmlUrl.value = text;
   } catch {
@@ -800,6 +829,7 @@ async function loadBizReportHtml(bizName: string) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
+    text = await replaceImagesWithBase64(text, taskId);
     text = text.replace('<head>', '<head><style>body{font-size:10px!important;line-height:1.5!important;}</style>');
     bizReportHtmlUrl.value = text;
   } catch {
