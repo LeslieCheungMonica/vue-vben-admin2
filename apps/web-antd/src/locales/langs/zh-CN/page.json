@@ -8,9 +8,10 @@
     "profile": "个人中心"
   },
   "dashboard": {
-    "title": "AI漏扫 工作台",
+    "title": "AI漏扫渗透智能体",
     "analytics": "资源管理",
-    "workspace": "任务管理"
+    "workspace": "任务管理",
+    "agentResource": "智能体资源管理"
   },
   "cosmic": {
     "title": "Cosmic 工作台",
