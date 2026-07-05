@@ -259,6 +259,13 @@ async function handleUpdate() {
   }
 }
 
+function handleDownload(record: TaskApi.TaskItem) {
+  const a = document.createElement('a');
+  a.href = `/api/wape/download_report_zip/${record.task_id}`;
+  a.download = `${record.task_id}_report.zip`;
+  a.click();
+}
+
 function handleDelete(record: TaskApi.TaskItem) {
   modalApi.confirm({
     content: `确定删除任务 [${record.task_name}] 吗？`,
@@ -412,6 +419,7 @@ onMounted(() => {
               >
               <Button size="small" @click="router.push(`/dashboard/task/biz-data/${record.task_id}`)">业务范围</Button>
               <Button size="small" @click="showDetail(record)">详情</Button>
+              <Button size="small" @click="handleDownload(record)">下载</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
               <Button danger size="small" @click="handleDelete(record)"
                 >删除</Button
