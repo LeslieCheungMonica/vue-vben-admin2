@@ -933,19 +933,18 @@ curl -X POST http://127.0.0.1:7654/cosmic/task_create \
 
 **POST** `/wape/task_session_messages`
 
-查询指定任务的所有 AI 会话消息记录，支持分页。根据 `task_id` 从 `session_snapshot` 表获取会话列表，再从 OpenCode 数据库读取每个会话的消息。
+查询指定任务的所有 AI 会话消息记录，支持分页。返回所有会话，但每个会话的消息按 `page`/`page_size` 分页。
 
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | task_id | string | 是 | — | 任务 ID |
-| page | int | 否 | 1 | 页码 |
-| page_size | int | 否 | 20 | 每页会话数（最大 100） |
-| max_messages_per_session | int | 否 | 50 | 每个会话最多返回消息数（最大 200） |
+| page | int | 否 | 1 | 消息页码（控制每个会话返回的消息偏移） |
+| page_size | int | 否 | 20 | 每页消息数（最大 200） |
 
 ```bash
 curl -X POST http://127.0.0.1:7654/wape/task_session_messages \
   -H "Content-Type: application/json" \
-  -d '{"task_id": "wape-20250516010101", "page": 1, "page_size": 20, "max_messages_per_session": 50}'
+  -d '{"task_id": "wape-20250516010101", "page": 1, "page_size": 20}'
 ```
 
 ```json
@@ -964,10 +963,11 @@ curl -X POST http://127.0.0.1:7654/wape/task_session_messages \
       ]
     }
   ],
-  "total": 15,
+  "total": 150,
   "page": 1,
   "page_size": 20,
-  "total_pages": 1,
-  "message": "查询到 15 个会话，当前第 1/1 页"
+  "total_pages": 8,
+  "message": "共 150 条消息，当前第 1/8 页"
 }
 ```
+git log
