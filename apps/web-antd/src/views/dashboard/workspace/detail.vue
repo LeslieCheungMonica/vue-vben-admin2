@@ -509,6 +509,7 @@ watch(activeStep, (step) => {
     vuln_recon: 'pre_recon',
     attack_surface: 'recon',
     attack_graph: 'recon_graph',
+    biz_surface: 'biz_recon',
   };
   if (htmlStages[step]) {
     loadHtml(htmlStages[step]);
@@ -651,9 +652,6 @@ async function loadBizVulnList() {
 }
 
 watch(activeStep, (step) => {
-  if (step === 'biz_surface') {
-    loadBizData();
-  }
   if (step === 'biz' || step === 'biz_vuln_list' || step === 'biz_exploit') {
     loadBizScopeSelectData();
   }
@@ -815,7 +813,8 @@ onUnmounted(() => {
             v-if="
               activeStep === 'vuln_recon' ||
               activeStep === 'attack_surface' ||
-              activeStep === 'attack_graph'
+              activeStep === 'attack_graph' ||
+              activeStep === 'biz_surface'
             "
             class="flex h-full flex-col"
           >
@@ -837,14 +836,18 @@ onUnmounted(() => {
                     ? '🔍'
                     : activeStep === 'attack_surface'
                       ? '🎯'
-                      : '🗺️'
+                      : activeStep === 'attack_graph'
+                        ? '🗺️'
+                        : '🏗️'
                 }}</span>
                 <span>{{
                   activeStep === 'vuln_recon'
                     ? '漏洞侦查报告'
                     : activeStep === 'attack_surface'
                       ? '攻击面测绘报告'
-                      : '攻击图谱报告'
+                      : activeStep === 'attack_graph'
+                        ? '攻击图谱报告'
+                        : '业务面测绘报告'
                 }}</span>
               </div>
               <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
@@ -886,76 +889,6 @@ onUnmounted(() => {
                   {{ getStepDesc(activeStep) }}
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div
-            v-else-if="activeStep === 'biz_surface'"
-            class="flex h-full w-full flex-1 flex-col overflow-y-auto p-4"
-          >
-            <div
-              v-if="bizDataLoading"
-              class="flex flex-1 items-center justify-center text-gray-400 text-sm"
-            >
-              加载业务数据中...
-            </div>
-            <div
-              v-else-if="bizData.length === 0"
-              class="flex flex-1 items-center justify-center text-gray-400 text-sm"
-            >
-              暂无业务数据
-            </div>
-            <div v-else class="space-y-4">
-              <template v-for="(group, gIdx) in bizData" :key="gIdx">
-                <div
-                  v-for="(modules, category) in group"
-                  :key="category"
-                  class="rounded border border-gray-200 bg-white shadow-sm"
-                >
-                  <div
-                    class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
-                    @click="toggleBizCollapse(gIdx + '-' + category)"
-                  >
-                    <div class="text-sm font-medium text-gray-700 capitalize">
-                      {{ String(category).replace(/_/g, ' ') }}
-                      <span class="ml-2 text-xs font-normal text-gray-400"
-                        >({{ modules.length }})</span
-                      >
-                    </div>
-                    <span
-                      class="text-xs text-gray-400 transition-transform duration-200"
-                      :class="{
-                        'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
-                      }"
-                    >
-                      ▸
-                    </span>
-                  </div>
-                  <div
-                    v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                    class="space-y-2 border-t border-gray-100 px-4 py-3"
-                  >
-                    <div
-                      v-for="(item, idx) in modules"
-                      :key="idx"
-                      class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
-                      :class="
-                        bizVulnResSet.has(item.module_name)
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
-                      "
-                    >
-                      <div class="font-medium">{{ item.module_name }}</div>
-                      <div
-                        v-if="item.module_path"
-                        class="mt-1 font-mono text-gray-400"
-                      >
-                        {{ item.module_path }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </template>
             </div>
           </div>
 
