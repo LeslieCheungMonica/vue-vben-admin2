@@ -82,16 +82,16 @@ function onExpand(expanded: boolean, record: any) {
     codeConfig.value.languages = record.code_language ? record.code_language.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
     knowledgeConfig.value.source = record.kb_source === '自定义上传' ? 'custom_upload' : 'doc_lib';
     knowledgeConfig.value.url = record.kb_url || '';
-    try {
-      knowledgeConfig.value.documents = record.doc_list ? JSON.parse(record.doc_list) : [];
-    } catch { knowledgeConfig.value.documents = []; }
-    try {
-      bizConfig.value.coreModules = record.core_biz_modules ? JSON.parse(record.core_biz_modules) : [];
-    } catch { bizConfig.value.coreModules = []; }
-    try {
-      const tables = record.core_data_tables ? JSON.parse(record.core_data_tables) : [];
-      bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.cn || t.cnName }));
-    } catch { bizConfig.value.coreTables = []; }
+    function parseJsonField(raw: any): any[] {
+      if (!raw) return [];
+      try { return JSON.parse(JSON.parse(raw)); } catch {}
+      try { return JSON.parse(raw.replace(/\\"/g, '"')); } catch {}
+      return [];
+    }
+    knowledgeConfig.value.documents = parseJsonField(record.doc_list);
+    bizConfig.value.coreModules = parseJsonField(record.core_biz_modules);
+    const tables = parseJsonField(record.core_data_tables);
+    bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.cn || t.cnName }));
   }
 }
 
@@ -333,7 +333,7 @@ onMounted(() => {
                     <div v-for="(doc, idx) in knowledgeConfig.documents" :key="idx" class="flex items-center gap-2 border-b px-3 py-2 text-xs last:border-b-0">
                       <span class="flex-1 text-gray-700">{{ doc.name }}</span>
                       <span class="w-20 text-center">
-                        <Tag :color="doc.synced ? 'green' : 'orange'">{{ doc.synced ? '已同步' : '未同步' }}</Tag>
+                        <Tag :color="doc.synced === true ? 'green' : doc.synced === 'handle' ? 'processing' : 'orange'">{{ doc.synced === true ? '已同步' : doc.synced === 'handle' ? '同步中' : '未同步' }}</Tag>
                       </span>
                     </div>
                   </div>
