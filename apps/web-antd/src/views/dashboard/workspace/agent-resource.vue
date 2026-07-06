@@ -78,7 +78,7 @@ function onExpand(expanded: boolean, record: any) {
     agentForm.value.target = record.target_system || '';
     agentForm.value.description = record.task_description || '';
     codeConfig.value.version = record.version || '';
-    codeConfig.value.path = record.code_path || '';
+    codeConfig.value.path = record.extracted_path || '';
     codeConfig.value.languages = record.code_language ? record.code_language.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
     knowledgeConfig.value.source = record.kb_source === '自定义上传' ? 'custom_upload' : 'doc_lib';
     knowledgeConfig.value.url = record.kb_url || '';
