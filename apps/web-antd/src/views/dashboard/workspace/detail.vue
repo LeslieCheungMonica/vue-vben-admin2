@@ -504,11 +504,11 @@ async function loadHtml(stage: string) {
 
 watch(activeStep, (step) => {
   const pdfStages: Record<string, string> = {
-    attack_graph: 'recon_graph',
   };
   const htmlStages: Record<string, string> = {
     vuln_recon: 'pre_recon',
     attack_surface: 'recon',
+    attack_graph: 'recon_graph',
   };
   if (htmlStages[step]) {
     loadHtml(htmlStages[step]);
