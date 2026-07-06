@@ -66,7 +66,7 @@ curl -X POST http://127.0.0.1:7654/wape/resource_delete \
 
 **POST** `/wape/resource_list`
 
-查询已上传的资源列表，可选按 `code` 和 `version` 过滤。
+查询已上传的资源列表，可选按 `code` 和 `version` 过滤。自动关联 `wape_resource_keji` 表返回科技资源扩展字段。
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
@@ -88,10 +88,76 @@ curl -X POST http://127.0.0.1:7654/wape/resource_list \
       "code": "myapp",
       "version": "v1.0",
       "description": "电商平台核心模块",
-      "extracted_path": "/tmp/resource_uploads/myapp/v1.0/myapp"
+      "extracted_path": "/tmp/resource_uploads/myapp/v1.0/myapp",
+      "agent_name": "电商安全扫描",
+      "agent_type": "漏洞扫描与渗透攻击测试",
+      "target_system": "电商平台",
+      "task_description": "对电商平台核心模块进行安全审计",
+      "code_path": "/data/projects/myapp",
+      "code_language": "Java,JavaScript",
+      "kb_source": "文档库",
+      "kb_url": "https://wiki.example.com/security",
+      "doc_list": "[{\"name\":\"接口文档.docx\",\"synced\":true}]",
+      "biz_arch_graph": "",
+      "core_biz_modules": "[\"用户管理\",\"订单管理\",\"支付系统\"]",
+      "core_data_tables": "[{\"en\":\"sys_user\",\"cn\":\"用户表\"},{\"en\":\"sys_order\",\"cn\":\"订单表\"}]",
+      "git_repo": "https://github.com/example/myapp.git",
+      "git_branch": "main",
+      "git_username": "",
+      "git_password": ""
     }
   ],
   "message": ""
+}
+```
+
+---
+
+## 3b. 科技资源更新
+
+**POST** `/wape/resource_update_keji`
+
+更新或新增科技资源信息。按 `id` 查询，存在则更新（仅传需要修改的字段），不存在则新增。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | int | 是 | 资源 ID |
+| agent_name | string | 否 | 智能体名称 |
+| agent_type | string | 否 | 智能体类型：`漏洞扫描` 或 `漏洞扫描与渗透攻击测试` |
+| target_system | string | 否 | 目标系统 |
+| task_description | string | 否 | 任务描述 |
+| version | string | 否 | 版本号 |
+| code_path | string | 否 | 代码路径 |
+| code_language | string | 否 | 代码语言，多选用逗号分隔 |
+| kb_source | string | 否 | 知识库来源：`文档库` 或 `自定义上传` |
+| kb_url | string | 否 | 知识库地址 |
+| doc_list | string | 否 | 文档列表，JSON 格式 |
+| biz_arch_graph | string | 否 | 业务架构图 |
+| core_biz_modules | string | 否 | 核心业务模块，JSON 数组格式 |
+| core_data_tables | string | 否 | 核心数据表，JSON 格式 |
+| git_repo | string | 否 | 仓库地址（Git 地址） |
+| git_branch | string | 否 | Git 分支 |
+| git_username | string | 否 | Git 用户名 |
+| git_password | string | 否 | Git 密码 |
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/resource_update_keji \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 1,
+    "agent_name": "更新后的智能体名称",
+    "agent_type": "漏洞扫描",
+    "version": "v2.0",
+    "code_language": "Java,Python",
+    "git_repo": "https://github.com/example/myapp.git",
+    "git_branch": "main"
+  }'
+```
+
+```json
+{
+  "status": "completed",
+  "message": "资源已更新: id=1"
 }
 ```
 
@@ -396,7 +462,25 @@ open http://127.0.0.1:7654/wape/report_html/wape-20250516010101/recon
 
 ---
 
-## 13. 健康检查
+## 13. 下载报告压缩包
+
+**GET** `/wape/download_report_zip/{task_id}`
+
+打包下载 deliverables 目录下所有 HTML 文件（保留目录结构，仅包含 .md 开头的目录）。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| task_id | path | 是 | 任务 ID |
+
+```bash
+curl -o wape-20250516010101_report.zip http://127.0.0.1:7654/wape/download_report_zip/wape-20250516010101
+```
+
+返回 ZIP 文件，包含所有 HTML 报告文件，保持原有目录结构。
+
+---
+
+## 14. 健康检查
 
 **GET** `/wape/health`
 
@@ -768,5 +852,122 @@ curl -X POST http://127.0.0.1:7654/wape/common_vuln_list \
     }
   ],
   "message": "查询到 1 条 auth 漏洞"
+}
+```
+
+---
+
+## 23. 图片转 Base64
+
+**POST** `/wape/image_to_base64`
+
+将图片文件转换为 Base64 编码。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| relative_path | string | 是 | 图片相对路径 |
+| task_id | string | 是 | 任务 ID |
+
+文件路径：`{WAPE_ROOT_PATH}/code-review-agent/work/{task_id}/{relative_path}`
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/image_to_base64 \
+  -H "Content-Type: application/json" \
+  -d '{"relative_path": "deliverables/report.png", "task_id": "wape-20250516010101"}'
+```
+
+```json
+{
+  "status": "completed",
+  "base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "message": "转换成功: /path/to/work/wape-20250516010101/deliverables/report.png"
+}
+```
+
+---
+
+## 24. COSMIC 任务创建
+
+**POST** `/cosmic/task_create`
+
+创建 COSMIC 功能存在性判定任务。
+
+| 参数 | 类型 | 必填 | 说明 |
+|:-----|:-----|:-----|:-----|
+| `code_resource_id` | int | 是 | 待分析的代码资源 ID（关联 wape_resource 表） |
+| `cosmic_resource_id` | int | 是 | COSMIC Excel 资源 ID（关联 cosmic_resource 表） |
+| `task_name` | string | 是 | 任务名称 |
+| `sheet_spec` | string | 否 | 指定 Sheet，支持数字索引（如 `"0"`）或 Sheet 名称（如 `"功能点拆分表"`），默认自动匹配 |
+| `col_one` | int | 否 | 一级模块列号（0-based），默认 `2`（C 列） |
+| `col_two` | int | 否 | 二级模块列号（0-based），默认 `3`（D 列） |
+| `col_three` | int | 否 | 三级模块列号（0-based），默认 `4`（E 列） |
+| `col_moudle` | int | 否 | 功能过程列号（0-based），默认 `8`（I 列） |
+
+```bash
+curl -X POST http://127.0.0.1:7654/cosmic/task_create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code_resource_id": 1,
+    "cosmic_resource_id": 2,
+    "task_name": "SDC COSMIC 评估",
+    "sheet_spec": "功能点拆分表",
+    "col_one": 2,
+    "col_two": 3,
+    "col_three": 4,
+    "col_moudle": 8
+  }'
+```
+
+```json
+{
+  "status": "completed",
+  "task_id": "cosmic-20260524120000",
+  "task_name": "SDC COSMIC 评估",
+  "message": "任务创建成功"
+}
+```
+
+---
+
+## 25. 任务会话消息查询（分页）
+
+**POST** `/wape/task_session_messages`
+
+查询指定任务的所有 AI 会话消息记录，支持分页。根据 `task_id` 从 `session_snapshot` 表获取会话列表，再从 OpenCode 数据库读取每个会话的消息。
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| task_id | string | 是 | — | 任务 ID |
+| page | int | 否 | 1 | 页码 |
+| page_size | int | 否 | 20 | 每页会话数（最大 100） |
+| max_messages_per_session | int | 否 | 50 | 每个会话最多返回消息数（最大 200） |
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/task_session_messages \
+  -H "Content-Type: application/json" \
+  -d '{"task_id": "wape-20250516010101", "page": 1, "page_size": 20, "max_messages_per_session": 50}'
+```
+
+```json
+{
+  "status": "completed",
+  "items": [
+    {
+      "session_id": "abc123",
+      "stage": "pre_recon",
+      "create_time": "2025-05-16 01:01:01",
+      "messages": [
+        {
+          "data": { "parts": [{"type": "text", "text": "..."}] },
+          "time_created": 1747357261
+        }
+      ]
+    }
+  ],
+  "total": 15,
+  "page": 1,
+  "page_size": 20,
+  "total_pages": 1,
+  "message": "查询到 15 个会话，当前第 1/1 页"
 }
 ```

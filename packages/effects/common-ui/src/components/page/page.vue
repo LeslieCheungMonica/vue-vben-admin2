@@ -50,7 +50,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative flex min-h-full flex-col">
+  <div class="relative flex min-h-full flex-col h-full">
     <div
       v-if="
         description ||
