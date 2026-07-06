@@ -805,10 +805,12 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div>
   <Page
     v-if="task"
     description="任务详情与实时思考流程"
     :title="task.task_name"
+    class="h-full"
   >
     <div
       ref="splitContainer"
@@ -1707,6 +1709,7 @@ onUnmounted(() => {
       </div>
     </div>
   </Modal>
+  </div>
 </template>
 
 <style scoped>
