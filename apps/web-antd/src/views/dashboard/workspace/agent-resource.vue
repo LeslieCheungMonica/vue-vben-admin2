@@ -117,7 +117,7 @@ async function fetchResources() {
   loading.value = true;
   try {
     const res = await getResourceListApi();
-    resources.value = res.items ?? [];
+    resources.value = (res.items ?? []).filter((item: ResourceApi.ResourceItem) => item.agent_name);
   } catch {
     message.error('获取资源列表失败');
   } finally {

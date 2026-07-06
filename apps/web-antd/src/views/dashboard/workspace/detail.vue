@@ -99,7 +99,7 @@ const leftPanelStyle = computed(() => {
   if (rightCollapsed.value) {
     return { width: '100%', maxHeight: 'calc(100vh - 246px)' };
   }
-  return { width: `${leftWidth.value}%`, maxHeight: 'calc(100vh - 246px)' };
+  return { width: `${leftWidth.value}%`, maxHeight: 'calc(100vh - 246px)', minHeight: '100%' };
 });
 
 const rightPanelStyle = computed(() => {
@@ -722,7 +722,7 @@ onUnmounted(() => {
     <div
       ref="splitContainer"
       class="flex gap-0 select-none"
-      style="min-height: 500px"
+      style="min-height: 500px; height: 100%"
     >
       <div
         class="flex flex-col overflow-hidden rounded border p-4"
