@@ -639,7 +639,8 @@ const filteredHistorySessions = computed(() => {
   if (historyFilter.value === 'all') return historySessions.value;
   return historySessions.value.filter((msg: any) => {
     const type = msg.data?.type;
-    if (historyFilter.value === 'step') return type === 'step-start' || type === 'step-finish' || type === 'todowrite' || type === 'task';
+    if (historyFilter.value === 'step') return type === 'tool' && (msg.data?.tool === 'todowrite' || msg.data?.tool === 'task');
+    if (historyFilter.value === 'tool') return type === 'tool' && msg.data?.tool !== 'todowrite' && msg.data?.tool !== 'task';
     return type === historyFilter.value;
   });
 });
@@ -673,11 +674,13 @@ function formatTime(ts: number) {
 
 function getMsgType(msg: any) {
   if (msg.data?.type === 'text') return '💬 文本';
-  if (msg.data?.type === 'tool') return `🔧 ${msg.data.tool || '工具调用'}`;
+  if (msg.data?.type === 'tool') {
+    if (msg.data?.tool === 'todowrite') return '📝 任务列表';
+    if (msg.data?.tool === 'task') return '📋 执行任务';
+    return `🔧 ${msg.data.tool || '工具调用'}`;
+  }
   if (msg.data?.type === 'step-start') return '▶️ 步骤开始';
   if (msg.data?.type === 'step-finish') return '⏹️ 步骤结束';
-  if (msg.data?.type === 'todowrite') return '📝 任务列表';
-  if (msg.data?.type === 'task') return '📋 执行任务';
   return msg.data?.type || msg.role || '消息';
 }
 
@@ -689,10 +692,8 @@ function getMsgContent(msg: any) {
     text = msg.data.state?.input ? JSON.stringify(msg.data.state.input, null, 2) : '';
   } else if (msg.data?.type === 'step-finish') {
     text = msg.data.reason || '';
-  } else if (msg.data?.type === 'todowrite') {
-    text = msg.data.text || msg.data.content || '';
-  } else if (msg.data?.type === 'task') {
-    text = msg.data.text || msg.data.content || '';
+  } else if (msg.data?.type === 'tool' && (msg.data?.tool === 'todowrite' || msg.data?.tool === 'task')) {
+    text = msg.data.state?.input ? JSON.stringify(msg.data.state.input, null, 2) : '';
   }
   if (/角色：你是一位/.test(text) || /\(可读写\) - 截图、脚本、临时工作等/.test(text) || /文件系统：\n- \. \(只读\)/.test(text) || /侦察报告 → 架构图/.test(text) || /提示词快照：业务域侦察/.test(text) || /提示词快照：认证漏洞分析/.test(text)) return '';
   text = text.replace(/<\/?conclusion_trigger>[\s\S]*?$/i, '');
