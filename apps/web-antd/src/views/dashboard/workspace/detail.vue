@@ -4,8 +4,10 @@ import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Descriptions, Tag } from 'ant-design-vue';
+import { Descriptions, Modal, Tag } from 'ant-design-vue';
 
+import { baseRequestClient } from '#/api/request';
+import ExpandableMsg from './components/expandable-msg.vue';
 import {
   getTaskListApi,
   getBizDataApi,
@@ -618,6 +620,75 @@ function backBizExploitToModuleList() {
 const bizData = ref<any[]>([]);
 const bizDataLoading = ref(false);
 const bizCollapsed = ref(new Set<string>());
+
+const historyModalVisible = ref(false);
+const historyLoading = ref(false);
+const historySessions = ref<any[]>([]);
+const historyPage = ref(1);
+const historyTotal = ref(0);
+
+async function loadHistoryMessages(page = 1) {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  historyLoading.value = true;
+  historyModalVisible.value = true;
+  historyPage.value = page;
+  try {
+    const { data } = await baseRequestClient.post('/wape/task_session_messages', {
+      task_id: taskId,
+      page,
+      page_size: 200,
+    });
+    historySessions.value = data.items ?? [];
+    historyTotal.value = data.total ?? 0;
+  } catch {
+    historySessions.value = [];
+  } finally {
+    historyLoading.value = false;
+  }
+}
+
+function formatTime(ts: number) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+}
+
+function getMsgType(msg: any) {
+  if (msg.data?.type === 'text') return '💬 文本';
+  if (msg.data?.type === 'tool') return `🔧 ${msg.data.tool || '工具调用'}`;
+  if (msg.data?.type === 'step-start') return '▶️ 步骤开始';
+  if (msg.data?.type === 'step-finish') return '⏹️ 步骤结束';
+  return msg.data?.type || msg.role || '消息';
+}
+
+function getMsgContent(msg: any) {
+  let text = '';
+  if (msg.data?.type === 'text') {
+    text = msg.data.text || '';
+  } else if (msg.data?.type === 'tool') {
+    text = msg.data.state?.input ? JSON.stringify(msg.data.state.input, null, 2) : '';
+  } else if (msg.data?.type === 'step-finish') {
+    text = msg.data.reason || '';
+  }
+  if (/角色：你是一位/.test(text) || /\(可读写\) - 截图、脚本、临时工作等/.test(text) || /文件系统：\n- \. \(只读\)/.test(text) || /侦察报告 → 架构图/.test(text) || /提示词快照：业务域侦察/.test(text) || /提示词快照：认证漏洞分析/.test(text)) return '';
+  text = text.replace(/<\/?conclusion_trigger>[\s\S]*?$/i, '');
+  text = text.replace(/<\/?critical>[\s\S]*?<\/critical>/gi, '');
+  text = text.replace(/<\/?system_architecture>[\s\S]*?<\/system_architecture>/gi, '');
+  text = text.replace(/<\/?attacker_perspective>[\s\S]*?<\/attacker_perspective>/gi, '');
+  text = text.replace(/<\/?starting_context>[\s\S]*?<\/starting_context>/gi, '');
+  text = text.replace(/<\/?cli_tools>[\s\S]*?<\/cli_tools>/gi, '');
+  text = text.replace(/<\/?task_agent_strategy>[\s\S]*?<\/task_agent_strategy>/gi, '');
+  text = text.replace(/<\/?conclusion_trigger>/gi, '');
+  return text.slice(0, 2000) || '(空)';
+}
+
+function filteredMessages(messages: any[]) {
+  return messages.filter((msg: any) => {
+    const content = getMsgContent(msg);
+    return content !== '' && content !== '(空)';
+  }).slice(0, 20);
+}
 
 function toggleBizCollapse(key: string) {
   const s = new Set(bizCollapsed.value);
@@ -1445,7 +1516,7 @@ onUnmounted(() => {
       <div class="relative flex flex-col" :style="{ width: '0' }">
         <div
           class="absolute -left-3 top-8 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-xs text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:text-blue-500 hover:shadow-md"
-          :title="rightCollapsed ? '展开思考流程' : '收起思考流程'"
+          :title="rightCollapsed ? '展开推理过程' : '收起推理过程'"
           @click="toggleRight"
         >
           <span class="select-none leading-none text-[10px]">
@@ -1461,7 +1532,7 @@ onUnmounted(() => {
         <div
           class="flex items-center gap-2 border-b bg-gray-50 px-4 py-3 text-sm font-medium"
         >
-          <span>🤖 思考流程</span>
+          <span class="text-xs">🤖 推理过程</span>
           <span
             class="inline-block h-2 w-2 rounded-full"
             :style="{
@@ -1471,6 +1542,14 @@ onUnmounted(() => {
           <span class="text-xs text-gray-400">
             {{ eventStreamConnected ? '已连接' : '未连接' }}
           </span>
+          <div class="ml-auto">
+            <button
+              class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
+              @click="loadHistoryMessages(1)"
+            >
+              查看历史
+            </button>
+          </div>
         </div>
         <div
           ref="eventStreamContainer"
@@ -1480,7 +1559,7 @@ onUnmounted(() => {
           <template v-if="mergedDisplayItems.length === 0">
             <div class="pt-16 text-center text-gray-400">
               <div class="mb-2 text-3xl">⚡</div>
-              <div>
+              <div class="text-xs">
                 {{ eventStreamConnected ? '等待 AI 思考...' : '暂无连接' }}
               </div>
             </div>
@@ -1606,6 +1685,28 @@ onUnmounted(() => {
   <Page v-else-if="!loading" description="未找到任务" title="任务详情">
     <div class="pt-20 text-center text-gray-400">未找到对应任务信息</div>
   </Page>
+
+  <Modal
+    :open="historyModalVisible"
+    title="历史会话消息"
+    width="70%"
+    :footer="null"
+    @cancel="historyModalVisible = false"
+  >
+    <div v-if="historyLoading" class="flex items-center justify-center py-16 text-sm text-gray-400">加载中...</div>
+    <div v-else-if="historySessions.length === 0" class="flex items-center justify-center py-16 text-sm text-gray-400">暂无历史消息</div>
+    <div v-else class="space-y-3">
+      <div v-for="(msg, idx) in historySessions" :key="idx" class="rounded border border-gray-200 bg-white">
+        <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2 text-xs text-gray-500">
+          <span class="font-medium text-gray-700">{{ getMsgType(msg) }}</span>
+          <span>{{ formatTime(msg.time_created) }}</span>
+        </div>
+        <div class="px-3 py-2">
+          <ExpandableMsg :content="getMsgContent(msg)" />
+        </div>
+      </div>
+    </div>
+  </Modal>
 </template>
 
 <style scoped>
