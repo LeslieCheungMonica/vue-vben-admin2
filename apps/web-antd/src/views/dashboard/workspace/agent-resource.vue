@@ -97,6 +97,14 @@ function onExpand(expanded: boolean, record: any) {
 
 const languageOptions = ['Java', 'Python', 'JavaScript', 'PHP', 'Go', 'C/C++', 'Ruby', 'TypeScript'];
 
+function parseBizModules(raw: any): string {
+  if (!raw) return '';
+  try {
+    const arr = JSON.parse(raw.replace(/\\"/g, '"'));
+    return Array.isArray(arr) ? arr.join(', ') : raw;
+  } catch { return raw; }
+}
+
 async function fetchResources() {
   loading.value = true;
   try {
@@ -214,11 +222,11 @@ async function handleSave(record: ResourceApi.ResourceItem) {
 }
 
 const columns = [
-  { dataIndex: 'id', key: 'id', title: 'ID', width: 60 },
-  { dataIndex: 'code', key: 'code', title: '资源标识', width: 120 },
-  { dataIndex: 'version', key: 'version', title: '版本号', width: 100 },
-  { dataIndex: 'description', key: 'description', title: '描述', width: 200, ellipsis: true },
-  { dataIndex: 'extracted_path', key: 'extracted_path', title: '路径', width: 300, ellipsis: true },
+  { dataIndex: 'agent_name', key: 'agent_name', title: '智能体名称', width: 120, ellipsis: true },
+  { dataIndex: 'agent_type', key: 'agent_type', title: '智能体类型', width: 140, ellipsis: true },
+  { dataIndex: 'target_system', key: 'target_system', title: '代码库', width: 120, ellipsis: true },
+  { dataIndex: 'kb_url', key: 'kb_url', title: '知识库地址', width: 200, ellipsis: true },
+  { dataIndex: 'core_biz_modules', key: 'core_biz_modules', title: '核心业务功能', width: 200, ellipsis: true },
   { key: 'action', title: '操作', width: 160, fixed: 'right' as const },
 ];
 
@@ -256,8 +264,11 @@ onMounted(() => {
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'action'">
-            <Button size="small" @click.stop="handleSave(record)">保存</Button>
+            <Button type="primary" size="small" class="mr-2" @click.stop="handleSave(record)">保存</Button>
             <Button danger size="small" @click.stop="handleDelete(record)">删除</Button>
+          </template>
+          <template v-else-if="column.key === 'core_biz_modules'">
+            <span class="text-xs">{{ parseBizModules(record.core_biz_modules) }}</span>
           </template>
         </template>
         <template #expandedRowRender="{ record }">
