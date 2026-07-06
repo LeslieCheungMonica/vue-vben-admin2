@@ -532,6 +532,26 @@ watch(activeStep, (step) => {
 watch(activeStep, (step) => {
 });
 
+function openHtmlInBrowser() {
+  if (htmlUrl.value) {
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(htmlUrl.value);
+      win.document.close();
+    }
+  }
+}
+
+function openBizHtmlInBrowser() {
+  if (bizReportHtmlUrl.value) {
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(bizReportHtmlUrl.value);
+      win.document.close();
+    }
+  }
+}
+
 const bizVulnExploitList = ref<BizVulnExploitItem[]>([]);
 const bizVulnExploitLoading = ref(false);
 const selectedBizName = ref<string | null>(null);
@@ -840,7 +860,7 @@ onUnmounted(() => {
                         ? '🗺️'
                         : '🏗️'
                 }}</span>
-                <span>{{
+                <span class="flex-1">{{
                   activeStep === 'vuln_recon'
                     ? '漏洞侦查报告'
                     : activeStep === 'attack_surface'
@@ -849,6 +869,13 @@ onUnmounted(() => {
                         ? '攻击图谱报告'
                         : '业务面测绘报告'
                 }}</span>
+                <button
+                  class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
+                  title="浏览器中打开"
+                  @click="openHtmlInBrowser"
+                >
+                  ⛶ 全屏
+                </button>
               </div>
               <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
                 <div
@@ -997,7 +1024,14 @@ onUnmounted(() => {
                   class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
                 >
                   <span>⚙️</span>
-                  <span>{{ selectedBizReportName }} - 漏洞报告</span>
+                  <span class="flex-1">{{ selectedBizReportName }} - 漏洞报告</span>
+                  <button
+                    class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
+                    title="浏览器中打开"
+                    @click="openBizHtmlInBrowser"
+                  >
+                    ⛶ 全屏
+                  </button>
                 </div>
                 <div
                   class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0"
@@ -1352,7 +1386,14 @@ onUnmounted(() => {
                   class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
                 >
                   <span>⚡</span>
-                  <span>{{ selectedBizExploitName }} - 漏洞利用报告</span>
+                  <span class="flex-1">{{ selectedBizExploitName }} - 漏洞利用报告</span>
+                  <button
+                    class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
+                    title="浏览器中打开"
+                    @click="openBizExploitHtmlInBrowser"
+                  >
+                    ⛶ 全屏
+                  </button>
                 </div>
                 <div
                   class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0"
