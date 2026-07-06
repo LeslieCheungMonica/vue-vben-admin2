@@ -1583,4 +1583,38 @@ onUnmounted(() => {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+:deep(.dark) .bg-white { background-color: hsl(var(--card)) !important; }
+:deep(.dark) .bg-gray-50 { background-color: hsl(var(--muted)) !important; }
+:deep(.dark) .bg-gray-100 { background-color: hsl(var(--accent)) !important; }
+:deep(.dark) .bg-gray-200 { background-color: hsl(var(--border)) !important; }
+:deep(.dark) .border-gray-100 { border-color: hsl(var(--border)) !important; }
+:deep(.dark) .border-gray-200 { border-color: hsl(var(--border)) !important; }
+:deep(.dark) .border-gray-300 { border-color: hsl(var(--border)) !important; }
+:deep(.dark) .text-gray-400 { color: hsl(var(--muted-foreground)) !important; }
+:deep(.dark) .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
+:deep(.dark) .text-gray-600 { color: hsl(var(--foreground)) !important; }
+:deep(.dark) .text-gray-700 { color: hsl(var(--foreground)) !important; }
+:deep(.dark) .text-gray-800 { color: hsl(var(--foreground)) !important; }
+:deep(.dark) .ring-gray-300 { --tw-ring-color: hsl(var(--border)) !important; }
+:deep(.dark) .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3) !important; }
+:deep(.dark) .bg-blue-50 { background-color: hsl(217 91% 60% / 0.15) !important; }
+:deep(.dark) .bg-blue-100 { background-color: hsl(217 91% 60% / 0.25) !important; }
+:deep(.dark) .text-blue-600 { color: hsl(217 91% 65%) !important; }
+:deep(.dark) .text-blue-700 { color: hsl(217 91% 70%) !important; }
+:deep(.dark) .text-blue-500 { color: hsl(217 91% 65%) !important; }
+:deep(.dark) .hover\:bg-blue-50:hover { background-color: hsl(217 91% 60% / 0.15) !important; }
+:deep(.dark) .hover\:text-blue-600:hover { color: hsl(217 91% 65%) !important; }
+:deep(.dark) .hover\:text-blue-500:hover { color: hsl(217 91% 65%) !important; }
+:deep(.dark) .bg-green-50 { background-color: hsl(142 71% 45% / 0.15) !important; }
+:deep(.dark) .bg-green-100 { background-color: hsl(142 71% 45% / 0.25) !important; }
+:deep(.dark) .text-green-700 { color: hsl(142 71% 55%) !important; }
+:deep(.dark) .hover\:bg-green-200:hover { background-color: hsl(142 71% 45% / 0.35) !important; }
+:deep(.dark) .from-blue-50 { --tw-gradient-from: hsl(217 91% 60% / 0.15) !important; }
+:deep(.dark) .to-blue-100 { --tw-gradient-to: hsl(217 91% 60% / 0.25) !important; }
+:deep(.dark) .border-blue-100 { border-color: hsl(217 91% 60% / 0.3) !important; }
+:deep(.dark) .border-blue-200 { border-color: hsl(217 91% 60% / 0.4) !important; }
+:deep(.dark) .bg-blue-400 { background-color: hsl(217 91% 60%) !important; }
+:deep(.dark) .bg-blue-500 { background-color: hsl(217 91% 55%) !important; }
+:deep(.dark) .text-blue-400 { color: hsl(217 91% 65%) !important; }
 </style>
