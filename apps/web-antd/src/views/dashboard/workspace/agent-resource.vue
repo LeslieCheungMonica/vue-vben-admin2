@@ -53,6 +53,10 @@ const codeConfig = ref({
   version: '',
   path: '',
   languages: [] as string[],
+  gitRepo: '',
+  gitBranch: '',
+  gitUsername: '',
+  gitPassword: '',
 });
 
 const knowledgeConfig = ref({
@@ -79,6 +83,10 @@ function onExpand(expanded: boolean, record: any) {
     agentForm.value.description = record.task_description || '';
     codeConfig.value.version = record.version || '';
     codeConfig.value.path = record.extracted_path || '';
+    codeConfig.value.gitRepo = record.git_repo || '';
+    codeConfig.value.gitBranch = record.git_branch || '';
+    codeConfig.value.gitUsername = record.git_username || '';
+    codeConfig.value.gitPassword = record.git_password || '';
     codeConfig.value.languages = record.code_language ? record.code_language.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
     knowledgeConfig.value.source = record.kb_source === '自定义上传' ? 'custom_upload' : 'doc_lib';
     knowledgeConfig.value.url = record.kb_url || '';
@@ -208,7 +216,13 @@ async function handleSave(record: ResourceApi.ResourceItem) {
       agent_type: agentForm.value.type === 'vuln_scan' ? '漏洞扫描' : '漏洞扫描与渗透攻击测试',
       target_system: agentForm.value.target || undefined,
       task_description: agentForm.value.description || undefined,
+      version: codeConfig.value.version || undefined,
+      code_path: codeConfig.value.path || undefined,
       code_language: codeConfig.value.languages.join(',') || undefined,
+      git_repo: codeConfig.value.gitRepo || undefined,
+      git_branch: codeConfig.value.gitBranch || undefined,
+      git_username: codeConfig.value.gitUsername || undefined,
+      git_password: codeConfig.value.gitPassword || undefined,
       kb_source: knowledgeConfig.value.source === 'doc_lib' ? '文档库' : '自定义上传',
       kb_url: knowledgeConfig.value.url || undefined,
       doc_list: knowledgeConfig.value.documents.length ? JSON.stringify(knowledgeConfig.value.documents) : undefined,
@@ -310,6 +324,22 @@ onMounted(() => {
                   </Form.Item>
                   <Form.Item label="代码路径">
                     <Input v-model:value="codeConfig.path" placeholder="例如: /src" />
+                  </Form.Item>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <Form.Item label="仓库地址">
+                    <Input v-model:value="codeConfig.gitRepo" placeholder="例如: https://github.com/example/myapp.git" />
+                  </Form.Item>
+                  <Form.Item label="分支">
+                    <Input v-model:value="codeConfig.gitBranch" placeholder="例如: main" />
+                  </Form.Item>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <Form.Item label="用户名">
+                    <Input v-model:value="codeConfig.gitUsername" placeholder="Git 用户名" />
+                  </Form.Item>
+                  <Form.Item label="密码">
+                    <Input.Password v-model:value="codeConfig.gitPassword" placeholder="Git 密码" />
                   </Form.Item>
                 </div>
                 <Form.Item label="代码语言（可多选）">

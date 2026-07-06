@@ -24,6 +24,10 @@ export namespace ResourceApi {
     biz_arch_graph?: string;
     core_biz_modules?: string;
     core_data_tables?: string;
+    git_repo?: string;
+    git_branch?: string;
+    git_username?: string;
+    git_password?: string;
   }
 
   export interface ResourceListResult {
@@ -111,6 +115,10 @@ export async function saveAgentConfigKejiApi(params: {
   version?: string;
   code_path?: string;
   code_language?: string;
+  git_repo?: string;
+  git_branch?: string;
+  git_username?: string;
+  git_password?: string;
   kb_source?: string;
   kb_url?: string;
   doc_list?: string;
