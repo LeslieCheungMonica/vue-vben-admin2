@@ -626,6 +626,23 @@ const historyLoading = ref(false);
 const historySessions = ref<any[]>([]);
 const historyPage = ref(1);
 const historyTotal = ref(0);
+const historyFilter = ref<string>('all');
+
+const historyFilterTags = [
+  { key: 'all', label: '全部' },
+  { key: 'tool', label: '🔧 执行工具' },
+  { key: 'text', label: '📖 知识库读取' },
+  { key: 'step', label: '⚡ 执行任务' },
+];
+
+const filteredHistorySessions = computed(() => {
+  if (historyFilter.value === 'all') return historySessions.value;
+  return historySessions.value.filter((msg: any) => {
+    const type = msg.data?.type;
+    if (historyFilter.value === 'step') return type === 'step-start' || type === 'step-finish' || type === 'todowrite' || type === 'task';
+    return type === historyFilter.value;
+  });
+});
 
 async function loadHistoryMessages(page = 1) {
   const taskId = route.params.taskId as string;
@@ -659,6 +676,8 @@ function getMsgType(msg: any) {
   if (msg.data?.type === 'tool') return `🔧 ${msg.data.tool || '工具调用'}`;
   if (msg.data?.type === 'step-start') return '▶️ 步骤开始';
   if (msg.data?.type === 'step-finish') return '⏹️ 步骤结束';
+  if (msg.data?.type === 'todowrite') return '📝 任务列表';
+  if (msg.data?.type === 'task') return '📋 执行任务';
   return msg.data?.type || msg.role || '消息';
 }
 
@@ -670,6 +689,10 @@ function getMsgContent(msg: any) {
     text = msg.data.state?.input ? JSON.stringify(msg.data.state.input, null, 2) : '';
   } else if (msg.data?.type === 'step-finish') {
     text = msg.data.reason || '';
+  } else if (msg.data?.type === 'todowrite') {
+    text = msg.data.text || msg.data.content || '';
+  } else if (msg.data?.type === 'task') {
+    text = msg.data.text || msg.data.content || '';
   }
   if (/角色：你是一位/.test(text) || /\(可读写\) - 截图、脚本、临时工作等/.test(text) || /文件系统：\n- \. \(只读\)/.test(text) || /侦察报告 → 架构图/.test(text) || /提示词快照：业务域侦察/.test(text) || /提示词快照：认证漏洞分析/.test(text)) return '';
   text = text.replace(/<\/?conclusion_trigger>[\s\S]*?$/i, '');
@@ -1697,17 +1720,30 @@ onUnmounted(() => {
   >
     <div v-if="historyLoading" class="flex items-center justify-center py-16 text-sm text-gray-400">加载中...</div>
     <div v-else-if="historySessions.length === 0" class="flex items-center justify-center py-16 text-sm text-gray-400">暂无历史消息</div>
-    <div v-else class="space-y-3">
-      <div v-for="(msg, idx) in historySessions" :key="idx" class="rounded border border-gray-200 bg-white">
-        <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2 text-xs text-gray-500">
-          <span class="font-medium text-gray-700">{{ getMsgType(msg) }}</span>
-          <span>{{ formatTime(msg.time_created) }}</span>
-        </div>
-        <div class="px-3 py-2">
-          <ExpandableMsg :content="getMsgContent(msg)" />
+    <div v-else>
+      <div class="mb-3 flex flex-wrap gap-2">
+        <button
+          v-for="tag in historyFilterTags"
+          :key="tag.key"
+          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          :class="historyFilter === tag.key ? 'bg-blue-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+          @click="historyFilter = tag.key"
+        >
+          {{ tag.label }}
+        </button>
+      </div>
+        <div class="space-y-3">
+          <div v-for="(msg, idx) in filteredHistorySessions" :key="idx" class="rounded border border-gray-200 bg-white">
+            <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2 text-xs text-gray-500">
+              <span class="font-medium text-gray-700">{{ getMsgType(msg) }}</span>
+              <span>{{ formatTime(msg.time_created) }}</span>
+            </div>
+            <div class="px-3 py-2">
+              <ExpandableMsg :content="getMsgContent(msg)" />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
   </Modal>
   </div>
 </template>
