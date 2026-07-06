@@ -223,7 +223,7 @@ async function handleSave(record: ResourceApi.ResourceItem) {
       git_branch: codeConfig.value.gitBranch || undefined,
       git_username: codeConfig.value.gitUsername || undefined,
       git_password: codeConfig.value.gitPassword || undefined,
-      kb_source: knowledgeConfig.value.source === 'doc_lib' ? '文档库' : '自定义上传',
+      kb_source: knowledgeConfig.value.source === 'doc_lib' ? '飞书文档库' : '自定义上传',
       kb_url: knowledgeConfig.value.url || undefined,
       doc_list: knowledgeConfig.value.documents.length ? JSON.stringify(knowledgeConfig.value.documents) : undefined,
       core_biz_modules: bizConfig.value.coreModules.length ? JSON.stringify(bizConfig.value.coreModules) : undefined,
@@ -319,14 +319,6 @@ onMounted(() => {
               <div class="mb-3 text-base font-semibold text-green-700 border-b border-green-200 pb-1">代码库配置</div>
               <Form layout="vertical">
                 <div class="grid grid-cols-2 gap-4">
-                  <Form.Item label="版本号">
-                    <Input v-model:value="codeConfig.version" placeholder="例如: v1.0" />
-                  </Form.Item>
-                  <Form.Item label="代码路径">
-                    <Input v-model:value="codeConfig.path" placeholder="例如: /src" />
-                  </Form.Item>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
                   <Form.Item label="仓库地址">
                     <Input v-model:value="codeConfig.gitRepo" placeholder="例如: https://github.com/example/myapp.git" />
                   </Form.Item>
@@ -356,29 +348,15 @@ onMounted(() => {
                 <div class="grid grid-cols-2 gap-4">
                   <Form.Item label="知识库来源">
                     <Select v-model:value="knowledgeConfig.source">
-                      <Select.Option value="doc_lib">文档库</Select.Option>
+                      <Select.Option value="doc_lib">飞书文档库</Select.Option>
                       <Select.Option value="custom_upload">自定义上传</Select.Option>
                     </Select>
                   </Form.Item>
                   <Form.Item label="知识库地址">
                     <Input v-model:value="knowledgeConfig.url" placeholder="输入知识库地址" />
+                    <a v-if="knowledgeConfig.url" :href="knowledgeConfig.url" target="_blank" class="mt-1 inline-block text-xs text-blue-600 hover:text-blue-800">{{ knowledgeConfig.url }}</a>
                   </Form.Item>
                 </div>
-                <Form.Item label="文档列表">
-                  <div class="rounded border border-gray-200 bg-white">
-                    <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500 border-b">
-                      <span class="flex-1">文件名</span>
-                      <span class="w-20 text-center">是否已同步</span>
-                    </div>
-                    <div v-if="knowledgeConfig.documents.length === 0" class="px-3 py-4 text-center text-xs text-gray-400">暂无文档</div>
-                    <div v-for="(doc, idx) in knowledgeConfig.documents" :key="idx" class="flex items-center gap-2 border-b px-3 py-2 text-xs last:border-b-0">
-                      <span class="flex-1 text-gray-700">{{ doc.name }}</span>
-                      <span class="w-20 text-center">
-                        <Tag :color="doc.synced === true ? 'green' : doc.synced === 'handle' ? 'processing' : 'orange'">{{ doc.synced === true ? '已同步' : doc.synced === 'handle' ? '同步中' : '未同步' }}</Tag>
-                      </span>
-                    </div>
-                  </div>
-                </Form.Item>
               </Form>
             </div>
 
