@@ -12,6 +12,18 @@ export namespace ResourceApi {
     version: string;
     description: string;
     extracted_path: string;
+    agent_name?: string;
+    agent_type?: string;
+    target_system?: string;
+    task_description?: string;
+    code_path?: string;
+    code_language?: string;
+    kb_source?: string;
+    kb_url?: string;
+    doc_list?: string;
+    biz_arch_graph?: string;
+    core_biz_modules?: string;
+    core_data_tables?: string;
   }
 
   export interface ResourceListResult {
@@ -87,6 +99,28 @@ export async function saveAgentConfigApi(
   >('/wape/resource_upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+  return data;
+}
+
+export async function saveAgentConfigKejiApi(params: {
+  id: number;
+  agent_name?: string;
+  agent_type?: string;
+  target_system?: string;
+  task_description?: string;
+  version?: string;
+  code_path?: string;
+  code_language?: string;
+  kb_source?: string;
+  kb_url?: string;
+  doc_list?: string;
+  biz_arch_graph?: string;
+  core_biz_modules?: string;
+  core_data_tables?: string;
+}) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<ResourceApi.ResourceUploadResult>
+  >('/wape/resource_update_keji', params);
   return data;
 }
 

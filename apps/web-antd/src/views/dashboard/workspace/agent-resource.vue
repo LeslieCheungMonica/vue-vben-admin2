@@ -20,7 +20,7 @@ import {
 import {
   deleteResourceApi,
   getResourceListApi,
-  saveAgentConfigApi,
+  saveAgentConfigKejiApi,
   uploadResourceApi,
 } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
@@ -70,6 +70,31 @@ const newModule = ref('');
 const newTableEn = ref('');
 const newTableCn = ref('');
 
+function onExpand(expanded: boolean, record: any) {
+  expandedRowKeys.value = expanded ? [record.id] : [];
+  if (expanded) {
+    agentForm.value.name = record.agent_name || '';
+    agentForm.value.type = record.agent_type === '漏洞扫描与渗透攻击测试' ? 'vuln_scan_penetration' : 'vuln_scan';
+    agentForm.value.target = record.target_system || '';
+    agentForm.value.description = record.task_description || '';
+    codeConfig.value.version = record.version || '';
+    codeConfig.value.path = record.code_path || '';
+    codeConfig.value.languages = record.code_language ? record.code_language.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    knowledgeConfig.value.source = record.kb_source === '自定义上传' ? 'custom_upload' : 'doc_lib';
+    knowledgeConfig.value.url = record.kb_url || '';
+    try {
+      knowledgeConfig.value.documents = record.doc_list ? JSON.parse(record.doc_list) : [];
+    } catch { knowledgeConfig.value.documents = []; }
+    try {
+      bizConfig.value.coreModules = record.core_biz_modules ? JSON.parse(record.core_biz_modules) : [];
+    } catch { bizConfig.value.coreModules = []; }
+    try {
+      const tables = record.core_data_tables ? JSON.parse(record.core_data_tables) : [];
+      bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.cn || t.cnName }));
+    } catch { bizConfig.value.coreTables = []; }
+  }
+}
+
 const languageOptions = ['Java', 'Python', 'JavaScript', 'PHP', 'Go', 'C/C++', 'Ruby', 'TypeScript'];
 
 async function fetchResources() {
@@ -105,12 +130,14 @@ async function handleUpload() {
 
   uploadLoading.value = true;
   try {
-    await uploadResourceApi(
-      uploadForm.value.file,
-      uploadForm.value.code,
-      uploadForm.value.version,
-      uploadForm.value.description || undefined,
-    );
+    const formData = new FormData();
+    formData.append('file', uploadForm.value.file);
+    formData.append('code', uploadForm.value.code);
+    formData.append('version', uploadForm.value.version);
+    if (uploadForm.value.description) {
+      formData.append('description', uploadForm.value.description);
+    }
+    await uploadResourceApi(formData);
     message.success('上传成功');
     uploadModalVisible.value = false;
     await fetchResources();
@@ -167,7 +194,8 @@ function removeTable(idx: number) {
 
 async function handleSave(record: ResourceApi.ResourceItem) {
   try {
-    await saveAgentConfigApi(record.code, record.version, {
+    await saveAgentConfigKejiApi({
+      id: record.id,
       agent_name: agentForm.value.name || undefined,
       agent_type: agentForm.value.type === 'vuln_scan' ? '漏洞扫描' : '漏洞扫描与渗透攻击测试',
       target_system: agentForm.value.target || undefined,
@@ -213,13 +241,9 @@ onMounted(() => {
         :columns="columns"
         :data-source="resources"
         :loading="loading"
-        :expandable="{
-          expandedRowKeys: expandedRowKeys.value,
-          onExpand: (expanded: boolean, record: any) => {
-            expandedRowKeys.value = expanded ? [record.id] : [];
-          },
-          expandRowByClick: true,
-        }"
+        :expanded-row-keys="expandedRowKeys"
+        expand-row-by-click
+        @expand="onExpand"
         :pagination="{
           pageSize: 10,
           showSizeChanger: true,
