@@ -120,14 +120,16 @@ function onExpand(expanded: boolean, record: any) {
     function parseJsonField(raw: any): any[] {
       if (!raw) return [];
       if (Array.isArray(raw)) return raw;
-      if (typeof raw === 'object') return raw;
-      try { return JSON.parse(JSON.parse(raw)); } catch {}
-      try { return JSON.parse(raw.replace(/\\"/g, '"')); } catch {}
+      if (typeof raw === 'string') {
+        try { return JSON.parse(raw); } catch {}
+        try { return JSON.parse(JSON.parse(raw)); } catch {}
+        try { return JSON.parse(raw.replace(/\\"/g, '"')); } catch {}
+      }
       return [];
     }
     knowledgeConfig.value.documents = parseJsonField(record.doc_list);
     const tables = parseJsonField(record.core_data_tables);
-    bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.cn || t.cnName }));
+    bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.name || t.cn || t.cnName }));
     loadBizReconHtml(record.task_id || 'wape-20260707');
   }
 }
