@@ -28,6 +28,7 @@ export namespace ResourceApi {
     git_branch?: string;
     git_username?: string;
     git_password?: string;
+    task_id?: string;
   }
 
   export interface ResourceListResult {

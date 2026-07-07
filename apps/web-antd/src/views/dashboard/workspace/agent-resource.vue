@@ -67,6 +67,37 @@ const knowledgeConfig = ref({
 const bizConfig = ref({
   coreTables: [] as { enName: string; cnName: string }[],
 });
+const bizReconHtml = ref<string | null>(null);
+const bizReconLoading = ref(false);
+const bizReconTaskId = ref('');
+
+async function loadBizReconHtml(taskId: string) {
+  bizReconHtml.value = null;
+  bizReconLoading.value = true;
+  bizReconTaskId.value = taskId;
+  try {
+    const url = `/api/wape/report_html/${taskId}/biz_recon?time=${new Date().getTime()}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTML not found');
+    let text = await resp.text();
+    text = text.replace(
+      '<head>',
+      '<head><meta http-equiv="Content-Security-Policy" content="script-src-attr \'none\'; script-src \'unsafe-inline\' \'self\' https://cdn.jsdelivr.net; img-src \'self\' data:;"><style>body{font-size:10px!important;line-height:1.5!important;}</style>',
+    );
+    bizReconHtml.value = text;
+  } catch {
+    bizReconHtml.value = null;
+  } finally {
+    bizReconLoading.value = false;
+  }
+}
+
+function openBizReconFullscreen() {
+  if (!bizReconHtml.value) return;
+  const blob = new Blob([bizReconHtml.value], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
 const newTableEn = ref('');
 const newTableCn = ref('');
 
@@ -88,6 +119,8 @@ function onExpand(expanded: boolean, record: any) {
     knowledgeConfig.value.url = record.kb_url || '';
     function parseJsonField(raw: any): any[] {
       if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'object') return raw;
       try { return JSON.parse(JSON.parse(raw)); } catch {}
       try { return JSON.parse(raw.replace(/\\"/g, '"')); } catch {}
       return [];
@@ -95,6 +128,7 @@ function onExpand(expanded: boolean, record: any) {
     knowledgeConfig.value.documents = parseJsonField(record.doc_list);
     const tables = parseJsonField(record.core_data_tables);
     bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.cn || t.cnName }));
+    loadBizReconHtml(record.task_id || 'wape-20260707');
   }
 }
 
@@ -333,8 +367,16 @@ onMounted(() => {
             <div class="rounded-lg border border-orange-200 bg-orange-50/40 p-4">
               <div class="mb-3 text-base font-semibold text-orange-700 border-b border-orange-200 pb-1">业务画像配置</div>
               <Form layout="vertical">
-                <Form.Item label="业务架构图">
-                  <div class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-sm text-gray-400">业务知识图谱展示区域</div>
+                <Form.Item>
+                  <template #label>
+                    <div class="flex w-full items-center">
+                      <span>业务架构图</span>
+                      <Button size="small" v-if="bizReconHtml" class="ml-auto" @click="openBizReconFullscreen">全屏</Button>
+                    </div>
+                  </template>
+                  <div v-if="bizReconLoading" class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-sm text-gray-400">加载中...</div>
+                  <iframe v-else-if="bizReconHtml" :srcdoc="bizReconHtml" class="w-full rounded border border-gray-200" style="height: 600px" />
+                  <div v-else class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-sm text-gray-400">暂无业务架构图</div>
                 </Form.Item>
                 <Form.Item label="核心数据表">
                   <div class="rounded border border-gray-200 bg-white">
