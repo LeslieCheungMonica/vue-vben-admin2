@@ -13,7 +13,6 @@ import {
   Modal,
   Select,
   Table,
-  Tag,
   Upload,
 } from 'ant-design-vue';
 
@@ -66,11 +65,8 @@ const knowledgeConfig = ref({
 });
 
 const bizConfig = ref({
-  coreModules: [] as string[],
   coreTables: [] as { enName: string; cnName: string }[],
 });
-
-const newModule = ref('');
 const newTableEn = ref('');
 const newTableCn = ref('');
 
@@ -97,21 +93,12 @@ function onExpand(expanded: boolean, record: any) {
       return [];
     }
     knowledgeConfig.value.documents = parseJsonField(record.doc_list);
-    bizConfig.value.coreModules = parseJsonField(record.core_biz_modules);
     const tables = parseJsonField(record.core_data_tables);
     bizConfig.value.coreTables = tables.map((t: any) => ({ enName: t.en || t.enName, cnName: t.cn || t.cnName }));
   }
 }
 
 const languageOptions = ['Java', 'Python', 'JavaScript', 'PHP', 'Go', 'C/C++', 'Ruby', 'TypeScript'];
-
-function parseBizModules(raw: any): string {
-  if (!raw) return '';
-  try {
-    const arr = JSON.parse(raw.replace(/\\"/g, '"'));
-    return Array.isArray(arr) ? arr.join(', ') : raw;
-  } catch { return raw; }
-}
 
 async function fetchResources() {
   loading.value = true;
@@ -182,18 +169,6 @@ function handleDelete(record: ResourceApi.ResourceItem) {
   });
 }
 
-function addModule() {
-  const v = newModule.value.trim();
-  if (v && !bizConfig.value.coreModules.includes(v)) {
-    bizConfig.value.coreModules.push(v);
-  }
-  newModule.value = '';
-}
-
-function removeModule(idx: number) {
-  bizConfig.value.coreModules.splice(idx, 1);
-}
-
 function addTable() {
   const en = newTableEn.value.trim();
   const cn = newTableCn.value.trim();
@@ -226,7 +201,6 @@ async function handleSave(record: ResourceApi.ResourceItem) {
       kb_source: knowledgeConfig.value.source === 'doc_lib' ? '飞书文档库' : '自定义上传',
       kb_url: knowledgeConfig.value.url || undefined,
       doc_list: knowledgeConfig.value.documents.length ? JSON.stringify(knowledgeConfig.value.documents) : undefined,
-      core_biz_modules: bizConfig.value.coreModules.length ? JSON.stringify(bizConfig.value.coreModules) : undefined,
       core_data_tables: bizConfig.value.coreTables.length ? JSON.stringify(bizConfig.value.coreTables.map(t => ({ en: t.enName, cn: t.cnName }))) : undefined,
     });
     message.success('保存成功');
@@ -240,7 +214,6 @@ const columns = [
   { dataIndex: 'agent_type', key: 'agent_type', title: '智能体类型', width: 140, ellipsis: true },
   { dataIndex: 'target_system', key: 'target_system', title: '代码库', width: 120, ellipsis: true },
   { dataIndex: 'kb_url', key: 'kb_url', title: '知识库地址', width: 200, ellipsis: true },
-  { dataIndex: 'core_biz_modules', key: 'core_biz_modules', title: '核心业务功能', width: 200, ellipsis: true },
   { key: 'action', title: '操作', width: 160, fixed: 'right' as const },
 ];
 
@@ -280,9 +253,6 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Button type="primary" size="small" class="mr-2" @click.stop="handleSave(record)">保存</Button>
             <Button danger size="small" @click.stop="handleDelete(record)">删除</Button>
-          </template>
-          <template v-else-if="column.key === 'core_biz_modules'">
-            <span class="text-xs">{{ parseBizModules(record.core_biz_modules) }}</span>
           </template>
         </template>
         <template #expandedRowRender="{ record }">
@@ -365,15 +335,6 @@ onMounted(() => {
               <Form layout="vertical">
                 <Form.Item label="业务架构图">
                   <div class="flex h-48 items-center justify-center rounded border border-dashed border-gray-300 bg-white text-sm text-gray-400">业务知识图谱展示区域</div>
-                </Form.Item>
-                <Form.Item label="核心业务模块">
-                  <div class="flex flex-wrap gap-2 mb-2">
-                    <Tag v-for="(mod, idx) in bizConfig.coreModules" :key="idx" closable @close="removeModule(idx)">{{ mod }}</Tag>
-                  </div>
-                  <div class="flex gap-2">
-                    <Input v-model:value="newModule" placeholder="输入模块名称" class="w-60" @press-enter="addModule" />
-                    <Button @click="addModule">添加</Button>
-                  </div>
                 </Form.Item>
                 <Form.Item label="核心数据表">
                   <div class="rounded border border-gray-200 bg-white">

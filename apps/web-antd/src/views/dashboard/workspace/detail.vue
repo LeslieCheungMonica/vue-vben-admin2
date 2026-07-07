@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
+import { computed, nextTick, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
@@ -627,6 +627,11 @@ const historySessions = ref<any[]>([]);
 const historyPage = ref(1);
 const historyTotal = ref(0);
 const historyFilter = ref<string>('all');
+const historyLoadingMore = ref(false);
+const historySentinel = ref<HTMLElement | null>(null);
+let historyObserver: IntersectionObserver | null = null;
+
+const historyHasMore = computed(() => historySessions.value.length < historyTotal.value);
 
 const historyFilterTags = [
   { key: 'all', label: '全部' },
@@ -655,14 +660,52 @@ async function loadHistoryMessages(page = 1) {
     const { data } = await baseRequestClient.post('/wape/task_session_messages', {
       task_id: taskId,
       page,
-      page_size: 200,
+      page_size: 500,
     });
-    historySessions.value = data.items ?? [];
+    if (page === 1) {
+      historySessions.value = data.items ?? [];
+    } else {
+      historySessions.value = [...historySessions.value, ...(data.items ?? [])];
+    }
     historyTotal.value = data.total ?? 0;
   } catch {
-    historySessions.value = [];
+    if (page === 1) historySessions.value = [];
   } finally {
     historyLoading.value = false;
+    historyLoadingMore.value = false;
+  }
+  if (page === 1) {
+    nextTick(() => setupHistoryObserver());
+  }
+}
+
+async function loadMoreHistory() {
+  if (historyLoadingMore.value || !historyHasMore.value) return;
+  historyLoadingMore.value = true;
+  await loadHistoryMessages(historyPage.value + 1);
+}
+
+function setupHistoryObserver() {
+  cleanupHistoryObserver();
+  historyObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        loadMoreHistory();
+      }
+    },
+    { rootMargin: '100px' },
+  );
+  nextTick(() => {
+    if (historySentinel.value) {
+      historyObserver?.observe(historySentinel.value);
+    }
+  });
+}
+
+function cleanupHistoryObserver() {
+  if (historyObserver) {
+    historyObserver.disconnect();
+    historyObserver = null;
   }
 }
 
@@ -822,6 +865,7 @@ function backBizReportToModuleList() {
 
 onUnmounted(() => {
   disconnectEventStream();
+  cleanupHistoryObserver();
   if (pdfUrl.value) {
     URL.revokeObjectURL(pdfUrl.value);
   }
@@ -1717,7 +1761,7 @@ onUnmounted(() => {
     title="历史会话消息"
     width="70%"
     :footer="null"
-    @cancel="historyModalVisible = false"
+    @cancel="historyModalVisible = false; cleanupHistoryObserver()"
   >
     <div v-if="historyLoading" class="flex items-center justify-center py-16 text-sm text-gray-400">加载中...</div>
     <div v-else-if="historySessions.length === 0" class="flex items-center justify-center py-16 text-sm text-gray-400">暂无历史消息</div>
@@ -1743,6 +1787,8 @@ onUnmounted(() => {
               <ExpandableMsg :content="getMsgContent(msg)" />
             </div>
           </div>
+          <div ref="historySentinel" class="h-4" />
+          <div v-if="historyLoadingMore" class="py-4 text-center text-xs text-gray-400">加载更多...</div>
         </div>
       </div>
   </Modal>
