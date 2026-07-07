@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
@@ -141,6 +141,9 @@ async function fetchResources() {
   try {
     const res = await getResourceListApi();
     resources.value = (res.items ?? []).filter((item: ResourceApi.ResourceItem) => item.agent_name);
+    if (resources.value.length > 0) {
+      nextTick(() => onExpand(true, resources.value[0]));
+    }
   } catch {
     message.error('获取资源列表失败');
   } finally {

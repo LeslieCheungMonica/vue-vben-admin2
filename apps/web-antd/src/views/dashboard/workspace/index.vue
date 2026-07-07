@@ -320,7 +320,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Page description="管理扫描任务的创建、启动与监控" title="任务管理">
+  <Page description="管理扫描任务的创建、启动与监控" title="智能体任务管理">
     <Card class="mb-5">
       <div class="flex flex-wrap items-center justify-between">
         <Space>
