@@ -17,5 +17,15 @@
     "title": "Cosmic 工作台",
     "docs": "文档管理",
     "tasks": "任务管理"
+  },
+  "sensitive": {
+    "title": "敏感数据检测",
+    "home": "总览",
+    "data": "数据查询",
+    "detection": "检测结果",
+    "report": "评估报告",
+    "model": "模型配置",
+    "knowledge": "知识增强",
+    "agent": "AI 助手"
   }
 }

@@ -1,0 +1,2576 @@
+[
+  {
+    "id": "det_001",
+    "trace_id": "trace_20260701_022",
+    "event_id": "evt_022",
+    "api_path": "BillDetailQueryService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-01 08:25:05",
+    "sensitive_types": [
+      "PHONE",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "136****3210",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "黄***@foxmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省普洱市思茅区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "黄**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"黄华军\", \"tel\": \"13671473210\", \"idNumber\": \"53046963259532787\", \"email\"",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_002",
+    "trace_id": "trace_20260701_028",
+    "event_id": "evt_028",
+    "api_path": "BatchExportService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-01 08:34:40",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "185****3536",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****1203",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "刘***@foxmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省红河州个旧市***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "刘**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"刘伟\", \"phone\": \"18596423536\", \"idCard\": \"53093785477725228\", \"ban",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_003",
+    "trace_id": "trace_20260701_012",
+    "event_id": "evt_012",
+    "api_path": "BizHandleService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-01 09:16:00",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "175****2474",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****8593",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "何***@foxmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省普洱市思茅区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "何**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"何强\", \"phone\": \"17558842474\", \"idCard\": \"53051712368516048\", \"ban",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_004",
+    "trace_id": "trace_20260701_032",
+    "event_id": "evt_032",
+    "api_path": "OrderCreateService",
+    "op_id": "ST002",
+    "op_name": "李华",
+    "detect_time": "2026-07-01 09:43:12",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****341",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "吴**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"吴华\", \"msisdn\": \"188****3622\", \"idCard\": \"530660********341",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_005",
+    "trace_id": "trace_20260701_002",
+    "event_id": "evt_002",
+    "api_path": "UserDetailQueryService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-01 10:28:58",
+    "sensitive_types": [
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "李***@163.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "李**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"李军\", \"tel\": \"185****0812\", \"email\": \"李1****@163.com\"}, \"success\": tr",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_006",
+    "trace_id": "trace_20260701_014",
+    "event_id": "evt_014",
+    "api_path": "AuthGrantService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-01 13:07:50",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****161",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "陈**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"陈敏平\", \"msisdn\": \"135****5766\", \"idCard\": \"530156********16",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_007",
+    "trace_id": "trace_20260701_016",
+    "event_id": "evt_016",
+    "api_path": "AccountUpdateService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-01 14:29:41",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"杨强\", \"msisdn\": \"159****5231\", \"idCard\": \"530243********97X",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_008",
+    "trace_id": "trace_20260701_006",
+    "event_id": "evt_006",
+    "api_path": "BillQueryService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-01 14:42:26",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****374",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "郑**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"郑明\", \"msisdn\": \"158****5310\", \"idCard\": \"530033********374",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_009",
+    "trace_id": "trace_20260701_031",
+    "event_id": "evt_031",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-01 15:06:21",
+    "sensitive_types": [
+      "PHONE",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "183****4266",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "周**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 403, \"message\": \"身份证号码校验失败\", \"data\": {\"userName\": \"周超娜\", \"phone\": \"18372434266\", \"idCard\": ",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_010",
+    "trace_id": "trace_20260701_030",
+    "event_id": "evt_030",
+    "api_path": "OrderCreateService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-01 15:21:29",
+    "sensitive_types": [
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "马***@sina.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "马**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"马平明\", \"tel\": \"159****1995\", \"email\": \"马8****@sina.com\"}, \"success\": ",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_011",
+    "trace_id": "trace_20260701_004",
+    "event_id": "evt_004",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-01 15:39:57",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "186****4656",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****2148",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "周**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"周杰军\", \"mobile\": \"18651484656\", \"identityNo\": \"53048236629946",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_012",
+    "trace_id": "trace_20260701_020",
+    "event_id": "evt_020",
+    "api_path": "UserInfoQueryService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-01 16:18:58",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****310",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "马**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"马芳\", \"msisdn\": \"136****0927\", \"idCard\": \"530557********310",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_013",
+    "trace_id": "trace_20260701_009",
+    "event_id": "evt_009",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-01 16:23:40",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "186****9904",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****7154",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "许**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"许芳军\", \"mobile\": \"18640139904\", \"identityNo\": \"53090278742967",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_014",
+    "trace_id": "trace_20260701_001",
+    "event_id": "evt_001",
+    "api_path": "OrderQueryService",
+    "op_id": "ST002",
+    "op_name": "李华",
+    "detect_time": "2026-07-01 18:34:56",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****311",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "吴**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"吴刚\", \"phone\": \"158****5183\", \"idCard\": \"530473********311\"}, \"su",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_015",
+    "trace_id": "trace_20260701_017",
+    "event_id": "evt_017",
+    "api_path": "UserDetailQueryService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-01 19:28:07",
+    "sensitive_types": [
+      "ID_CARD",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "623****2214",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****2214",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"杨娜\", \"mobile\": \"175****2519\", \"bankCard\": \"6230***********22",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_016",
+    "trace_id": "trace_20260701_007",
+    "event_id": "evt_007",
+    "api_path": "OfferSubscribeService",
+    "op_id": "ST002",
+    "op_name": "李华",
+    "detect_time": "2026-07-01 19:34:51",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "198****5454",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****8856",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "许***@outlook.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省红河州个旧市***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "许**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"许涛\", \"phone\": \"19852735454\", \"idCard\": \"5309480831367837X\", \"ban",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_017",
+    "trace_id": "trace_20260701_023",
+    "event_id": "evt_023",
+    "api_path": "BizHandleService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-01 19:46:04",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "刘**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"刘军军\", \"phoneNumber\": \"188****5888\"}, \"success\": true}",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_018",
+    "trace_id": "trace_20260701_013",
+    "event_id": "evt_013",
+    "api_path": "OfferQueryService",
+    "op_id": "ST001",
+    "op_name": "张明",
+    "detect_time": "2026-07-01 19:51:02",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****842",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "马**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"马娜洁\", \"phone\": \"138****9318\", \"idCard\": \"530393********842\"}, \"s",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_019",
+    "trace_id": "trace_20260701_021",
+    "event_id": "evt_021",
+    "api_path": "BatchExportService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-01 20:36:31",
+    "sensitive_types": [
+      "ID_CARD",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "622****9229",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****9229",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "刘**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"刘军超\", \"mobile\": \"199****9226\", \"bankCard\": \"6225***********9",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_020",
+    "trace_id": "trace_20260701_033",
+    "event_id": "evt_033",
+    "api_path": "UserDetailQueryService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-01 20:47:38",
+    "sensitive_types": [
+      "ID_CARD",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "621****8361",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****8361",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "罗**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"罗静\", \"mobile\": \"182****7677\", \"bankCard\": \"6214***********83",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_021",
+    "trace_id": "trace_20260701_026",
+    "event_id": "evt_026",
+    "api_path": "StatisticsService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-01 21:00:00",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "孙**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 500, \"message\": \"账户状态异常，请联系管理员\", \"data\": {\"userName\": \"孙伟\", \"phone\": \"138****6518\"}, \"succe",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_022",
+    "trace_id": "trace_20260702_061",
+    "event_id": "evt_061",
+    "api_path": "UserInfoQueryService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-02 08:03:23",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "136****8376",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****0097",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "吴**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"吴涛超\", \"msisdn\": \"13603718376\", \"idDocNo\": \"530452088147435",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_023",
+    "trace_id": "trace_20260702_063",
+    "event_id": "evt_063",
+    "api_path": "OrderCreateService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-02 08:19:19",
+    "sensitive_types": [
+      "PHONE",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "136****6195",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "林***@foxmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省昆明市西山区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "林**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"林磊\", \"tel\": \"13692886195\", \"idNumber\": \"53076122868528975\", \"email\":",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_024",
+    "trace_id": "trace_20260702_049",
+    "event_id": "evt_049",
+    "api_path": "UserDetailQueryService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-02 09:01:27",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "185****9958",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****8851",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省昭通市镇雄县***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "唐**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"realName\": \"唐丽强\", \"cellPhone\": \"18522169958\", \"idCardNo\": \"53066934654722698",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_025",
+    "trace_id": "trace_20260702_054",
+    "event_id": "evt_054",
+    "api_path": "OrderCreateService",
+    "op_id": "ST003",
+    "op_name": "王强",
+    "detect_time": "2026-07-02 10:06:06",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"杨敏丽\", \"phoneNumber\": \"198****0302\"}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_026",
+    "trace_id": "trace_20260702_053",
+    "event_id": "evt_053",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-02 10:24:44",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "185****8165",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****5677",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "刘**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"realName\": \"刘杰\", \"cellPhone\": \"18542788165\", \"idCardNo\": \"53080392827229927\"",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_027",
+    "trace_id": "trace_20260702_041",
+    "event_id": "evt_041",
+    "api_path": "PasswordChangeService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-02 11:06:03",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "吴**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"吴强芳\", \"phoneNumber\": \"178****1526\"}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_028",
+    "trace_id": "trace_20260702_055",
+    "event_id": "evt_055",
+    "api_path": "StatisticsService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-02 11:28:51",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "178****3009",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****7258",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "罗**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"罗洋娜\", \"msisdn\": \"17898643009\", \"idDocNo\": \"530818063565126",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_029",
+    "trace_id": "trace_20260702_056",
+    "event_id": "evt_056",
+    "api_path": "ReportService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-02 12:56:36",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "罗**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 500, \"message\": \"会话已过期，请重新登录\", \"data\": {\"userName\": \"罗超\", \"phone\": \"173****8839\"}, \"success",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_030",
+    "trace_id": "trace_20260702_052",
+    "event_id": "evt_052",
+    "api_path": "AccountUpdateService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-02 13:08:46",
+    "sensitive_types": [
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "黄***@outlook.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "黄**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"黄磊华\", \"tel\": \"187****4312\", \"email\": \"黄9****@outlook.com\"}, \"success",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_031",
+    "trace_id": "trace_20260702_057",
+    "event_id": "evt_057",
+    "api_path": "RefundService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-02 13:25:56",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****111",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"杨娜强\", \"msisdn\": \"198****4237\", \"idCard\": \"530333********11",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_032",
+    "trace_id": "trace_20260702_043",
+    "event_id": "evt_043",
+    "api_path": "UserDetailQueryService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-02 13:31:40",
+    "sensitive_types": [
+      "ID_CARD",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "622****0307",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****0307",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "郑**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"郑杰\", \"mobile\": \"178****3247\", \"bankCard\": \"6228***********03",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_033",
+    "trace_id": "trace_20260702_045",
+    "event_id": "evt_045",
+    "api_path": "AccountQueryService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-02 13:48:54",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "185****3816",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****2712",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "陈***@yeah.net",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省昆明市西山区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "陈**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"陈丽\", \"phone\": \"18599173816\", \"idCard\": \"53084602235697252\", \"ban",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_034",
+    "trace_id": "trace_20260702_062",
+    "event_id": "evt_062",
+    "api_path": "PasswordChangeService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-02 15:33:43",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "186****2744",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****1810",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "黄**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"黄军艳\", \"msisdn\": \"18682182744\", \"idDocNo\": \"530857086209593",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_035",
+    "trace_id": "trace_20260702_066",
+    "event_id": "evt_066",
+    "api_path": "AccountUpdateService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-02 15:48:03",
+    "sensitive_types": [
+      "PHONE",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "175****6216",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "李***@163.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省玉溪市红塔区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "李**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"李艳伟\", \"tel\": \"17543256216\", \"idNumber\": \"53089363926495782\", \"email\"",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_036",
+    "trace_id": "trace_20260702_036",
+    "event_id": "evt_036",
+    "api_path": "RefundService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-02 16:04:18",
+    "sensitive_types": [
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "梁***@gmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "梁**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"梁明涛\", \"tel\": \"158****4141\", \"email\": \"梁8****@gmail.com\"}, \"success\":",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_037",
+    "trace_id": "trace_20260702_050",
+    "event_id": "evt_050",
+    "api_path": "BatchExportService",
+    "op_id": "ST001",
+    "op_name": "张明",
+    "detect_time": "2026-07-02 16:34:28",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"杨平\", \"phoneNumber\": \"177****5989\"}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_038",
+    "trace_id": "trace_20260702_042",
+    "event_id": "evt_042",
+    "api_path": "AccountQueryService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-02 17:37:36",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "183****6868",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****2945",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "陈**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"陈娜平\", \"msisdn\": \"18393806868\", \"idDocNo\": \"530793741608989",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_039",
+    "trace_id": "trace_20260702_038",
+    "event_id": "evt_038",
+    "api_path": "AuthGrantService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-02 18:40:44",
+    "sensitive_types": [
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "刘***@163.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "刘**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"刘刚\", \"tel\": \"159****6185\", \"email\": \"刘7****@163.com\"}, \"success\": tr",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_040",
+    "trace_id": "trace_20260702_040",
+    "event_id": "evt_040",
+    "api_path": "BillQueryService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-02 18:40:47",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "185****1569",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****9593",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"杨芳\", \"msisdn\": \"18521851569\", \"idDocNo\": \"5301545226752895",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_041",
+    "trace_id": "trace_20260702_059",
+    "event_id": "evt_059",
+    "api_path": "AccountQueryService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-02 19:34:16",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "185****2023",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****2282",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "郑**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"郑超杰\", \"mobile\": \"18587622023\", \"identityNo\": \"53041326111780",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_042",
+    "trace_id": "trace_20260702_044",
+    "event_id": "evt_044",
+    "api_path": "BizAuditService",
+    "op_id": "ST001",
+    "op_name": "张明",
+    "detect_time": "2026-07-02 19:36:54",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "吴**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"吴艳勇\", \"msisdn\": \"177****4374\", \"idCard\": \"530896********44",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_043",
+    "trace_id": "trace_20260703_087",
+    "event_id": "evt_087",
+    "api_path": "RefundService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-03 08:19:40",
+    "sensitive_types": [
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "何***@outlook.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "何**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"何杰\", \"tel\": \"136****1141\", \"email\": \"何4****@outlook.com\"}, \"success\"",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_044",
+    "trace_id": "trace_20260703_070",
+    "event_id": "evt_070",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-03 08:29:28",
+    "sensitive_types": [
+      "PHONE",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "187****8299",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 500, \"message\": \"数据库连接超时\", \"data\": {\"userName\": \"杨杰\", \"phone\": \"18740568299\", \"idCard\": \"53",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_045",
+    "trace_id": "trace_20260703_068",
+    "event_id": "evt_068",
+    "api_path": "OrderQueryService",
+    "op_id": "ST002",
+    "op_name": "李华",
+    "detect_time": "2026-07-03 08:41:25",
+    "sensitive_types": [
+      "ID_CARD",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "622****7671",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****7671",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "梁**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"梁洁涛\", \"mobile\": \"175****9222\", \"bankCard\": \"6222***********7",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_046",
+    "trace_id": "trace_20260703_086",
+    "event_id": "evt_086",
+    "api_path": "AddressUpdateService",
+    "op_id": "ST010",
+    "op_name": "孙丽",
+    "detect_time": "2026-07-03 10:19:48",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "198****0170",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****1675",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "陈***@foxmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "陈**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"陈敏\", \"phoneNumber\": \"19832010170\", \"certNo\": \"530269524991187",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_047",
+    "trace_id": "trace_20260703_077",
+    "event_id": "evt_077",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-03 10:20:54",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "139****6138",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****1799",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省保山市隆阳区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "宋**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"realName\": \"宋超伟\", \"cellPhone\": \"13950506138\", \"idCardNo\": \"53078293102707903",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_048",
+    "trace_id": "trace_20260703_075",
+    "event_id": "evt_075",
+    "api_path": "AccountUpdateService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-03 10:24:44",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****580",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "林**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"林军芳\", \"msisdn\": \"159****4544\", \"idCard\": \"530149********58",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_049",
+    "trace_id": "trace_20260703_071",
+    "event_id": "evt_071",
+    "api_path": "BizHandleService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-03 11:09:56",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "175****2493",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****3817",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "许**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"许平磊\", \"mobile\": \"17558542493\", \"identityNo\": \"53021495870207",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_050",
+    "trace_id": "trace_20260703_089",
+    "event_id": "evt_089",
+    "api_path": "AccountQueryService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-03 12:19:08",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "150****6321",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****0348",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "吴***@gmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "吴**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"吴洁\", \"phoneNumber\": \"15059636321\", \"certNo\": \"530234764907851",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_051",
+    "trace_id": "trace_20260703_096",
+    "event_id": "evt_096",
+    "api_path": "AuthGrantService",
+    "op_id": "ST003",
+    "op_name": "王强",
+    "detect_time": "2026-07-03 12:26:29",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****632",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "陈**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"陈静军\", \"msisdn\": \"187****0375\", \"idCard\": \"530482********63",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_052",
+    "trace_id": "trace_20260703_073",
+    "event_id": "evt_073",
+    "api_path": "RefundService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-03 13:02:05",
+    "sensitive_types": [
+      "ID_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "ID_CARD",
+        "field": "idCard",
+        "value": "530*****212",
+        "confidence": 0.99,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "林**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"林涛\", \"msisdn\": \"175****3865\", \"idCard\": \"530624********212",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_053",
+    "trace_id": "trace_20260703_098",
+    "event_id": "evt_098",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-03 13:05:52",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "151****2154",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****7567",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "许**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"subscriberName\": \"许明\", \"msisdn\": \"15194082154\", \"idDocNo\": \"5305447022960443",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_054",
+    "trace_id": "trace_20260703_082",
+    "event_id": "evt_082",
+    "api_path": "AddressUpdateService",
+    "op_id": "ST003",
+    "op_name": "王强",
+    "detect_time": "2026-07-03 13:19:30",
+    "sensitive_types": [
+      "PHONE",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "187****7028",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "罗***@outlook.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省昆明市西山区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "罗**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"罗勇刚\", \"tel\": \"18797517028\", \"idNumber\": \"53014069375150939\", \"email\"",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_055",
+    "trace_id": "trace_20260703_092",
+    "event_id": "evt_092",
+    "api_path": "AuthGrantService",
+    "op_id": "ST005",
+    "op_name": "刘芳",
+    "detect_time": "2026-07-03 13:46:51",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "198****1513",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****5201",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "罗***@foxmail.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "罗**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"罗芳平\", \"phoneNumber\": \"19877121513\", \"certNo\": \"53042284993908",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_056",
+    "trace_id": "trace_20260703_093",
+    "event_id": "evt_093",
+    "api_path": "AccountUpdateService",
+    "op_id": "ST005",
+    "op_name": "刘芳",
+    "detect_time": "2026-07-03 14:06:31",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "159****7674",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****4224",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "孙***@yeah.net",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "孙**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"孙洁\", \"phoneNumber\": \"15958377674\", \"certNo\": \"530996165926610",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_057",
+    "trace_id": "trace_20260703_095",
+    "event_id": "evt_095",
+    "api_path": "ReportService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-03 17:14:11",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "马**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 403, \"message\": \"账户状态异常，请联系管理员\", \"data\": {\"userName\": \"马明\", \"phone\": \"178****3839\"}, \"succe",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_058",
+    "trace_id": "trace_20260703_094",
+    "event_id": "evt_094",
+    "api_path": "OrderQueryService",
+    "op_id": "ST003",
+    "op_name": "王强",
+    "detect_time": "2026-07-03 17:53:57",
+    "sensitive_types": [
+      "PHONE",
+      "EMAIL",
+      "ADDRESS",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "138****7769",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "郑***@126.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "ADDRESS",
+        "field": "address",
+        "value": "云南省曲靖市麒麟区***",
+        "confidence": 0.9,
+        "source": "LLM"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "郑**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE+LLM",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"郑敏伟\", \"tel\": \"13861027769\", \"idNumber\": \"53074995641220310\", \"email\"",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_059",
+    "trace_id": "trace_20260703_083",
+    "event_id": "evt_083",
+    "api_path": "AccountQueryService",
+    "op_id": "ST002",
+    "op_name": "李华",
+    "detect_time": "2026-07-03 19:08:24",
+    "sensitive_types": [
+      "PHONE",
+      "BANK_CARD",
+      "EMAIL",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "135****7049",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "BANK_CARD",
+        "field": "bankCard",
+        "value": "****9647",
+        "confidence": 0.85,
+        "source": "RULE"
+      },
+      {
+        "type": "EMAIL",
+        "field": "email",
+        "value": "马***@outlook.com",
+        "confidence": 0.95,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "马**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "CRITICAL",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"contactName\": \"马刚静\", \"phoneNumber\": \"13526487049\", \"certNo\": \"53047873002447",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_060",
+    "trace_id": "trace_20260703_099",
+    "event_id": "evt_099",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST009",
+    "op_name": "郑涛",
+    "detect_time": "2026-07-03 20:38:40",
+    "sensitive_types": [
+      "PHONE",
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "PHONE",
+        "field": "phone",
+        "value": "199****6907",
+        "confidence": 0.98,
+        "source": "RULE"
+      },
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "周**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "HIGH",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 403, \"message\": \"数据库连接超时\", \"data\": {\"userName\": \"周洋刚\", \"phone\": \"19918956907\", \"idCard\": \"5",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_061",
+    "trace_id": "trace_20260702_067",
+    "event_id": "evt_067",
+    "api_path": "BizHandleService",
+    "op_id": "ST007",
+    "op_name": "周洁",
+    "detect_time": "2026-07-02 15:53:44",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "何**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"何伟明\", \"region\": \"5307\", \"createTime\": \"2026-07-02\"}, \"succes",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_062",
+    "trace_id": "trace_20260701_011",
+    "event_id": "evt_011",
+    "api_path": "OrderQueryService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-01 17:18:48",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "陈**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"陈超\", \"accountType\": \"personal\"}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_063",
+    "trace_id": "trace_20260703_081",
+    "event_id": "evt_081",
+    "api_path": "BizAuditService",
+    "op_id": "ST005",
+    "op_name": "刘芳",
+    "detect_time": "2026-07-03 09:02:25",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "罗**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"罗静华\", \"region\": \"5308\", \"createTime\": \"2026-07-03\"}, \"succes",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_064",
+    "trace_id": "trace_20260701_010",
+    "event_id": "evt_010",
+    "api_path": "BizHandleService",
+    "op_id": "ST002",
+    "op_name": "李华",
+    "detect_time": "2026-07-01 10:32:40",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "孙**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"userName\": \"孙华明\", \"status\": \"active\", \"level\": 4}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_065",
+    "trace_id": "trace_20260702_058",
+    "event_id": "evt_058",
+    "api_path": "BatchExportService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-02 18:38:14",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "黄**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"黄杰艳\", \"accountType\": \"personal\"}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_066",
+    "trace_id": "trace_20260702_047",
+    "event_id": "evt_047",
+    "api_path": "BizAuditService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-02 18:55:26",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "孙**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"孙杰军\", \"region\": \"5301\", \"createTime\": \"2026-07-02\"}, \"succes",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_067",
+    "trace_id": "trace_20260701_034",
+    "event_id": "evt_034",
+    "api_path": "OfferSubscribeService",
+    "op_id": "ST004",
+    "op_name": "陈伟",
+    "detect_time": "2026-07-01 09:41:25",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "林**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 404, \"message\": \"请求参数校验失败：手机号格式不正确\", \"data\": {\"userName\": \"林丽\"}, \"success\": false}",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_068",
+    "trace_id": "trace_20260703_088",
+    "event_id": "evt_088",
+    "api_path": "AuthGrantService",
+    "op_id": "ST005",
+    "op_name": "刘芳",
+    "detect_time": "2026-07-03 20:51:19",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "赵**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"name\": \"赵伟华\", \"accountType\": \"personal\"}, \"success\": true}",
+    "deal_status": "0"
+  },
+  {
+    "id": "det_069",
+    "trace_id": "trace_20260703_090",
+    "event_id": "evt_090",
+    "api_path": "PhoneChangeService",
+    "op_id": "ST006",
+    "op_name": "赵刚",
+    "detect_time": "2026-07-03 09:23:12",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "张**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"张芳强\", \"region\": \"5321\", \"createTime\": \"2026-07-03\"}, \"succes",
+    "deal_status": "1"
+  },
+  {
+    "id": "det_070",
+    "trace_id": "trace_20260701_008",
+    "event_id": "evt_008",
+    "api_path": "StatisticsService",
+    "op_id": "ST008",
+    "op_name": "吴磊",
+    "detect_time": "2026-07-01 12:45:19",
+    "sensitive_types": [
+      "NAME"
+    ],
+    "sensitive_details": [
+      {
+        "type": "NAME",
+        "field": "name",
+        "value": "杨**",
+        "confidence": 0.88,
+        "source": "LLM"
+      }
+    ],
+    "risk_level": "LOW",
+    "detect_source": "RULE",
+    "response_snippet": "{\"code\": 200, \"data\": {\"customerName\": \"杨强艳\", \"region\": \"5308\", \"createTime\": \"2026-07-01\"}, \"succes",
+    "deal_status": "0"
+  }
+]

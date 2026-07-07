@@ -14,6 +14,18 @@ const defaultConfig: MenuConfig = {
     },
   },
   Cosmic: true,
+  SensitiveDetection: {
+    visible: true,
+    children: {
+      SensitiveHome: true,
+      SensitiveData: true,
+      SensitiveDetectionResult: true,
+      SensitiveReport: true,
+      SensitiveModel: true,
+      SensitiveKnowledge: true,
+      SensitiveAgent: true,
+    },
+  },
 };
 
 async function fetchMenuConfig(): Promise<MenuConfig> {

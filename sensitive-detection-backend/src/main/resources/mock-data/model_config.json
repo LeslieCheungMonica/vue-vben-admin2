@@ -1,0 +1,132 @@
+[
+  {
+    "id": "model_001",
+    "name": "手机号检测规则",
+    "type": "RULE",
+    "pattern": "1[3-9]\\d{9}",
+    "field": "response",
+    "sensitive_type": "PHONE",
+    "confidence": 0.98,
+    "enabled": true,
+    "description": "正则匹配中国大陆手机号码",
+    "priority": 1,
+    "create_time": "2026-06-01 10:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_002",
+    "name": "身份证号检测规则",
+    "type": "RULE",
+    "pattern": "[1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[0-9Xx]",
+    "field": "response",
+    "sensitive_type": "ID_CARD",
+    "confidence": 0.99,
+    "enabled": true,
+    "description": "正则匹配18位身份证号码",
+    "priority": 1,
+    "create_time": "2026-06-01 10:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_003",
+    "name": "银行卡号检测规则",
+    "type": "RULE",
+    "pattern": "[1-9]\\d{14,18}",
+    "field": "response",
+    "sensitive_type": "BANK_CARD",
+    "confidence": 0.85,
+    "enabled": true,
+    "description": "正则匹配银行卡号（需配合Luhn校验）",
+    "priority": 2,
+    "create_time": "2026-06-01 10:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_004",
+    "name": "邮箱地址检测规则",
+    "type": "RULE",
+    "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+    "field": "response",
+    "sensitive_type": "EMAIL",
+    "confidence": 0.95,
+    "enabled": true,
+    "description": "正则匹配电子邮箱地址",
+    "priority": 2,
+    "create_time": "2026-06-01 10:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_005",
+    "name": "地址信息检测模型",
+    "type": "LLM",
+    "pattern": null,
+    "field": "response",
+    "sensitive_type": "ADDRESS",
+    "confidence": 0.90,
+    "enabled": true,
+    "description": "基于大语言模型的中文地址识别，支持省市区街道级别",
+    "priority": 3,
+    "llm_config": {
+      "model": "claude-sonnet-5",
+      "prompt": "请分析以下文本是否包含中国地址信息，如果包含请返回JSON格式：{\"has_address\": true, \"address\": \"脱敏后的地址\", \"confidence\": 0.0-1.0}",
+      "temperature": 0.1,
+      "max_tokens": 500
+    },
+    "create_time": "2026-06-15 14:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_006",
+    "name": "姓名检测模型",
+    "type": "LLM",
+    "pattern": null,
+    "field": "response",
+    "sensitive_type": "NAME",
+    "confidence": 0.88,
+    "enabled": true,
+    "description": "基于NLP的中文姓名识别模型，区分姓名与普通名词",
+    "priority": 3,
+    "llm_config": {
+      "model": "claude-sonnet-5",
+      "prompt": "请分析以下文本中是否包含真实人名（非角色名或测试名），返回JSON：{\"has_name\": true, \"name\": \"脱敏姓名\", \"confidence\": 0.0-1.0}",
+      "temperature": 0.1,
+      "max_tokens": 300
+    },
+    "create_time": "2026-06-15 14:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_007",
+    "name": "综合敏感信息检测",
+    "type": "LLM",
+    "pattern": null,
+    "field": "response",
+    "sensitive_type": "MIXED",
+    "confidence": 0.92,
+    "enabled": true,
+    "description": "综合检测多种敏感信息类型，支持上下文语义分析",
+    "priority": 4,
+    "llm_config": {
+      "model": "claude-sonnet-5",
+      "prompt": "请全面分析以下接口响应数据中包含的所有敏感信息类型，返回JSON数组：[{\"type\": \"敏感类型\", \"field\": \"字段名\", \"value\": \"脱敏值\", \"confidence\": 0.0-1.0}]。敏感类型包括：PHONE,ID_CARD,EMAIL,ADDRESS,BANK_CARD,NAME,PASSWORD",
+      "temperature": 0.1,
+      "max_tokens": 1000
+    },
+    "create_time": "2026-06-20 09:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  },
+  {
+    "id": "model_008",
+    "name": "IP地址检测规则",
+    "type": "RULE",
+    "pattern": "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}",
+    "field": "response",
+    "sensitive_type": "IP",
+    "confidence": 0.75,
+    "enabled": false,
+    "description": "正则匹配IP地址（已禁用，误报率较高）",
+    "priority": 5,
+    "create_time": "2026-06-01 10:00:00",
+    "update_time": "2026-07-01 08:00:00"
+  }
+]

@@ -11,5 +11,15 @@
     "title": "Dashboard",
     "analytics": "Analytics",
     "workspace": "Workspace"
+  },
+  "sensitive": {
+    "title": "Sensitive Detection",
+    "home": "Overview",
+    "data": "Data Query",
+    "detection": "Detection Results",
+    "report": "Assessment Report",
+    "model": "Model Config",
+    "knowledge": "Knowledge Enhancement",
+    "agent": "AI Assistant"
   }
 }
