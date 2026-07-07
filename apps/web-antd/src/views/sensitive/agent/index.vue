@@ -3,13 +3,31 @@ import { nextTick, onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Input, Tag, message } from 'ant-design-vue';
+import {
+  Button,
+  Input,
+  Modal,
+  Table,
+  type TableColumnType,
+  Tag,
+} from 'ant-design-vue';
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 
-import { chatSyncApi } from '#/api/core/sensitive-agent';
+import {
+  chatSyncApi,
+  type SensitiveAgentApi,
+} from '#/api/core/sensitive-agent';
+import {
+  getRiskLevelColor,
+  getRiskLevelName,
+  getSensitiveTypeName,
+} from '#/views/sensitive/utils/mapping';
 
 import 'highlight.js/styles/github-dark.css';
+
+type RiskInterfaceItem = SensitiveAgentApi.RiskInterfaceItem;
+type StructuredRiskData = SensitiveAgentApi.StructuredRiskData;
 
 interface StepItem {
   type: 'thinking' | 'analysis' | 'data';
@@ -22,6 +40,7 @@ interface ChatMessage {
   content: string;
   steps: StepItem[];
   timestamp: string;
+  structuredData?: StructuredRiskData;
 }
 
 const md = new MarkdownIt({
@@ -45,11 +64,34 @@ const inputMessage = ref('');
 const streaming = ref(false);
 const messages = ref<ChatMessage[]>([]);
 
+// AI scan demo modal state
+const scanModalVisible = ref(false);
+const scanLoading = ref(false);
+const scanRecord = ref<RiskInterfaceItem | null>(null);
+const scanStepIndex = ref(0);
+
+const scanSteps = [
+  { icon: '🔍', title: '关联代码定位', desc: '根据泄露接口路由定位源代码模块' },
+  { icon: '🔎', title: '漏洞侦查', desc: '扫描接口认证、授权、注入等漏洞' },
+  { icon: '⚔️', title: '渗透攻击测试', desc: '模拟攻击验证漏洞可利用性' },
+  { icon: '📋', title: '生成渗透报告', desc: '汇总漏洞详情与修复建议' },
+];
+
 const quickQuestions = [
   '今天数据情况如何？',
   '有哪些高危接口？',
   '敏感信息分布情况？',
   '生成安全建议',
+];
+
+const riskTableColumns: TableColumnType<RiskInterfaceItem>[] = [
+  { title: '接口名称', dataIndex: 'serviceName', key: 'serviceName', width: 180 },
+  { title: '路由', dataIndex: 'serviceRoute', key: 'serviceRoute', width: 200 },
+  { title: '风险等级', dataIndex: 'riskLevel', key: 'riskLevel', width: 90 },
+  { title: '风险分', dataIndex: 'riskScore', key: 'riskScore', width: 80 },
+  { title: '敏感类型', dataIndex: 'sensitiveTypes', key: 'sensitiveTypes', width: 200 },
+  { title: '检测次数', dataIndex: 'detectCount', key: 'detectCount', width: 80 },
+  { title: '操作', key: 'action', width: 130, fixed: 'right' },
 ];
 
 const renderMarkdown = (content: string) => {
@@ -89,6 +131,21 @@ const ensureStep = (
   scrollToBottom();
   return newStep;
 };
+
+async function handleAiScan(record: RiskInterfaceItem) {
+  scanRecord.value = record;
+  scanModalVisible.value = true;
+  scanLoading.value = true;
+  scanStepIndex.value = 0;
+
+  // Simulate step-by-step scan process
+  for (let i = 0; i < scanSteps.length; i++) {
+    scanStepIndex.value = i;
+    await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
+  }
+  scanStepIndex.value = scanSteps.length; // all done
+  scanLoading.value = false;
+}
 
 const handleSend = async () => {
   const msg = inputMessage.value.trim();
@@ -184,6 +241,14 @@ const handleSend = async () => {
               };
               steps.push(s);
               scrollToBottom();
+            } else if (step.type === 'structured_data') {
+              try {
+                const data: StructuredRiskData = JSON.parse(step.content);
+                messages.value[msgIndex]!.structuredData = data;
+                scrollToBottom();
+              } catch {
+                // JSON parse error — skip
+              }
             } else if (step.type === 'answer') {
               for (const s of messages.value[msgIndex]!.steps) {
                 s.done = true;
@@ -382,6 +447,105 @@ onMounted(() => {
                   v-html="renderMarkdown(msg.content)"
                 ></div>
               </div>
+
+              <!-- Structured Risk Data (仅数据统计类问题) -->
+              <div v-if="msg.structuredData" class="mt-4">
+                <!-- 风险等级定义 (overview / risk_only / suggestion 时展示) -->
+                <div
+                  v-if="['overview', 'risk_only', 'suggestion'].includes(msg.structuredData.displayMode)"
+                  class="mb-3 flex flex-wrap gap-3 rounded-xl border border-orange-500/15 bg-orange-500/5 px-4 py-3"
+                >
+                  <span class="text-xs font-semibold text-gray-500">风险等级定义：</span>
+                  <span
+                    v-for="def in msg.structuredData.riskLevelDefs"
+                    :key="def.level"
+                    class="flex items-center gap-1"
+                  >
+                    <Tag :color="def.color">{{ def.name }}</Tag>
+                    <span class="text-xs text-gray-400">{{ def.description }}</span>
+                  </span>
+                </div>
+
+                <!-- 敏感类型分布 (type_dist 模式) -->
+                <template v-if="msg.structuredData.displayMode === 'type_dist'">
+                  <div
+                    class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-blue-500"
+                  >
+                    <span>📊</span>
+                    <span>敏感信息类型分布</span>
+                  </div>
+                  <div class="rounded-xl border border-blue-500/10 bg-card px-4 py-3">
+                    <div class="flex flex-col gap-2">
+                      <div
+                        v-for="item in msg.structuredData.sensitiveTypeDistribution"
+                        :key="item.type"
+                        class="flex items-center gap-3"
+                      >
+                        <Tag :color="item.color" class="min-w-[70px] text-center">{{ item.name }}</Tag>
+                        <div class="flex-1">
+                          <div class="h-4 overflow-hidden rounded-full bg-gray-100">
+                            <div
+                              class="h-full rounded-full transition-all"
+                              :style="{
+                                width: Math.max(4, item.count / Math.max(...msg.structuredData.sensitiveTypeDistribution.map(d => d.count)) * 100) + '%',
+                                backgroundColor: item.color,
+                              }"
+                            ></div>
+                          </div>
+                        </div>
+                        <span class="min-w-[40px] text-right text-xs font-semibold text-gray-600">{{ item.count }}次</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- 风险接口明细表格 (overview / risk_only / suggestion 时展示) -->
+                <template v-if="['overview', 'risk_only', 'suggestion'].includes(msg.structuredData.displayMode) && msg.structuredData.riskInterfaces.length > 0">
+                  <div
+                    class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-red-500"
+                  >
+                    <span>📊</span>
+                    <span>{{ msg.structuredData.displayMode === 'risk_only' ? '高危风险接口' : msg.structuredData.displayMode === 'suggestion' ? '主要风险接口' : '风险接口明细' }}</span>
+                  </div>
+                  <div class="rounded-xl border border-red-500/10 bg-card">
+                    <Table
+                      :columns="riskTableColumns"
+                      :data-source="msg.structuredData.riskInterfaces"
+                      size="small"
+                      :pagination="msg.structuredData.riskInterfaces.length > 5 ? { pageSize: 5, size: 'small' } : false"
+                      row-key="id"
+                      :scroll="{ x: 800 }"
+                    >
+                      <template #bodyCell="{ column, record }">
+                        <template v-if="column.key === 'riskLevel'">
+                          <Tag :color="getRiskLevelColor(record.riskLevel)">
+                            {{ getRiskLevelName(record.riskLevel) }}
+                          </Tag>
+                        </template>
+                        <template v-if="column.key === 'sensitiveTypes'">
+                          <Tag
+                            v-for="t in record.sensitiveTypes.split(',')"
+                            :key="t"
+                            color="red"
+                            class="mr-1 mb-1"
+                          >
+                            {{ getSensitiveTypeName(t.trim()) }}
+                          </Tag>
+                        </template>
+                        <template v-if="column.key === 'action'">
+                          <Button
+                            type="link"
+                            size="small"
+                            @click="handleAiScan(record as RiskInterfaceItem)"
+                          >
+                            🔍 AI扫描渗透
+                          </Button>
+                        </template>
+                      </template>
+                    </Table>
+                  </div>
+                </template>
+              </div>
             </template>
           </div>
         </div>
@@ -443,6 +607,71 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- AI Scan Demo Modal -->
+    <Modal
+      v-model:open="scanModalVisible"
+      title="AI 扫描渗透分析"
+      :footer="null"
+      width="520px"
+    >
+      <!-- Target info -->
+      <div class="mb-4 rounded-lg bg-red-500/5 px-3 py-2">
+        <p class="text-xs font-medium text-gray-500">分析目标</p>
+        <p class="text-sm font-semibold text-red-500">{{ scanRecord?.serviceName }}</p>
+        <p class="text-xs text-gray-400">{{ scanRecord?.serviceRoute }}</p>
+        <div class="mt-1 flex flex-wrap gap-1">
+          <Tag
+            v-for="t in scanRecord?.sensitiveTypes?.split(',')"
+            :key="t"
+            color="red"
+          >
+            {{ getSensitiveTypeName(t?.trim() ?? '') }}
+          </Tag>
+        </div>
+      </div>
+
+      <!-- Step progress -->
+      <div class="flex flex-col gap-3 py-2">
+        <div
+          v-for="(step, i) in scanSteps"
+          :key="i"
+          class="flex items-start gap-3 rounded-lg border p-3 transition-all"
+          :class="{
+            'border-green-500/20 bg-green-500/5': scanStepIndex > i,
+            'border-blue-400/40 bg-blue-500/5': scanStepIndex === i,
+            'border-gray-200 bg-transparent': scanStepIndex < i,
+          }"
+        >
+          <span class="mt-0.5 text-lg">{{ step.icon }}</span>
+          <div class="flex-1">
+            <p class="text-sm font-semibold" :class="scanStepIndex < i ? 'text-gray-400' : 'text-gray-700'">
+              {{ step.title }}
+            </p>
+            <p class="text-xs text-gray-400">{{ step.desc }}</p>
+          </div>
+          <span
+            v-if="scanStepIndex > i"
+            class="text-sm text-green-500"
+          >✓</span>
+          <span
+            v-else-if="scanStepIndex === i"
+            class="h-4 w-4 animate-spin rounded-full border-2 border-blue-400/20 border-t-blue-400"
+          ></span>
+        </div>
+      </div>
+
+      <!-- Done result -->
+      <div v-if="scanStepIndex >= scanSteps.length && !scanLoading" class="mt-2 rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3">
+        <p class="mb-1 text-sm font-semibold text-green-600">✅ 渗透分析完成</p>
+        <p class="text-xs text-gray-400">已对接口 <b>{{ scanRecord?.serviceName }}</b> 完成关联代码定位与漏洞渗透测试，发现 <b class="text-red-500">{{ scanRecord?.riskLevel === 'CRITICAL' ? 3 : 2 }}</b> 个安全漏洞。</p>
+        <div class="mt-3 flex gap-2">
+          <Button type="primary" size="small" @click="scanModalVisible = false">
+            知道了
+          </Button>
+        </div>
+      </div>
+    </Modal>
   </Page>
 </template>
 

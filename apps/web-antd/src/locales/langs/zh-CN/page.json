@@ -19,7 +19,7 @@
     "tasks": "任务管理"
   },
   "sensitive": {
-    "title": "敏感数据检测",
+    "title": "敏感数据检测智能体",
     "home": "总览",
     "data": "数据查询",
     "detection": "检测结果",

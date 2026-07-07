@@ -2,6 +2,7 @@ package com.asiainfo.crm.security.demo.service;
 
 import com.asiainfo.crm.security.demo.dto.ChatRequest;
 import com.asiainfo.crm.security.demo.dto.ChatResponse;
+import com.asiainfo.crm.security.demo.dto.StructuredRiskData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -83,6 +85,18 @@ public class AgentService {
                     if (answer == null) answer = generateStaticAnswer(message);
                 } else {
                     answer = generateStaticAnswer(message);
+                }
+
+                // Step 5.5: Send structured data for data-statistics questions
+                if (isDataStatisticsQuestion(message)) {
+                    try {
+                        StructuredRiskData structuredData = buildStructuredRiskData(message);
+                        String structuredJson = objectMapper.writeValueAsString(structuredData);
+                        sendEvent(emitter, "structured_data", structuredJson);
+                        Thread.sleep(200);
+                    } catch (Exception e) {
+                        log.warn("Failed to send structured_data event: {}", e.getMessage());
+                    }
                 }
 
                 sendEvent(emitter, "answer", answer);
@@ -338,5 +352,139 @@ public class AgentService {
         String lower = text.toLowerCase();
         for (String k : keywords) if (lower.contains(k.toLowerCase())) return true;
         return false;
+    }
+
+    // ==================== Structured Data ====================
+
+    private boolean isDataStatisticsQuestion(String message) {
+        return containsAny(message, "数据", "情况", "概况", "统计", "今天", "概览", "总")
+                || containsAny(message, "高危", "风险", "接口", "危险")
+                || containsAny(message, "敏感", "分布", "类型")
+                || containsAny(message, "建议", "安全", "整改", "处理", "改进", "优化");
+    }
+
+    @SuppressWarnings("unchecked")
+    private StructuredRiskData buildStructuredRiskData(String message) {
+        // Determine display mode based on question type
+        String displayMode;
+        if (containsAny(message, "高危", "风险", "接口", "危险")) {
+            displayMode = "risk_only";
+        } else if (containsAny(message, "敏感", "分布", "类型") && !containsAny(message, "高危", "风险", "接口")) {
+            displayMode = "type_dist";
+        } else if (containsAny(message, "建议", "安全", "整改", "处理", "改进", "优化")) {
+            displayMode = "suggestion";
+        } else {
+            displayMode = "overview";
+        }
+
+        // Build risk level definitions
+        List<StructuredRiskData.RiskLevelDef> riskLevelDefs = Arrays.asList(
+                StructuredRiskData.RiskLevelDef.builder()
+                        .level("CRITICAL").name("严重").color("red")
+                        .description("存在极高风险，敏感信息严重泄露，需立即处理").build(),
+                StructuredRiskData.RiskLevelDef.builder()
+                        .level("HIGH").name("高危").color("orange")
+                        .description("存在高风险，敏感信息存在泄露风险，需尽快处理").build(),
+                StructuredRiskData.RiskLevelDef.builder()
+                        .level("MEDIUM").name("中危").color("blue")
+                        .description("存在中等风险，需关注并制定整改计划").build(),
+                StructuredRiskData.RiskLevelDef.builder()
+                        .level("LOW").name("低危").color("green")
+                        .description("存在较低风险，建议优化改进").build()
+        );
+
+        // Build risk interface items — filtered by display mode
+        List<Map<String, Object>> allRisks = dataService.getPrivacyInterfaceRisks();
+        List<Map<String, Object>> filteredRisks = allRisks;
+
+        if ("risk_only".equals(displayMode)) {
+            // Only show CRITICAL and HIGH risk interfaces
+            filteredRisks = allRisks.stream()
+                    .filter(r -> "CRITICAL".equals(r.get("risk_level")) || "HIGH".equals(r.get("risk_level")))
+                    .collect(Collectors.toList());
+        } else if ("suggestion".equals(displayMode)) {
+            // Show top 5 riskiest interfaces
+            filteredRisks = allRisks.stream()
+                    .sorted((a, b) -> {
+                        int sa = a.get("risk_score") != null ? ((Number) a.get("risk_score")).intValue() : 0;
+                        int sb = b.get("risk_score") != null ? ((Number) b.get("risk_score")).intValue() : 0;
+                        return Integer.compare(sb, sa);
+                    })
+                    .limit(5)
+                    .collect(Collectors.toList());
+        }
+        // "type_dist" mode: no interface table needed
+
+        List<StructuredRiskData.RiskInterfaceItem> riskInterfaces = filteredRisks.stream()
+                .sorted((a, b) -> {
+                    int sa = a.get("risk_score") != null ? ((Number) a.get("risk_score")).intValue() : 0;
+                    int sb = b.get("risk_score") != null ? ((Number) b.get("risk_score")).intValue() : 0;
+                    return Integer.compare(sb, sa);
+                })
+                .map(r -> StructuredRiskData.RiskInterfaceItem.builder()
+                        .id(String.valueOf(r.getOrDefault("id", "")))
+                        .serviceName(String.valueOf(r.getOrDefault("service_name", "")))
+                        .serviceRoute(String.valueOf(r.getOrDefault("service_route", "")))
+                        .riskLevel(String.valueOf(r.getOrDefault("risk_level", "")))
+                        .riskScore(r.get("risk_score") != null ? ((Number) r.get("risk_score")).intValue() : 0)
+                        .sensitiveTypes(String.valueOf(r.getOrDefault("sensitive_types", "")))
+                        .sensitiveSummary(String.valueOf(r.getOrDefault("sensitive_summary", "")))
+                        .detectCount(r.get("detect_count") != null ? ((Number) r.get("detect_count")).intValue() : 0)
+                        .detectSource(String.valueOf(r.getOrDefault("detect_source", "")))
+                        .confidence(r.get("confidence") != null ? ((Number) r.get("confidence")).doubleValue() : 0.0)
+                        .build())
+                .collect(Collectors.toList());
+
+        // Build statistics summary
+        Map<String, Object> stats = dataService.getStatistics();
+        Map<String, Object> statisticsSummary = new LinkedHashMap<>();
+        statisticsSummary.put("totalLogs", stats.get("totalLogs"));
+        statisticsSummary.put("totalDetections", stats.get("totalDetections"));
+        statisticsSummary.put("totalRisks", stats.get("totalRisks"));
+        statisticsSummary.put("riskDistribution", stats.get("riskDistribution"));
+
+        // Build sensitive type distribution
+        List<StructuredRiskData.SensitiveTypeDistribution> typeDist = new ArrayList<>();
+        Map<String, Long> typeDistribution = (Map<String, Long>) stats.get("sensitiveTypeDistribution");
+        if (typeDistribution != null) {
+            String[] colors = {"#e94560", "#f5a623", "#409eff", "#67c23a", "#909399", "#9b59b6", "#e67e22", "#1abc9c"};
+            int ci = 0;
+            for (Map.Entry<String, Long> entry : typeDistribution.entrySet()) {
+                String type = entry.getKey();
+                String name = getChineseTypeName(type);
+                typeDist.add(StructuredRiskData.SensitiveTypeDistribution.builder()
+                        .type(type)
+                        .name(name)
+                        .count(entry.getValue())
+                        .color(colors[ci % colors.length])
+                        .build());
+                ci++;
+            }
+            // Sort by count descending
+            typeDist.sort((a, b) -> Long.compare(b.getCount(), a.getCount()));
+        }
+
+        return StructuredRiskData.builder()
+                .displayMode(displayMode)
+                .riskLevelDefs(riskLevelDefs)
+                .riskInterfaces(riskInterfaces)
+                .statistics(statisticsSummary)
+                .sensitiveTypeDistribution(typeDist)
+                .build();
+    }
+
+    private String getChineseTypeName(String type) {
+        switch (type) {
+            case "ID_CARD": return "身份证号";
+            case "PHONE": return "手机号码";
+            case "BANK_CARD": return "银行卡号";
+            case "NAME": return "姓名";
+            case "ADDRESS": return "地址";
+            case "EMAIL": return "邮箱";
+            case "IP": return "IP地址";
+            case "MIXED": return "综合";
+            case "PASSWORD": return "密码";
+            default: return type;
+        }
     }
 }
