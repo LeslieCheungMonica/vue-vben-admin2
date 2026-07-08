@@ -126,7 +126,7 @@ const chainData = computed(() => {
       { id: 'n6', label: '攻击图谱生成', type: 'process', status: getNodeStatus('recon-graph'), x: 450, y: 60 },
       { id: 'n7', label: '业务面测绘', type: 'process', status: getNodeStatus('biz-recon'), x: 300, y: 120 },
       { id: 'n9', label: '业务逻辑漏扫', type: 'process', status: getNodeStatus('biz-vuln'), x: 600, y: 90 },
-      { id: 'n10', label: '业务漏扫报告', type: 'output', status: bizVulnFinish ? 'completed' : 'pending', x: 760, y: 90 },
+      { id: 'n10', label: '业务漏扫报告', type: 'output', status: bizVulnFinish ? 'completed' : 'pending', x: 750, y: 90 },
     ],
     edges: [
       { from: 'n1', to: 'n2' },
@@ -141,15 +141,21 @@ const chainData = computed(() => {
 });
 
 let agentStartTime = Date.now();
+let elapsedBaseSeconds = 0;
 const elapsedSeconds = ref(0);
 let elapsedTimer: ReturnType<typeof setInterval> | null = null;
 
 function startElapsedTimer() {
   stopElapsedTimer();
-  elapsedSeconds.value = 0;
-  agentStartTime = Date.now();
+  const agent = activeAgent.value;
+  if (agent?.created && agent?.updated) {
+    elapsedBaseSeconds = Math.floor((agent.updated - agent.created) / 1000);
+  } else {
+    elapsedBaseSeconds = 0;
+  }
+  elapsedSeconds.value = elapsedBaseSeconds;
   elapsedTimer = setInterval(() => {
-    elapsedSeconds.value = Math.floor((Date.now() - agentStartTime) / 1000);
+    elapsedSeconds.value = elapsedBaseSeconds + Math.floor((Date.now() - agentStartTime) / 1000);
   }, 1000);
 }
 
@@ -160,6 +166,16 @@ function stopElapsedTimer() {
   }
 }
 
+const activeStageDuration = computed(() => {
+  const agent = activeAgent.value;
+  if (!agent?.created || !agent?.updated) return null;
+  const diffMs = agent.updated - agent.created;
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes >= 1) return `${minutes}分钟`;
+  const seconds = Math.floor(diffMs / 1000);
+  return `${seconds > 0 ? seconds : 2}秒`;
+});
+
 const formattedElapsed = computed(() => {
   const h = Math.floor(elapsedSeconds.value / 3600);
   const m = Math.floor((elapsedSeconds.value % 3600) / 60);
@@ -167,12 +183,12 @@ const formattedElapsed = computed(() => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 });
 
-const knowledgeHits = ref<{ time: string; text: string }[]>([]);
+const knowledgeHits = ref<{ time: string; tool: string; input: string; output: string }[]>([]);
 
-function addKnowledgeHit(text: string) {
+function addKnowledgeHit(tool: string, input: string, output: string) {
   const now = new Date();
   const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  knowledgeHits.value.unshift({ time, text });
+  knowledgeHits.value.unshift({ time, tool, input, output });
   if (knowledgeHits.value.length > 50) {
     knowledgeHits.value = knowledgeHits.value.slice(0, 50);
   }
@@ -239,6 +255,7 @@ const mergedDisplayItems = computed(() => {
 const eventStreamConnected = ref(false);
 
 let eventSource: EventSource | null = null;
+let kbEventSource: EventSource | null = null;
 let flushTimer: ReturnType<typeof setInterval> | null = null;
 const partsMap = new Map<string, PartState>();
 const dirtyParts = new Set<string>();
@@ -303,7 +320,7 @@ function processEvent(data: any) {
       part.text = partData.text || part.text;
     } else if (partType === 'tool') {
       const tool = partData.tool || partData.toolName;
-      if (tool === 'grep' || tool === 'glob') { part.hidden = true; return; }
+      if (tool === 'grep' || tool === 'glob') { part.hidden = true; }
       if (tool === 'read' || tool === 'bash') { part.hideContent = true; }
       part.type = 'tool';
       part.toolName = tool;
@@ -316,6 +333,12 @@ function processEvent(data: any) {
       if (state.output) {
         part.toolOutput = typeof state.output === 'string' ? state.output : JSON.stringify(state.output, null, 2);
       }
+      if (tool === 'grep' || tool === 'glob' || tool === 'read') {
+        const input = typeof state.input === 'string' ? state.input : JSON.stringify(state.input, null, 2);
+        const output = typeof state.output === 'string' ? state.output.slice(0, 200) : state.output ? JSON.stringify(state.output, null, 2).slice(0, 200) : '';
+        addKnowledgeHit(tool, input, output);
+      }
+      if (part.hidden) return;
     } else if (partType === 'step-start') {
       part.type = 'step';
       part.stepType = 'start';
@@ -428,6 +451,32 @@ function connectEventStream(taskId: string) {
   };
 }
 
+function connectKbEventStream(taskId: string) {
+  if (kbEventSource) {
+    kbEventSource.close();
+    kbEventSource = null;
+  }
+  const url = `/api/wape/kb_event_stream/${taskId}`;
+  kbEventSource = new EventSource(url);
+  kbEventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'kb.retrieval') {
+        const msg = data.properties?.message || '';
+        addKnowledgeHit('kb', msg, '');
+      }
+    } catch {
+      // ignore
+    }
+  };
+  kbEventSource.onerror = () => {
+    if (kbEventSource) {
+      kbEventSource.close();
+      kbEventSource = null;
+    }
+  };
+}
+
 function disconnectEventStream() {
   if (flushTimer) {
     clearInterval(flushTimer);
@@ -437,6 +486,10 @@ function disconnectEventStream() {
   if (eventSource) {
     eventSource.close();
     eventSource = null;
+  }
+  if (kbEventSource) {
+    kbEventSource.close();
+    kbEventSource = null;
   }
   eventStreamConnected.value = false;
 }
@@ -571,6 +624,7 @@ watch(
     if (taskId) {
       fetchTask();
       connectEventStream(taskId as string);
+      connectKbEventStream(taskId as string);
     }
   },
   { immediate: true },
@@ -638,8 +692,11 @@ onUnmounted(() => {
                     <span class="inline-block h-1.5 w-1.5 rounded-full" :class="statusColorMap[activeAgent?.status || 'wait']" />
                     {{ statusLabelMap[activeAgent?.status || 'wait'] || activeAgent?.status }}
                   </span>
-                  <span>运行时长 30分钟</span>
-                  <span class="font-mono text-blue-600 font-medium">{{ formattedElapsed }}</span>
+                  <template v-if="activeAgent?.status === 'running'">
+                    <span>运行时长</span>
+                    <span class="font-mono text-blue-600 font-medium">{{ formattedElapsed }}</span>
+                  </template>
+                  <span v-else>运行时长 {{ activeStageDuration || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -659,9 +716,14 @@ onUnmounted(() => {
               <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">实时知识检索</div>
               <div class="flex-1 overflow-y-auto px-3 py-1">
                 <div v-if="knowledgeHits.length === 0" class="flex h-full items-center justify-center text-xs text-gray-400">暂无检索记录</div>
-                <div v-for="(hit, idx) in knowledgeHits" :key="idx" class="flex gap-2 py-1 text-xs border-b border-gray-50 last:border-0">
-                  <span class="shrink-0 font-mono text-gray-400">{{ hit.time }}</span>
-                  <span class="text-gray-600">{{ hit.text }}</span>
+                <div v-for="(hit, idx) in knowledgeHits" :key="idx" class="border-b border-gray-50 py-1.5 last:border-0">
+                  <div class="flex items-start gap-1.5 text-xs">
+                    <span class="shrink-0 font-mono text-gray-400">{{ hit.time }}</span>
+                    <span v-if="hit.tool === 'kb'" class="shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] text-green-600">知识库</span>
+                    <span v-else class="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-600">{{ hit.tool }}</span>
+                    <span class="text-gray-600 break-all">{{ hit.input }}</span>
+                  </div>
+                  <div v-if="hit.output" class="mt-0.5 truncate pl-[72px] text-[11px] text-gray-400">{{ hit.output }}</div>
                 </div>
               </div>
             </div>
