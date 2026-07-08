@@ -185,6 +185,13 @@ const formattedElapsed = computed(() => {
 
 const knowledgeHits = ref<{ time: string; tool: string; input: string; output: string }[]>([]);
 
+function handleAgentClick(agent: { key: string; name: string; icon: string; stage: string; status: string; session_id?: string; created?: number; updated?: number }) {
+  activeStep.value = agent.stage;
+  if (task.value?.status !== 'running') {
+    return;
+  }
+}
+
 function addKnowledgeHit(tool: string, input: string, output: string) {
   const now = new Date();
   const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
@@ -630,6 +637,14 @@ watch(
   { immediate: true },
 );
 
+watch(activeStep, () => {
+  const taskId = route.params.taskId as string;
+  if (taskId && task.value?.status === 'running') {
+    knowledgeHits.value = [];
+    connectKbEventStream(taskId);
+  }
+});
+
 onUnmounted(() => {
   disconnectEventStream();
   cleanupHistoryObserver();
@@ -664,7 +679,7 @@ onUnmounted(() => {
               :key="agent.stage"
               class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors"
               :class="activeStep === agent.stage ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'"
-              @click="activeStep = agent.stage"
+              @click="handleAgentClick(agent)"
             >
               <span class="text-base">{{ agent.icon }}</span>
               <div class="flex flex-1 flex-col min-w-0">
@@ -702,7 +717,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Middle: Agent Execution Flow Graph -->
-            <div class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-400 overflow-hidden">
+            <div style="minHeight: 310px; maxHeight:310px;flex-grow: 0;" class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-400 overflow-hidden">
               <ThoughtChainFlow
                 :chain-data="chainData"
                 title="智能体协同作业"
@@ -712,7 +727,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Bottom: Real-time Knowledge Retrieval -->
-            <div class="flex h-40 flex-col rounded-lg border border-gray-200 bg-white">
+            <div style="flex-grow: 1;" class="flex h-40 flex-col rounded-lg border border-gray-200 bg-white">
               <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">实时知识检索</div>
               <div class="flex-1 overflow-y-auto px-3 py-1">
                 <div v-if="knowledgeHits.length === 0" class="flex h-full items-center justify-center text-xs text-gray-400">暂无检索记录</div>
