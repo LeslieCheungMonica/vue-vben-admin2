@@ -340,7 +340,7 @@ function processEvent(data: any) {
       if (state.output) {
         part.toolOutput = typeof state.output === 'string' ? state.output : JSON.stringify(state.output, null, 2);
       }
-      if (tool === 'grep' || tool === 'glob' || tool === 'read') {
+      if (tool === 'read') {
         const input = typeof state.input === 'string' ? state.input : JSON.stringify(state.input, null, 2);
         const output = typeof state.output === 'string' ? state.output.slice(0, 200) : state.output ? JSON.stringify(state.output, null, 2).slice(0, 200) : '';
         addKnowledgeHit(tool, input, output);
@@ -728,7 +728,7 @@ onUnmounted(() => {
 
             <!-- Bottom: Real-time Knowledge Retrieval -->
             <div style="flex-grow: 1;" class="flex h-40 flex-col rounded-lg border border-gray-200 bg-white">
-              <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">实时知识检索</div>
+              <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">实时工具与知识检索</div>
               <div class="flex-1 overflow-y-auto px-3 py-1">
                 <div v-if="knowledgeHits.length === 0" class="flex h-full items-center justify-center text-xs text-gray-400">暂无检索记录</div>
                 <div v-for="(hit, idx) in knowledgeHits" :key="idx" class="border-b border-gray-50 py-1.5 last:border-0">

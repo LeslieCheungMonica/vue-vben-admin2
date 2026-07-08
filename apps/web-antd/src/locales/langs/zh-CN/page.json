@@ -8,7 +8,7 @@
     "profile": "个人中心"
   },
   "dashboard": {
-    "title": "AI漏扫渗透智能体",
+    "title": "渗透漏扫智能体",
     "analytics": "资源管理",
     "workspace": "智能体任务管理",
     "agentResource": "智能体资源管理"
@@ -19,13 +19,13 @@
     "tasks": "任务管理"
   },
   "sensitive": {
-    "title": "敏感数据检测智能体",
+    "title": "日志分析智能体",
     "home": "总览",
     "data": "数据查询",
     "detection": "检测结果",
     "report": "评估报告",
     "model": "模型配置",
     "knowledge": "知识增强",
-    "agent": "AI 助手"
+    "agent": "内生安全-AI 敏感信息泄露防控"
   }
 }
