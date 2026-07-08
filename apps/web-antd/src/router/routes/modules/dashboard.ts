@@ -41,6 +41,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'TaskRunStatus',
+        path: 'task/run-status/:taskId',
+        component: () => import('#/views/dashboard/workspace/run-status.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '运行状态',
+        },
+      },
+      {
         name: 'BizData',
         path: 'task/biz-data/:taskId',
         component: () => import('#/views/dashboard/workspace/biz-data.vue'),
