@@ -12,26 +12,171 @@ import { getTaskListApi } from '#/api/core/task';
 import type { TaskApi } from '#/api/core/task';
 import ThoughtChainFlow from './components/expandable-graph.vue';
 
-const chainData = {
-  nodes: [
-    { id: 'n1', label: '接收任务', type: 'input', status: 'completed', x: 0, y: 60 },
-    { id: 'n2', label: '漏洞侦查', type: 'process', status: 'running', x: 150, y: 60 },
-    { id: 'n4', label: '攻击面测绘', type: 'process', status: 'completed', x: 300, y: 60 },
-    { id: 'n6', label: '攻击图谱生成', type: 'process', status: 'completed', x: 450, y: 60 },
-    { id: 'n7', label: '业务面测绘', type: 'process', status: 'completed', x: 300, y: 120 },
-    { id: 'n9', label: '业务逻辑漏扫', type: 'process', status: 'completed', x: 600, y: 90 },
-    { id: 'n10', label: '业务漏扫报告', type: 'output', status: 'completed', x: 760, y: 90 },
-  ],
-  edges: [
-    { from: 'n1', to: 'n2' },
-    { from: 'n2', to: 'n4' },
-    { from: 'n4', to: 'n6' },
-    { from: 'n2', to: 'n7' },
-    { from: 'n7', to: 'n9' },
-    { from: 'n6', to: 'n9' },
-    { from: 'n9', to: 'n10' },
-  ],
+interface StageItem {
+  stage: string;
+  status: string;
+  session_id?: string;
+  created?: number;
+  updated?: number;
+}
+
+interface TaskStageResult {
+  status: string;
+  mertic_status: { running: number; wait: number; finish: number };
+  run_status: StageItem[];
+  message: string;
+}
+
+const stageToAgent: Record<string, { key: string; name: string; icon: string }> = {
+  'pre-recon': { key: 'vuln_recon', name: '漏洞侦查智能体', icon: '🔍' },
+  recon: { key: 'attack_surface', name: '攻击面测绘智能体', icon: '🎯' },
+  'recon-graph': { key: 'attack_graph', name: '攻击图谱智能体', icon: '🗺️' },
+  'biz-recon': { key: 'biz_surface', name: '业务面测绘智能体', icon: '🏗️' },
+  'biz-vuln': { key: 'biz', name: '业务逻辑漏洞扫描智能体', icon: '⚙️' },
 };
+
+const stageOrder = ['pre-recon', 'recon', 'recon-graph', 'biz-recon', 'biz-vuln'];
+
+const route = useRoute();
+
+const loading = ref(true);
+const task = ref<TaskApi.TaskItem | null>(null);
+const taskStage = ref<TaskStageResult | null>(null);
+
+const agents = computed(() => {
+  const list: { key: string; name: string; icon: string; stage: string; status: string; session_id?: string; created?: number; updated?: number }[] = [];
+  for (const stage of stageOrder) {
+    const info = stageToAgent[stage];
+    const stageData = taskStage.value?.run_status?.find(s => s.stage === stage);
+    list.push({
+      ...info,
+      stage,
+      status: stageData?.status || 'wait',
+      session_id: stageData?.session_id,
+      created: stageData?.created,
+      updated: stageData?.updated,
+    });
+  }
+  return list;
+});
+
+const agentStats = computed(() => {
+  const m = taskStage.value?.mertic_status;
+  return {
+    running: m?.running ?? 0,
+    waiting: m?.wait ?? 0,
+    error: 0,
+    finish: m?.finish ?? 0,
+  };
+});
+
+const activeStep = ref('pre-recon');
+
+const activeAgent = computed(() => agents.value.find(a => a.stage === activeStep.value));
+
+const flowSteps = [
+  { key: 'pre-recon', label: '漏洞侦查', icon: '🔍' },
+  { key: 'recon', label: '攻击面测绘', icon: '🎯' },
+  { key: 'recon-graph', label: '攻击图谱', icon: '🗺️' },
+  { key: 'biz-recon', label: '业务面测绘', icon: '🏗️' },
+  { key: 'biz-vuln', label: '业务逻辑漏洞扫描', icon: '⚙️' },
+];
+
+function getStepTitle(key: string) {
+  return flowSteps.find(s => s.key === key)?.label || key;
+}
+
+function getStepIcon(key: string) {
+  return flowSteps.find(s => s.key === key)?.icon || '📋';
+}
+
+const statusLabelMap: Record<string, string> = {
+  running: '运行中',
+  wait: '待运行',
+  finish: '已完成',
+};
+
+const statusColorMap: Record<string, string> = {
+  running: 'bg-green-500',
+  wait: 'bg-gray-300',
+  finish: 'bg-blue-500',
+};
+
+const stageNodeMap: Record<string, string> = {
+  'pre-recon': 'n2',
+  recon: 'n4',
+  'recon-graph': 'n6',
+  'biz-recon': 'n7',
+  'biz-vuln': 'n9',
+};
+
+const chainData = computed(() => {
+  const stageStatus = taskStage.value?.run_status || [];
+  const getNodeStatus = (stage: string) => {
+    const s = stageStatus.find(ss => ss.stage === stage);
+    if (!s) return 'pending';
+    return s.status === 'running' ? 'running' : s.status === 'finish' ? 'completed' : 'pending';
+  };
+  const bizVulnFinish = stageStatus.find(s => s.stage === 'biz-vuln')?.status === 'finish';
+  return {
+    nodes: [
+      { id: 'n1', label: '接收任务', type: 'input', status: 'completed', x: 0, y: 60 },
+      { id: 'n2', label: '漏洞侦查', type: 'process', status: getNodeStatus('pre-recon'), x: 150, y: 60 },
+      { id: 'n4', label: '攻击面测绘', type: 'process', status: getNodeStatus('recon'), x: 300, y: 60 },
+      { id: 'n6', label: '攻击图谱生成', type: 'process', status: getNodeStatus('recon-graph'), x: 450, y: 60 },
+      { id: 'n7', label: '业务面测绘', type: 'process', status: getNodeStatus('biz-recon'), x: 300, y: 120 },
+      { id: 'n9', label: '业务逻辑漏扫', type: 'process', status: getNodeStatus('biz-vuln'), x: 600, y: 90 },
+      { id: 'n10', label: '业务漏扫报告', type: 'output', status: bizVulnFinish ? 'completed' : 'pending', x: 760, y: 90 },
+    ],
+    edges: [
+      { from: 'n1', to: 'n2' },
+      { from: 'n2', to: 'n4' },
+      { from: 'n4', to: 'n6' },
+      { from: 'n2', to: 'n7' },
+      { from: 'n7', to: 'n9' },
+      { from: 'n6', to: 'n9' },
+      { from: 'n9', to: 'n10' },
+    ],
+  };
+});
+
+let agentStartTime = Date.now();
+const elapsedSeconds = ref(0);
+let elapsedTimer: ReturnType<typeof setInterval> | null = null;
+
+function startElapsedTimer() {
+  stopElapsedTimer();
+  elapsedSeconds.value = 0;
+  agentStartTime = Date.now();
+  elapsedTimer = setInterval(() => {
+    elapsedSeconds.value = Math.floor((Date.now() - agentStartTime) / 1000);
+  }, 1000);
+}
+
+function stopElapsedTimer() {
+  if (elapsedTimer) {
+    clearInterval(elapsedTimer);
+    elapsedTimer = null;
+  }
+}
+
+const formattedElapsed = computed(() => {
+  const h = Math.floor(elapsedSeconds.value / 3600);
+  const m = Math.floor((elapsedSeconds.value % 3600) / 60);
+  const s = elapsedSeconds.value % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+});
+
+const knowledgeHits = ref<{ time: string; text: string }[]>([]);
+
+function addKnowledgeHit(text: string) {
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  knowledgeHits.value.unshift({ time, text });
+  if (knowledgeHits.value.length > 50) {
+    knowledgeHits.value = knowledgeHits.value.slice(0, 50);
+  }
+}
 
 interface PartState {
   id: string;
@@ -49,13 +194,7 @@ interface PartState {
   updatedAt: number;
 }
 
-const route = useRoute();
-
-const loading = ref(true);
-const task = ref<TaskApi.TaskItem | null>(null);
-
 const FLUSH_INTERVAL = 150;
-
 const displayItems = shallowRef<PartState[]>([]);
 
 const mergedDisplayItems = computed(() => {
@@ -127,97 +266,6 @@ const rightPanelStyle = computed(() => {
   };
 });
 
-const activeStep = ref('vuln_recon');
-
-let agentStartTime = Date.now();
-const elapsedSeconds = ref(0);
-let elapsedTimer: ReturnType<typeof setInterval> | null = null;
-
-function startElapsedTimer() {
-  stopElapsedTimer();
-  elapsedSeconds.value = 0;
-  agentStartTime = Date.now();
-  elapsedTimer = setInterval(() => {
-    elapsedSeconds.value = Math.floor((Date.now() - agentStartTime) / 1000);
-  }, 1000);
-}
-
-function stopElapsedTimer() {
-  if (elapsedTimer) {
-    clearInterval(elapsedTimer);
-    elapsedTimer = null;
-  }
-}
-
-const formattedElapsed = computed(() => {
-  const h = Math.floor(elapsedSeconds.value / 3600);
-  const m = Math.floor((elapsedSeconds.value % 3600) / 60);
-  const s = elapsedSeconds.value % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-});
-
-const knowledgeHits = ref<{ time: string; text: string }[]>([]);
-
-function addKnowledgeHit(text: string) {
-  const now = new Date();
-  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  knowledgeHits.value.unshift({ time, text });
-  if (knowledgeHits.value.length > 50) {
-    knowledgeHits.value = knowledgeHits.value.slice(0, 50);
-  }
-}
-
-const agents = [
-  { key: 'vuln_recon', name: '漏洞侦查智能体', icon: '🔍' },
-  { key: 'attack_surface', name: '攻击面测绘智能体', icon: '🎯' },
-  { key: 'attack_graph', name: '攻击图谱智能体', icon: '🗺️' },
-  { key: 'biz_surface', name: '业务面测绘智能体', icon: '🏗️' },
-  { key: 'biz', name: '业务逻辑漏洞扫描智能体', icon: '⚙️' },
-];
-
-const agentStatusMap = computed(() => {
-  const map: Record<string, string> = {};
-  for (const a of agents) {
-    map[a.key] = a.key === activeStep.value ? 'running' : 'wait-to-start';
-  }
-  return map;
-});
-
-const agentStats = computed(() => {
-  const statuses = Object.values(agentStatusMap.value);
-  return {
-    running: statuses.filter(s => s === 'running').length,
-    waiting: statuses.filter(s => s === 'wait-to-start').length,
-    error: statuses.filter(s => s === 'run-except').length,
-  };
-});
-
-const flowSteps = [
-  { key: 'vuln_recon', label: '漏洞侦查', icon: '🔍' },
-  { key: 'attack_surface', label: '攻击面测绘', icon: '🎯' },
-  { key: 'attack_graph', label: '攻击图谱', icon: '🗺️' },
-  { key: 'biz_surface', label: '业务面测绘', icon: '🏗️' },
-  { key: 'biz', label: '业务逻辑漏洞扫描', icon: '⚙️' },
-];
-
-function getStepTitle(key: string) {
-  for (const s of flowSteps) {
-    if (s.key === key) return s.label;
-    const child = s.children?.find((c: any) => c.key === key);
-    if (child) return child.label;
-  }
-  return '基本信息';
-}
-
-function getStepIcon(key: string) {
-  for (const s of flowSteps) {
-    if (s.key === key) return s.icon;
-    const child = s.children?.find((c: any) => c.key === key);
-    if (child) return child.icon;
-  }
-  return '📋';
-}
-
 function getOrCreatePart(id: string, sessionId: string, type: PartState['type']) {
   let part = partsMap.get(id);
   if (!part) {
@@ -255,13 +303,8 @@ function processEvent(data: any) {
       part.text = partData.text || part.text;
     } else if (partType === 'tool') {
       const tool = partData.tool || partData.toolName;
-      if (tool === 'grep' || tool === 'glob') {
-        part.hidden = true;
-        return;
-      }
-      if (tool === 'read' || tool === 'bash') {
-        part.hideContent = true;
-      }
+      if (tool === 'grep' || tool === 'glob') { part.hidden = true; return; }
+      if (tool === 'read' || tool === 'bash') { part.hideContent = true; }
       part.type = 'tool';
       part.toolName = tool;
       part.toolCallId = partData.callID;
@@ -293,7 +336,6 @@ function processEvent(data: any) {
     const info = props.info || {};
     const msgId = info.id;
     if (!msgId) return;
-
     if (info.finish) {
       const part = getOrCreatePart(`finish:${msgId}`, info.sessionID, 'step');
       part.stepType = 'finish';
@@ -341,8 +383,12 @@ async function fetchTask() {
   if (!taskId) return;
   loading.value = true;
   try {
-    const res = await getTaskListApi(taskId);
-    task.value = res.items?.[0] ?? null;
+    const [taskRes, stageRes] = await Promise.all([
+      getTaskListApi(taskId),
+      baseRequestClient.post<TaskStageResult>('/wape/task_stage', { task_id: taskId }),
+    ]);
+    task.value = taskRes.items?.[0] ?? null;
+    taskStage.value = stageRes.data;
   } catch {
     console.error('获取任务详情失败');
   } finally {
@@ -468,25 +514,14 @@ async function loadMoreHistory() {
 function setupHistoryObserver() {
   cleanupHistoryObserver();
   historyObserver = new IntersectionObserver(
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        loadMoreHistory();
-      }
-    },
+    (entries) => { if (entries[0]?.isIntersecting) loadMoreHistory(); },
     { rootMargin: '100px' },
   );
-  nextTick(() => {
-    if (historySentinel.value) {
-      historyObserver?.observe(historySentinel.value);
-    }
-  });
+  nextTick(() => { if (historySentinel.value) historyObserver?.observe(historySentinel.value); });
 }
 
 function cleanupHistoryObserver() {
-  if (historyObserver) {
-    historyObserver.disconnect();
-    historyObserver = null;
-  }
+  if (historyObserver) { historyObserver.disconnect(); historyObserver = null; }
 }
 
 function formatTime(ts: number) {
@@ -562,27 +597,27 @@ onUnmounted(() => {
         style="min-height: 500px; height: 100%"
       >
         <!-- Left: Agent List -->
-        <div class="flex w-56 flex-shrink-0 flex-col overflow-hidden rounded border border-gray-200 bg-white p-3">
+        <div class="flex w-[239px] flex-shrink-0 flex-col overflow-hidden rounded border border-gray-200 bg-white p-3">
           <div class="mb-2 text-sm font-semibold text-gray-700">智能体列表</div>
           <div class="mb-3 flex gap-2 text-xs">
             <span class="rounded bg-blue-100 px-2 py-0.5 text-blue-700">运行中 {{ agentStats.running }}</span>
             <span class="rounded bg-gray-100 px-2 py-0.5 text-gray-600">待运行 {{ agentStats.waiting }}</span>
-            <span class="rounded bg-red-100 px-2 py-0.5 text-red-600">异常 {{ agentStats.error }}</span>
+            <span class="rounded bg-green-100 px-2 py-0.5 text-green-700">已完成 {{ agentStats.finish }}</span>
           </div>
           <div class="flex flex-col gap-1.5 flex-1 overflow-y-auto">
             <div
               v-for="agent in agents"
-              :key="agent.key"
+              :key="agent.stage"
               class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors"
-              :class="activeStep === agent.key ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'"
-              @click="activeStep = agent.key"
+              :class="activeStep === agent.stage ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'"
+              @click="activeStep = agent.stage"
             >
               <span class="text-base">{{ agent.icon }}</span>
               <div class="flex flex-1 flex-col min-w-0">
                 <span class="truncate font-medium text-gray-700">{{ agent.name }}</span>
-                <span class="text-[10px] text-gray-400">{{ agentStatusMap[agent.key] === 'running' ? '运行中' : '待运行' }}</span>
+                <span class="text-[10px]" :class="statusLabelMap[agent.status] ? 'text-gray-400' : 'text-gray-400'">{{ statusLabelMap[agent.status] || agent.status }}</span>
               </div>
-              <span v-if="agentStatusMap[agent.key] === 'running'" class="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span class="inline-block h-2 w-2 rounded-full" :class="statusColorMap[agent.status] || 'bg-gray-300'" />
             </div>
           </div>
         </div>
@@ -599,7 +634,10 @@ onUnmounted(() => {
               <div class="flex flex-1 flex-col">
                 <span class="text-sm font-semibold text-gray-700">{{ getStepTitle(activeStep) }}</span>
                 <div class="flex items-center gap-3 text-xs text-gray-500">
-                  <span class="flex items-center gap-1"><span class="inline-block h-1.5 w-1.5 rounded-full bg-green-500" /> 运行中</span>
+                  <span class="flex items-center gap-1">
+                    <span class="inline-block h-1.5 w-1.5 rounded-full" :class="statusColorMap[activeAgent?.status || 'wait']" />
+                    {{ statusLabelMap[activeAgent?.status || 'wait'] || activeAgent?.status }}
+                  </span>
                   <span>运行时长 30分钟</span>
                   <span class="font-mono text-blue-600 font-medium">{{ formattedElapsed }}</span>
                 </div>
@@ -636,9 +674,7 @@ onUnmounted(() => {
             :title="rightCollapsed ? '展开推理过程' : '收起推理过程'"
             @click="toggleRight"
           >
-            <span class="select-none leading-none text-[10px]">
-              {{ rightCollapsed ? '◀' : '▶' }}
-            </span>
+            <span class="select-none leading-none text-[10px]">{{ rightCollapsed ? '◀' : '▶' }}</span>
           </div>
         </div>
 
@@ -648,49 +684,24 @@ onUnmounted(() => {
         >
           <div class="flex items-center gap-2 border-b bg-gray-50 px-4 py-3 text-sm font-medium">
             <span class="text-xs">🤖 推理过程</span>
-            <span
-              class="inline-block h-2 w-2 rounded-full"
-              :style="{ backgroundColor: eventStreamConnected ? '#52c41a' : '#d9d9d9' }"
-            ></span>
-            <span class="text-xs text-gray-400">
-              {{ eventStreamConnected ? '已连接' : '未连接' }}
-            </span>
+            <span class="inline-block h-2 w-2 rounded-full" :style="{ backgroundColor: eventStreamConnected ? '#52c41a' : '#d9d9d9' }"></span>
+            <span class="text-xs text-gray-400">{{ eventStreamConnected ? '已连接' : '未连接' }}</span>
             <div class="ml-auto">
-              <button
-                class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
-                @click="loadHistoryMessages(1)"
-              >
-                查看历史
-              </button>
+              <button class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors" @click="loadHistoryMessages(1)">查看历史</button>
             </div>
           </div>
-          <div
-            ref="eventStreamContainer"
-            class="flex-1 overflow-y-auto p-4"
-            style="min-height: 400px; max-height: 100%"
-          >
+          <div ref="eventStreamContainer" class="flex-1 overflow-y-auto p-4" style="min-height: 400px; max-height: 100%">
             <template v-if="mergedDisplayItems.length === 0">
               <div class="pt-16 text-center text-gray-400">
                 <div class="mb-2 text-3xl">⚡</div>
-                <div class="text-xs">
-                  {{ eventStreamConnected ? '等待 AI 思考...' : '暂无连接' }}
-                </div>
+                <div class="text-xs">{{ eventStreamConnected ? '等待 AI 思考...' : '暂无连接' }}</div>
               </div>
             </template>
-
             <div class="space-y-3">
-              <div
-                v-for="item in mergedDisplayItems"
-                :key="item.type === 'merged-reasoning' ? item.ids[0] : item.id"
-                class="animate-fade-in"
-              >
-                <div
-                  v-if="item.type === 'merged-reasoning'"
-                  class="rounded-lg border border-blue-100 bg-blue-50/60 p-3"
-                >
+              <div v-for="item in mergedDisplayItems" :key="item.type === 'merged-reasoning' ? item.ids[0] : item.id" class="animate-fade-in">
+                <div v-if="item.type === 'merged-reasoning'" class="rounded-lg border border-blue-100 bg-blue-50/60 p-3">
                   <div class="mb-1.5 flex items-center gap-1.5 text-xs text-blue-400">
-                    <span>💭</span>
-                    <span>推理中</span>
+                    <span>💭</span><span>推理中</span>
                     <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400"></span>
                   </div>
                   <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2">
@@ -700,32 +711,22 @@ onUnmounted(() => {
                     <span class="inline-block h-3.5 w-0.5 animate-pulse bg-blue-300 align-text-bottom"></span>
                   </div>
                 </div>
-
-                <div
-                  v-if="item.type === 'tool'"
-                  class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
-                >
+                <div v-if="item.type === 'tool'" class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
                   <div class="mb-1.5 flex items-center gap-2">
                     <span class="text-base">{{ toolStatusIcon[item.toolStatus || ''] || '🔧' }}</span>
                     <span class="text-xs font-medium text-gray-500">{{ item.toolName || '工具调用' }}</span>
-                    <Tag
-                      v-if="item.toolStatus"
-                      :color="item.toolStatus === 'completed' ? 'success' : item.toolStatus === 'running' ? 'processing' : 'default'"
-                      class="!text-xs !px-1.5 !py-0"
-                    >{{ item.toolStatus }}</Tag>
+                    <Tag v-if="item.toolStatus" :color="item.toolStatus === 'completed' ? 'success' : item.toolStatus === 'running' ? 'processing' : 'default'" class="!text-xs !px-1.5 !py-0">{{ item.toolStatus }}</Tag>
                   </div>
                   <div v-if="item.toolInput && !item.hideContent" class="mb-1 rounded bg-gray-100 p-2 text-xs text-gray-600 font-mono">{{ item.toolInput }}</div>
                   <div v-if="item.toolInput && item.hideContent" class="mb-1 truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono" :title="item.toolInput">{{ item.toolInput.slice(0, 80) }}...</div>
                   <div v-if="item.toolOutput && !item.hideContent" class="rounded bg-green-50 p-2 text-xs text-green-700 font-mono whitespace-pre-wrap">{{ item.toolOutput }}</div>
                   <div v-if="item.toolOutput && item.hideContent" class="truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono" :title="item.toolOutput">{{ item.toolOutput.slice(0, 80) }}...</div>
                 </div>
-
                 <div v-if="item.type === 'step'" class="flex items-center gap-2 text-xs text-gray-400">
                   <span v-if="item.stepType === 'start'" class="text-blue-400">┌─</span>
                   <span v-else-if="item.stepType === 'finish'" class="text-green-400">└─</span>
                   <span>{{ item.text }}</span>
                 </div>
-
                 <div v-if="item.type === 'message'" class="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-xs text-gray-500">{{ item.text }}</div>
               </div>
             </div>
@@ -737,26 +738,12 @@ onUnmounted(() => {
       <div class="pt-20 text-center text-gray-400">未找到对应任务信息</div>
     </Page>
 
-    <Modal
-      :open="historyModalVisible"
-      title="历史会话消息"
-      width="70%"
-      :footer="null"
-      @cancel="historyModalVisible = false; cleanupHistoryObserver()"
-    >
+    <Modal :open="historyModalVisible" title="历史会话消息" width="70%" :footer="null" @cancel="historyModalVisible = false; cleanupHistoryObserver()">
       <div v-if="historyLoading" class="flex items-center justify-center py-16 text-sm text-gray-400">加载中...</div>
       <div v-else-if="historySessions.length === 0" class="flex items-center justify-center py-16 text-sm text-gray-400">暂无历史消息</div>
       <div v-else>
         <div class="mb-3 flex flex-wrap gap-2">
-          <button
-            v-for="tag in historyFilterTags"
-            :key="tag.key"
-            class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-            :class="historyFilter === tag.key ? 'bg-blue-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-            @click="historyFilter = tag.key"
-          >
-            {{ tag.label }}
-          </button>
+          <button v-for="tag in historyFilterTags" :key="tag.key" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="historyFilter === tag.key ? 'bg-blue-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" @click="historyFilter = tag.key">{{ tag.label }}</button>
         </div>
         <div class="space-y-3">
           <div v-for="(msg, idx) in filteredHistorySessions" :key="idx" class="rounded border border-gray-200 bg-white">
@@ -764,9 +751,7 @@ onUnmounted(() => {
               <span class="font-medium text-gray-700">{{ getMsgType(msg) }}</span>
               <span>{{ formatTime(msg.time_created) }}</span>
             </div>
-            <div class="px-3 py-2">
-              <ExpandableMsg :content="getMsgContent(msg)" />
-            </div>
+            <div class="px-3 py-2"><ExpandableMsg :content="getMsgContent(msg)" /></div>
           </div>
           <div ref="historySentinel" class="h-4" />
           <div v-if="historyLoadingMore" class="py-4 text-center text-xs text-gray-400">加载更多...</div>
