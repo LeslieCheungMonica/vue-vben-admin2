@@ -126,7 +126,7 @@ const chainData = computed(() => {
       { id: 'n6', label: '攻击图谱生成', type: 'process', status: getNodeStatus('recon-graph'), x: 450, y: 60 },
       { id: 'n7', label: '业务面测绘', type: 'process', status: getNodeStatus('biz-recon'), x: 300, y: 120 },
       { id: 'n9', label: '业务逻辑漏扫', type: 'process', status: getNodeStatus('biz-vuln'), x: 600, y: 90 },
-      { id: 'n10', label: '业务漏扫报告', type: 'output', status: bizVulnFinish ? 'completed' : 'pending', x: 750, y: 90 },
+      { id: 'n10', label: '业务漏扫报告', type: 'output', status: task.value?.status === 'running' ? 'running' : 'completed', x: 750, y: 90 },
     ],
     edges: [
       { from: 'n1', to: 'n2' },
