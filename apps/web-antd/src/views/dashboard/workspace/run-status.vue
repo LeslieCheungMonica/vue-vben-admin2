@@ -145,6 +145,36 @@ let elapsedBaseSeconds = 0;
 const elapsedSeconds = ref(0);
 let elapsedTimer: ReturnType<typeof setInterval> | null = null;
 
+const POLL_INTERVAL = 10000;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let currentPollTaskId: string | null = null;
+
+function startPolling(taskId: string) {
+  stopPolling();
+  currentPollTaskId = taskId;
+  pollTimer = setInterval(async () => {
+    if (!currentPollTaskId) return;
+    const taskId = currentPollTaskId;
+    try {
+      const stageRes = await baseRequestClient.post<TaskStageResult>('/wape/task_stage', { task_id: taskId });
+      taskStage.value = stageRes.data;
+      if (stageRes.data?.status === 'finish' || stageRes.data?.status === 'stopped') {
+        stopPolling();
+      }
+    } catch {
+      // ignore poll errors
+    }
+  }, POLL_INTERVAL);
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  currentPollTaskId = null;
+}
+
 function startElapsedTimer() {
   stopElapsedTimer();
   const agent = activeAgent.value;
@@ -419,6 +449,10 @@ async function fetchTask() {
     ]);
     task.value = taskRes.items?.[0] ?? null;
     taskStage.value = stageRes.data;
+
+    if (task.value?.status !== 'finish' && task.value?.status !== 'stopped') {
+      startPolling(taskId);
+    }
   } catch {
     console.error('获取任务详情失败');
   } finally {
@@ -627,7 +661,11 @@ function getMsgContent(msg: any) {
 
 watch(
   () => route.params.taskId,
-  (taskId) => {
+  (taskId, oldTaskId) => {
+    if (oldTaskId && oldTaskId !== taskId) {
+      stopPolling();
+      disconnectEventStream();
+    }
     if (taskId) {
       fetchTask();
       connectEventStream(taskId as string);
@@ -649,6 +687,7 @@ onUnmounted(() => {
   disconnectEventStream();
   cleanupHistoryObserver();
   stopElapsedTimer();
+  stopPolling();
 });
 </script>
 
