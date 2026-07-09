@@ -27,5 +27,10 @@
     "model": "模型配置",
     "knowledge": "知识增强",
     "agent": "内生安全-AI 敏感信息泄露防控"
+  },
+  "knowledge": {
+    "list": "知识库列表",
+    "upload": "文档上传",
+    "search": "知识检索"
   }
 }

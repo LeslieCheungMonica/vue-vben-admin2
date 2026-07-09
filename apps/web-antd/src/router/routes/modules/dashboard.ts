@@ -58,15 +58,6 @@ const routes: RouteRecordRaw[] = [
           title: '业务范围',
         },
       },
-      {
-        name: 'AgentResource',
-        path: '/agent-resource',
-        component: () => import('#/views/dashboard/workspace/agent-resource.vue'),
-        meta: {
-          icon: 'lucide:package',
-          title: $t('page.dashboard.agentResource'),
-        },
-      },
     ],
   },
 ];

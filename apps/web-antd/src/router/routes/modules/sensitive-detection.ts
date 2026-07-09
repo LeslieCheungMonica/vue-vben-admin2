@@ -58,15 +58,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        name: 'SensitiveKnowledge',
-        path: '/sensitive/knowledge',
-        component: () => import('#/views/sensitive/knowledge/index.vue'),
-        meta: {
-          icon: 'lucide:book-open',
-          title: $t('page.sensitive.knowledge'),
-        },
-      },
-      {
         name: 'SensitiveAgent',
         path: '/sensitive/agent',
         component: () => import('#/views/sensitive/agent/index.vue'),
