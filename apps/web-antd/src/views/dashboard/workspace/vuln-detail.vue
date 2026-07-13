@@ -19,6 +19,20 @@ const vulnList = ref<AuthVulnItem[]>([]);
 const loading = ref(false);
 const selectedVuln = ref<AuthVulnItem | null>(null);
 const selectedIds = ref<Set<number>>(new Set());
+const page = ref(1);
+const pageSize = 10;
+
+const pagedList = computed(() => {
+  const start = (page.value - 1) * pageSize;
+  return filteredList.value.slice(start, start + pageSize);
+});
+
+const totalPages = computed(() => Math.ceil(filteredList.value.length / pageSize));
+
+function goPage(p: number) {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+}
 
 function toggleSelect(id: number) {
   const s = new Set(selectedIds.value);
@@ -190,7 +204,7 @@ onMounted(() => {
             </div>
           </div>
           <div
-            v-for="vuln in filteredList"
+            v-for="vuln in pagedList"
             :key="vuln.id"
             class="cursor-pointer border-b border-gray-50 px-4 py-3 transition-all hover:bg-blue-50/60"
             :class="{
@@ -242,9 +256,45 @@ onMounted(() => {
                   {{ vuln.vuln_detail }}
                 </div>
               </div>
+            </div>
+          </div>
         </div>
-      </div>
-      </div>
+        <div
+          v-if="totalPages > 1"
+          class="flex items-center justify-between border-t border-gray-100 px-3 py-2 text-xs text-gray-500"
+        >
+          <span>共 {{ filteredList.length }} 条</span>
+          <div class="flex items-center gap-1">
+            <button
+              class="rounded px-2 py-1 transition-colors hover:bg-gray-100 disabled:opacity-40"
+              :disabled="page <= 1"
+              @click="goPage(page - 1)"
+            >
+              上一页
+            </button>
+            <template v-for="p in totalPages" :key="p">
+              <button
+                v-if="p === page || p === 1 || p === totalPages || Math.abs(p - page) <= 1"
+                class="rounded px-2 py-1 transition-colors"
+                :class="p === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'"
+                @click="goPage(p)"
+              >
+                {{ p }}
+              </button>
+              <span
+                v-else-if="p === page - 2 || p === page + 2"
+                class="px-1"
+              >...</span>
+            </template>
+            <button
+              class="rounded px-2 py-1 transition-colors hover:bg-gray-100 disabled:opacity-40"
+              :disabled="page >= totalPages"
+              @click="goPage(page + 1)"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Middle: Vuln Detail -->
