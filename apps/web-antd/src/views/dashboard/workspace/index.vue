@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import type { ResourceApi } from '#/api/core/resource';
+import type { TaskApi } from '#/api/core/task';
+
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -21,7 +24,6 @@ import {
 } from 'ant-design-vue';
 
 import { getResourceListApi } from '#/api/core/resource';
-import type { ResourceApi } from '#/api/core/resource';
 import {
   createTaskApi,
   deleteTaskApi,
@@ -30,7 +32,6 @@ import {
   stopTaskApi,
   updateTaskApi,
 } from '#/api/core/task';
-import type { TaskApi } from '#/api/core/task';
 
 const router = useRouter();
 
@@ -61,7 +62,7 @@ const createForm = ref<TaskApi.TaskCreateParams>({
 
 const editModalVisible = ref(false);
 const editLoading = ref(false);
-const editTask = ref<TaskApi.TaskItem | null>(null);
+const editTask = ref<null | TaskApi.TaskItem>(null);
 const editForm = ref<TaskApi.TaskUpdateParams>({ task_id: '' });
 
 const scopeOptions = [
@@ -339,8 +340,9 @@ onMounted(() => {
               filterKeyword = '';
               fetchTasks();
             "
-            >重置</Button
-          >
+            >
+重置
+</Button>
         </Space>
         <Button type="primary" @click="openCreateModal">创建任务</Button>
       </div>
@@ -395,9 +397,7 @@ onMounted(() => {
                 v-if="record.status === 'invalid'"
                 title="任务无效，无法启动"
               >
-                <Button size="small" disabled>
-                  启动
-                </Button>
+                <Button size="small" disabled> 启动 </Button>
               </Tooltip>
               <Tooltip
                 v-else-if="
@@ -420,21 +420,33 @@ onMounted(() => {
                 <Button size="small" @click="handleStop(record)">停止</Button>
               </Tooltip>
               <Tooltip v-else-if="record.status === 'stopped'" title="继续任务">
-                <Button size="small" type="primary" @click="handleStart(record)"
-                  >继续</Button
-                >
+                <Button size="small" type="primary" @click="handleStart(record)">
+继续
+</Button>
               </Tooltip>
-              <span v-else class="text-gray-300 text-xs cursor-not-allowed"
-                >—</span
-              >
-              <Button size="small" @click="router.push(`/dashboard/task/biz-data/${record.task_id}`)">业务范围</Button>
-              <Button size="small" @click="router.push(`/dashboard/task/run-status/${record.task_id}`)">运行状态</Button>
+              <span v-else class="text-gray-300 text-xs cursor-not-allowed">—</span>
+              <Button
+                size="small"
+                @click="
+                  router.push(`/dashboard/task/biz-data/${record.task_id}`)
+                "
+                >
+业务范围
+</Button>
+              <Button
+                size="small"
+                @click="
+                  router.push(`/dashboard/task/run-status/${record.task_id}`)
+                "
+                >
+运行状态
+</Button>
               <Button size="small" @click="showDetail(record)">详情</Button>
               <Button size="small" @click="handleDownload(record)">下载</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
-              <Button danger size="small" @click="handleDelete(record)"
-                >删除</Button
-              >
+              <Button danger size="small" @click="handleDelete(record)">
+删除
+</Button>
             </Space>
           </template>
         </template>
@@ -532,7 +544,7 @@ onMounted(() => {
             <Form.Item label="API 调用样例">
               <Input.TextArea
                 v-model:value="createForm.api_example"
-                placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
+                placeholder="例子：http://127.0.0.1/test/list -H &quot;Authorization: $TOKEN&quot;&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`"
                 :rows="5"
               />
             </Form.Item>
@@ -623,7 +635,7 @@ onMounted(() => {
             <Form.Item label="API 调用样例">
               <Input.TextArea
                 v-model:value="editForm.api_example"
-                placeholder='例子：http://127.0.0.1/test/list -H "Authorization: $TOKEN"&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`'
+                placeholder="例子：http://127.0.0.1/test/list -H &quot;Authorization: $TOKEN&quot;&#10;后台接口访问需要TOKEN：`eyJhbGciOiJIUzUxMiJ9.eyJ0ZW5hbnRJZCI6OTgsInVzZXJUeXBlIjoidGVuYW50IiwidGVuYW50Q29kZSI6IlNEQ1RFTkFOVCIsInVzZXJOYW1lIjoibGl5YW5odWkiLCJpYXQiOjE3NzkwODU4ODMsImV4cCI6MTc3OTE3MjI4MywianRpIjoibG9naW5fdG9rZW5zOnRlbmFudDpsaXlhbmh1aSJ9...`"
                 :rows="5"
               />
             </Form.Item>
