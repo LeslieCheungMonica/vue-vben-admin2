@@ -78,6 +78,7 @@ const statusColorMap: Record<string, string> = {
   running: 'processing',
   stopped: 'warning',
   'run-except': 'error',
+  invalid: 'default',
 };
 
 const statusLabelMap: Record<string, string> = {
@@ -86,6 +87,7 @@ const statusLabelMap: Record<string, string> = {
   stopped: '已停止',
   finish: '执行完成',
   'run-except': '执行异常',
+  invalid: '执行完成',
 };
 
 async function fetchTasks() {
@@ -390,7 +392,15 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Space :size="4">
               <Tooltip
-                v-if="
+                v-if="record.status === 'invalid'"
+                title="任务无效，无法启动"
+              >
+                <Button size="small" disabled>
+                  启动
+                </Button>
+              </Tooltip>
+              <Tooltip
+                v-else-if="
                   record.status === 'wait-to-start' ||
                   record.status === 'finish' ||
                   record.status === 'run-except' ||

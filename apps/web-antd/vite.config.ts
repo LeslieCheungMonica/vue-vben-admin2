@@ -5,6 +5,13 @@ export default defineConfig(async () => {
     application: {},
     vite: {
       server: {
+        host: '0.0.0.0',           // 允许外部访问
+        port: 5666,                 // 你的端口
+        allowedHosts: [
+          'manhole-reliably-guru.ngrok-free.dev',  // 添加你的 ngrok 域名
+          // 或者使用通配符（开发环境方便，但注意安全）
+          // '.ngrok-free.dev'
+        ],
         proxy: {
           '/api/wape': {
             changeOrigin: true,

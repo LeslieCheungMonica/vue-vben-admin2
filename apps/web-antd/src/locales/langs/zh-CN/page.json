@@ -26,7 +26,7 @@
     "report": "评估报告",
     "model": "模型配置",
     "knowledge": "知识增强",
-    "agent": "内生安全-AI 敏感信息泄露防控"
+    "agent": "敏感信息泄漏防控"
   },
   "knowledge": {
     "list": "知识库列表",
