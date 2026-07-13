@@ -97,7 +97,7 @@ const logoSrc = computed(() => {
             width="42"
           />
           <p v-if="appName" class="m-0 text-xl font-medium">
-            AI敏感信息泄漏防控
+            AI-漏洞扫描
           </p>
         </div>
       </div>

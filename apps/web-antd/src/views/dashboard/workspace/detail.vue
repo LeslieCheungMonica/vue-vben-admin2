@@ -1,19 +1,17 @@
 <script lang="ts" setup>
-import { computed, nextTick, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
+import { computed, onUnmounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
 import { Descriptions, Modal, Tag } from 'ant-design-vue';
 
-import { baseRequestClient } from '#/api/request';
-import ExpandableMsg from './components/expandable-msg.vue';
 import {
   getTaskListApi,
+  getAuthVulnListApi,
   getBizDataApi,
   getBizVulnListApi,
   getBizVulnExploitListApi,
-  getBizVulnScanScopeSelectListApi,
 } from '#/api/core/task';
 import type { TaskApi } from '#/api/core/task';
 import type { AuthVulnItem } from '#/api/core/task';
@@ -49,29 +47,19 @@ const mergedDisplayItems = computed(() => {
     | { type: 'merged-reasoning'; texts: string[]; ids: string[] }
     | PartState
   )[] = [];
-  let current: {
-    type: 'merged-reasoning';
-    texts: string[];
-    ids: string[];
-  } | null = null;
+  let current:
+    | { type: 'merged-reasoning'; texts: string[]; ids: string[] }
+    | null = null;
 
   for (const item of displayItems.value) {
     if (item.type === 'reasoning') {
-      const trimmed = item.text.trim();
-      if (!trimmed || /^<\/?thinking>\s*<\/?thinking>?\s*$/.test(trimmed))
-        continue;
       if (current) {
-        const cleaned = item.text
-          .replace(/<\/?thinking>/g, '')
-          .replace(/\n{3,}/g, '\n\n');
-        current.texts.push(cleaned);
+        current.texts.push(item.text);
         current.ids.push(item.id);
       } else {
         current = {
           type: 'merged-reasoning',
-          texts: [
-            item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n'),
-          ],
+          texts: [item.text],
           ids: [item.id],
         };
         result.push(current);
@@ -99,19 +87,16 @@ function toggleRight() {
 
 const leftPanelStyle = computed(() => {
   if (rightCollapsed.value) {
-    return { width: '100%', maxHeight: 'calc(100vh - 246px)' };
+    return { width: '100%', maxHeight: '600px' };
   }
-  return { width: `${leftWidth.value}%`, maxHeight: 'calc(100vh - 246px)', minHeight: '100%' };
+  return { width: `${leftWidth.value}%`, maxHeight: '600px' };
 });
 
 const rightPanelStyle = computed(() => {
   if (rightCollapsed.value) {
     return { width: '0', minWidth: '0', overflow: 'hidden', border: 'none' };
   }
-  return {
-    width: `calc(${100 - leftWidth.value}%)`,
-    maxHeight: 'calc(100vh - 247px)',
-  };
+  return { width: `calc(${100 - leftWidth.value}%)` };
 });
 
 const activeStep = ref('vuln_recon');
@@ -141,10 +126,46 @@ const flowSteps = [
   },
   { key: 'biz_surface', label: '业务面测绘', icon: '🏗️' },
   {
+    key: 'auth',
+    label: '认证漏洞扫描',
+    icon: '🔐',
+    children: [
+      { key: 'auth_vuln_list', label: '认证漏洞列表', icon: '📋' },
+      { key: 'auth_exploit', label: '漏洞攻击利用', icon: '⚡' },
+    ],
+  },
+  {
+    key: 'zuthz',
+    label: '授权漏洞扫描',
+    icon: '🛡️',
+    children: [{ key: 'zuthz_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+  },
+  {
+    key: 'inject',
+    label: '注入漏洞扫描',
+    icon: '💉',
+    children: [{ key: 'inject_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+  },
+  {
+    key: 'ssrf',
+    label: 'SSRF漏洞扫描',
+    icon: '🌐',
+    children: [{ key: 'ssrf_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+  },
+  {
+    key: 'xxs',
+    label: 'XSS漏洞扫描',
+    icon: '📝',
+    children: [{ key: 'xxs_exploit', label: '漏洞攻击利用', icon: '⚡' }],
+  },
+  {
     key: 'biz',
     label: '业务逻辑漏洞扫描',
     icon: '⚙️',
-    children: [],
+    children: [
+      { key: 'biz_vuln_list', label: '业务漏洞列表', icon: '📋' },
+      { key: 'biz_exploit', label: '漏洞攻击利用', icon: '⚡' },
+    ],
   },
 ];
 
@@ -172,6 +193,17 @@ function getStepDesc(key: string) {
     attack_surface: '关联外部扫描结果与代码，测绘攻击面范围',
     attack_graph: '生成攻击图谱，可视化攻击路径与关联关系',
     biz_surface: '查看业务面测绘数据',
+    auth: '检测认证相关漏洞',
+    auth_vuln_list: '查看认证漏洞列表',
+    auth_exploit: '对认证漏洞进行可利用性验证',
+    zuthz: '检测授权相关漏洞',
+    zuthz_exploit: '对授权漏洞进行可利用性验证',
+    inject: '检测注入类漏洞',
+    inject_exploit: '对注入漏洞进行可利用性验证',
+    ssrf: '检测SSRF漏洞',
+    ssrf_exploit: '对SSRF漏洞进行可利用性验证',
+    xxs: '检测XSS漏洞',
+    xxs_exploit: '对XSS漏洞进行可利用性验证',
     biz: '检测业务逻辑漏洞',
     biz_vuln_list: '查看业务漏洞列表',
     biz_exploit: '对业务逻辑漏洞进行可利用性验证',
@@ -408,15 +440,9 @@ watch(
 
 const pdfUrl = ref<string | null>(null);
 const pdfLoading = ref(false);
-const htmlUrl = ref<string | null>(null);
-const htmlLoading = ref(false);
 
 function getReportPdfUrl(taskId: string, stage: string) {
   return `/api/wape/report_pdf/${taskId}/${stage}?time=${new Date().getTime()}`;
-}
-
-function getReportHtmlUrl(taskId: string, stage: string) {
-  return `/api/wape/report_html/${taskId}/${stage}?time=${new Date().getTime()}`;
 }
 
 async function loadPdf(stage: string) {
@@ -437,122 +463,47 @@ async function loadPdf(stage: string) {
   }
 }
 
-async function replaceImagesWithBase64(
-  html: string,
-  taskId: string,
-): Promise<string> {
-  let result = html;
-  result = result.replace(/<script[\s\S]*?<\/script>/gi, '');
-  result = result.replace(/(href|src)\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, '$1=""');
-  const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
-  const matches = [...result.matchAll(imgRegex)];
-  if (!matches.length) return result;
-  const replacements = await Promise.all(
-    matches.map(async ([, src]) => {
-      try {
-        const resp = await fetch('/api/wape/image_to_base64', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ relative_path: src, task_id: taskId }),
-        });
-        if (!resp.ok) return { src, base64: src };
-        const data = await resp.json();
-        const ext = src.toLowerCase().split('.').pop();
-        const mime =
-          ext === 'png'
-            ? 'image/png'
-            : ext === 'jpg' || ext === 'jpeg'
-              ? 'image/jpeg'
-              : ext === 'gif'
-                ? 'image/gif'
-                : 'image/svg+xml';
-        return {
-          src,
-          base64: data.base64 ? `data:${mime};base64,${data.base64}` : src,
-        };
-      } catch {
-        return { src, base64: src };
-      }
-    }),
-  );
-  for (const { src, base64 } of replacements) {
-    result = result.replaceAll(src, base64);
-  }
-  return result;
-}
-
-async function loadHtml(stage: string) {
-  const taskId = route.params.taskId as string;
-  if (!taskId) return;
-  htmlUrl.value = null;
-  htmlLoading.value = true;
-  try {
-    const url = getReportHtmlUrl(taskId, stage);
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error('HTML not found');
-    let text = await resp.text();
-    text = await replaceImagesWithBase64(text, taskId);
-    text = text.replace(
-      '<head>',
-      '<head><meta http-equiv="Content-Security-Policy" content="script-src-attr \'none\'; script-src \'unsafe-inline\' \'self\' https://cdn.jsdelivr.net; img-src \'self\' data:;"><style>body{font-size:10px!important;line-height:1.5!important;}</style><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script><script>document.querySelectorAll("pre>code.language-mermaid").forEach(function(c){var p=c.parentElement,d=document.createElement("div");d.className="mermaid";d.textContent=c.textContent;p.parentNode.replaceChild(d,p)});var t=setInterval(function(){if(typeof mermaid!=="undefined"){clearInterval(t);mermaid.run({nodes:document.querySelectorAll(".mermaid")})}},100);<\/script>',
-    );
-    htmlUrl.value = text;
-  } catch {
-    htmlUrl.value = null;
-  } finally {
-    htmlLoading.value = false;
-  }
-}
-
 watch(activeStep, (step) => {
   const pdfStages: Record<string, string> = {
-  };
-  const htmlStages: Record<string, string> = {
     vuln_recon: 'pre_recon',
     attack_surface: 'recon',
     attack_graph: 'recon_graph',
-    biz_surface: 'biz_recon',
+    auth: 'auth_vuln',
+    auth_exploit: 'auth_vuln_exploit',
   };
-  if (htmlStages[step]) {
-    loadHtml(htmlStages[step]);
+  const stage = pdfStages[step];
+  if (stage) {
+    loadPdf(stage);
   } else {
-    if (htmlUrl.value) {
-      htmlUrl.value = null;
-    }
-    const stage = pdfStages[step];
-    if (stage) {
-      loadPdf(stage);
-    } else {
-      if (pdfUrl.value) {
-        URL.revokeObjectURL(pdfUrl.value);
-        pdfUrl.value = null;
-      }
+    if (pdfUrl.value) {
+      URL.revokeObjectURL(pdfUrl.value);
+      pdfUrl.value = null;
     }
   }
 });
+
+const authVulnList = ref<AuthVulnItem[]>([]);
+const authVulnLoading = ref(false);
+
+async function loadAuthVulnList() {
+  const taskId = route.params.taskId as string;
+  if (!taskId) return;
+  authVulnLoading.value = true;
+  try {
+    const res = await getAuthVulnListApi(taskId);
+    authVulnList.value = res.items || [];
+  } catch {
+    authVulnList.value = [];
+  } finally {
+    authVulnLoading.value = false;
+  }
+}
 
 watch(activeStep, (step) => {
+  if (step === 'auth_vuln_list') {
+    loadAuthVulnList();
+  }
 });
-
-function openHtmlInBrowser() {
-  if (htmlUrl.value) {
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.write(htmlUrl.value);
-      win.document.close();
-    }
-  }
-}
-
-function openBizHtmlInBrowser() {
-  if (bizReportHtmlUrl.value) {
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.write(bizReportHtmlUrl.value);
-      win.document.close();
-    }
-  }
-}
 
 const bizVulnExploitList = ref<BizVulnExploitItem[]>([]);
 const bizVulnExploitLoading = ref(false);
@@ -581,181 +532,43 @@ function backToBizModuleList() {
   bizVulnExploitList.value = [];
 }
 
-const bizExploitHtmlUrl = ref<string | null>(null);
-const bizExploitHtmlLoading = ref(false);
+const bizExploitPdfUrl = ref<string | null>(null);
+const bizExploitPdfLoading = ref(false);
 const selectedBizExploitName = ref<string | null>(null);
 const showBizExploitModuleList = ref(true);
 
-async function loadBizExploitHtml(bizName: string) {
+async function loadBizExploitPdf(bizName: string) {
   const taskId = route.params.taskId as string;
   if (!taskId) return;
-  bizExploitHtmlLoading.value = true;
+  bizExploitPdfLoading.value = true;
   selectedBizExploitName.value = bizName;
   showBizExploitModuleList.value = false;
-  bizExploitHtmlUrl.value = null;
+  bizExploitPdfUrl.value = null;
   try {
-    const url = `/api/wape/biz_exploit_report_html/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
+    const url = `/api/wape/biz_exploit_report_pdf/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error('HTML not found');
-    let text = await resp.text();
-    text = await replaceImagesWithBase64(text, taskId);
-    text = text.replace(
-      '<head>',
-      '<head><meta http-equiv="Content-Security-Policy" content="script-src-attr \'none\'; script-src \'unsafe-inline\' \'self\' https://cdn.jsdelivr.net; img-src \'self\' data:;"><style>body{font-size:10px!important;line-height:1.5!important;}</style><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script><script>document.querySelectorAll("pre>code.language-mermaid").forEach(function(c){var p=c.parentElement,d=document.createElement("div");d.className="mermaid";d.textContent=c.textContent;p.parentNode.replaceChild(d,p)});var t=setInterval(function(){if(typeof mermaid!=="undefined"){clearInterval(t);mermaid.run({nodes:document.querySelectorAll(".mermaid")})}},100);<\/script>',
-    );
-    bizExploitHtmlUrl.value = text;
+    if (!resp.ok) throw new Error('PDF not found');
+    const blob = await resp.blob();
+    bizExploitPdfUrl.value = URL.createObjectURL(blob);
   } catch {
-    bizExploitHtmlUrl.value = null;
+    bizExploitPdfUrl.value = null;
   } finally {
-    bizExploitHtmlLoading.value = false;
+    bizExploitPdfLoading.value = false;
   }
 }
 
 function backBizExploitToModuleList() {
   showBizExploitModuleList.value = true;
   selectedBizExploitName.value = null;
-  bizExploitHtmlUrl.value = null;
+  if (bizExploitPdfUrl.value) {
+    URL.revokeObjectURL(bizExploitPdfUrl.value);
+    bizExploitPdfUrl.value = null;
+  }
 }
 
 const bizData = ref<any[]>([]);
 const bizDataLoading = ref(false);
 const bizCollapsed = ref(new Set<string>());
-
-const historyModalVisible = ref(false);
-const historyLoading = ref(false);
-const historySessions = ref<any[]>([]);
-const historyPage = ref(1);
-const historyTotal = ref(0);
-const historyFilter = ref<string>('all');
-const historyLoadingMore = ref(false);
-const historySentinel = ref<HTMLElement | null>(null);
-let historyObserver: IntersectionObserver | null = null;
-
-const historyHasMore = computed(() => historySessions.value.length < historyTotal.value);
-
-const historyFilterTags = [
-  { key: 'all', label: '全部' },
-  { key: 'tool', label: '🔧 执行工具' },
-  { key: 'text', label: '📖 知识库读取' },
-  { key: 'step', label: '⚡ 执行任务' },
-];
-
-const filteredHistorySessions = computed(() => {
-  if (historyFilter.value === 'all') return historySessions.value;
-  return historySessions.value.filter((msg: any) => {
-    const type = msg.data?.type;
-    if (historyFilter.value === 'step') return type === 'tool' && (msg.data?.tool === 'todowrite' || msg.data?.tool === 'task');
-    if (historyFilter.value === 'tool') return type === 'tool' && msg.data?.tool !== 'todowrite' && msg.data?.tool !== 'task';
-    return type === historyFilter.value;
-  });
-});
-
-async function loadHistoryMessages(page = 1) {
-  const taskId = route.params.taskId as string;
-  if (!taskId) return;
-  historyLoading.value = true;
-  historyModalVisible.value = true;
-  historyPage.value = page;
-  try {
-    const { data } = await baseRequestClient.post('/wape/task_session_messages', {
-      task_id: taskId,
-      page,
-      page_size: 500,
-    });
-    if (page === 1) {
-      historySessions.value = data.items ?? [];
-    } else {
-      historySessions.value = [...historySessions.value, ...(data.items ?? [])];
-    }
-    historyTotal.value = data.total ?? 0;
-  } catch {
-    if (page === 1) historySessions.value = [];
-  } finally {
-    historyLoading.value = false;
-    historyLoadingMore.value = false;
-  }
-  if (page === 1) {
-    nextTick(() => setupHistoryObserver());
-  }
-}
-
-async function loadMoreHistory() {
-  if (historyLoadingMore.value || !historyHasMore.value) return;
-  historyLoadingMore.value = true;
-  await loadHistoryMessages(historyPage.value + 1);
-}
-
-function setupHistoryObserver() {
-  cleanupHistoryObserver();
-  historyObserver = new IntersectionObserver(
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        loadMoreHistory();
-      }
-    },
-    { rootMargin: '100px' },
-  );
-  nextTick(() => {
-    if (historySentinel.value) {
-      historyObserver?.observe(historySentinel.value);
-    }
-  });
-}
-
-function cleanupHistoryObserver() {
-  if (historyObserver) {
-    historyObserver.disconnect();
-    historyObserver = null;
-  }
-}
-
-function formatTime(ts: number) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
-}
-
-function getMsgType(msg: any) {
-  if (msg.data?.type === 'text') return '💬 文本';
-  if (msg.data?.type === 'tool') {
-    if (msg.data?.tool === 'todowrite') return '📝 任务列表';
-    if (msg.data?.tool === 'task') return '📋 执行任务';
-    return `🔧 ${msg.data.tool || '工具调用'}`;
-  }
-  if (msg.data?.type === 'step-start') return '▶️ 步骤开始';
-  if (msg.data?.type === 'step-finish') return '⏹️ 步骤结束';
-  return msg.data?.type || msg.role || '消息';
-}
-
-function getMsgContent(msg: any) {
-  let text = '';
-  if (msg.data?.type === 'text') {
-    text = msg.data.text || '';
-  } else if (msg.data?.type === 'tool') {
-    text = msg.data.state?.input ? JSON.stringify(msg.data.state.input, null, 2) : '';
-  } else if (msg.data?.type === 'step-finish') {
-    text = msg.data.reason || '';
-  } else if (msg.data?.type === 'tool' && (msg.data?.tool === 'todowrite' || msg.data?.tool === 'task')) {
-    text = msg.data.state?.input ? JSON.stringify(msg.data.state.input, null, 2) : '';
-  }
-  if (/角色：你是一位/.test(text) || /\(可读写\) - 截图、脚本、临时工作等/.test(text) || /文件系统：\n- \. \(只读\)/.test(text) || /侦察报告 → 架构图/.test(text) || /提示词快照：业务域侦察/.test(text) || /提示词快照：认证漏洞分析/.test(text)) return '';
-  text = text.replace(/<\/?conclusion_trigger>[\s\S]*?$/i, '');
-  text = text.replace(/<\/?critical>[\s\S]*?<\/critical>/gi, '');
-  text = text.replace(/<\/?system_architecture>[\s\S]*?<\/system_architecture>/gi, '');
-  text = text.replace(/<\/?attacker_perspective>[\s\S]*?<\/attacker_perspective>/gi, '');
-  text = text.replace(/<\/?starting_context>[\s\S]*?<\/starting_context>/gi, '');
-  text = text.replace(/<\/?cli_tools>[\s\S]*?<\/cli_tools>/gi, '');
-  text = text.replace(/<\/?task_agent_strategy>[\s\S]*?<\/task_agent_strategy>/gi, '');
-  text = text.replace(/<\/?conclusion_trigger>/gi, '');
-  return text.slice(0, 2000) || '(空)';
-}
-
-function filteredMessages(messages: any[]) {
-  return messages.filter((msg: any) => {
-    const content = getMsgContent(msg);
-    return content !== '' && content !== '(空)';
-  }).slice(0, 20);
-}
 
 function toggleBizCollapse(key: string) {
   const s = new Set(bizCollapsed.value);
@@ -781,20 +594,6 @@ async function loadBizData() {
   }
 }
 
-async function loadBizScopeSelectData() {
-  const tid = route.params.taskId as string;
-  if (!tid) return;
-  bizDataLoading.value = true;
-  try {
-    const res = await getBizVulnScanScopeSelectListApi(tid);
-    bizData.value = res.items || [];
-  } catch {
-    bizData.value = [];
-  } finally {
-    bizDataLoading.value = false;
-  }
-}
-
 const bizVulnResSet = ref(new Set<string>());
 
 async function loadBizVulnList() {
@@ -810,8 +609,13 @@ async function loadBizVulnList() {
 }
 
 watch(activeStep, (step) => {
-  if (step === 'biz' || step === 'biz_vuln_list' || step === 'biz_exploit') {
-    loadBizScopeSelectData();
+  if (
+    step === 'biz_surface' ||
+    step === 'biz' ||
+    step === 'biz_vuln_list' ||
+    step === 'biz_exploit'
+  ) {
+    loadBizData();
   }
   if (step === 'biz') {
     loadBizVulnList();
@@ -827,63 +631,58 @@ watch(activeStep, (step) => {
   }
 });
 
-const bizReportHtmlUrl = ref<string | null>(null);
-const bizReportHtmlLoading = ref(false);
-const selectedBizReportName = ref<string | null>(null);
-const showBizReportModuleList = ref(true);
+const reportModalVisible = ref(false);
+const reportModalPdfUrl = ref<string | null>(null);
+const reportModalLoading = ref(false);
 
-async function loadBizReportHtml(bizName: string) {
+async function openReportPdf(bizName: string) {
   const taskId = route.params.taskId as string;
   if (!taskId) return;
-  bizReportHtmlLoading.value = true;
-  selectedBizReportName.value = bizName;
-  showBizReportModuleList.value = false;
-  bizReportHtmlUrl.value = null;
+  reportModalLoading.value = true;
+  reportModalVisible.value = true;
+  reportModalPdfUrl.value = null;
   try {
-    const url = `/api/wape/biz_report_html/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
+    const url = `/api/wape/biz_report_pdf/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error('HTML not found');
-    let text = await resp.text();
-    text = await replaceImagesWithBase64(text, taskId);
-    text = text.replace(
-      '<head>',
-      '<head><meta http-equiv="Content-Security-Policy" content="script-src-attr \'none\'; script-src \'unsafe-inline\' \'self\' https://cdn.jsdelivr.net; img-src \'self\' data:;"><style>body{font-size:10px!important;line-height:1.5!important;}</style><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script><script>document.querySelectorAll("pre>code.language-mermaid").forEach(function(c){var p=c.parentElement,d=document.createElement("div");d.className="mermaid";d.textContent=c.textContent;p.parentNode.replaceChild(d,p)});var t=setInterval(function(){if(typeof mermaid!=="undefined"){clearInterval(t);mermaid.run({nodes:document.querySelectorAll(".mermaid")})}},100);<\/script>',
-    );
-    bizReportHtmlUrl.value = text;
+    if (!resp.ok) throw new Error('PDF not found');
+    const blob = await resp.blob();
+    reportModalPdfUrl.value = URL.createObjectURL(blob);
   } catch {
-    bizReportHtmlUrl.value = null;
+    reportModalPdfUrl.value = null;
   } finally {
-    bizReportHtmlLoading.value = false;
+    reportModalLoading.value = false;
   }
 }
 
-function backBizReportToModuleList() {
-  showBizReportModuleList.value = true;
-  selectedBizReportName.value = null;
-  bizReportHtmlUrl.value = null;
+function closeReportPdf() {
+  reportModalVisible.value = false;
+  if (reportModalPdfUrl.value) {
+    URL.revokeObjectURL(reportModalPdfUrl.value);
+    reportModalPdfUrl.value = null;
+  }
 }
 
 onUnmounted(() => {
   disconnectEventStream();
-  cleanupHistoryObserver();
   if (pdfUrl.value) {
     URL.revokeObjectURL(pdfUrl.value);
+  }
+  if (reportModalPdfUrl.value) {
+    URL.revokeObjectURL(reportModalPdfUrl.value);
   }
 });
 </script>
 
 <template>
-  <div>
   <Page
     v-if="task"
     description="任务详情与实时思考流程"
     :title="task.task_name"
-    class="h-full"
   >
     <div
       ref="splitContainer"
       class="flex gap-0 select-none"
-      style="min-height: 500px; height: 100%"
+      style="min-height: 500px"
     >
       <div
         class="flex flex-col overflow-hidden rounded border p-4"
@@ -896,7 +695,7 @@ onUnmounted(() => {
             >
               流程
             </div>
-            <div class="relative" style="max-height: 100%; overflow: auto">
+            <div class="relative">
               <div
                 class="absolute left-[9px] top-2 h-[calc(100%-12px)] w-0.5 bg-gray-200"
               ></div>
@@ -975,68 +774,16 @@ onUnmounted(() => {
               activeStep === 'vuln_recon' ||
               activeStep === 'attack_surface' ||
               activeStep === 'attack_graph' ||
-              activeStep === 'biz_surface'
+              activeStep === 'auth' ||
+              activeStep === 'auth_exploit'
             "
             class="flex h-full flex-col"
           >
             <div
-              v-if="htmlLoading"
+              v-if="pdfLoading"
               class="flex flex-1 items-center justify-center text-gray-400 text-sm"
             >
               加载报告中...
-            </div>
-            <div
-              v-else-if="htmlUrl"
-              class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
-            >
-              <div
-                class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
-              >
-                <span>{{
-                  activeStep === 'vuln_recon'
-                    ? '🔍'
-                    : activeStep === 'attack_surface'
-                      ? '🎯'
-                      : activeStep === 'attack_graph'
-                        ? '🗺️'
-                        : '🏗️'
-                }}</span>
-                <span class="flex-1">{{
-                  activeStep === 'vuln_recon'
-                    ? '漏洞侦查报告'
-                    : activeStep === 'attack_surface'
-                      ? '攻击面测绘报告'
-                      : activeStep === 'attack_graph'
-                        ? '攻击图谱报告'
-                        : '业务面测绘报告'
-                }}</span>
-                <button
-                  class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
-                  title="浏览器中打开"
-                  @click="openHtmlInBrowser"
-                >
-                  ⛶ 全屏
-                </button>
-              </div>
-              <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
-                <div
-                  class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0"
-                  style="display: flex; flex-direction: column"
-                >
-                  <div style=" position: relative;flex: 1; min-height: 400px">
-                    <iframe
-                      :srcdoc="htmlUrl"
-                      class="border-0"
-                      style="
-                        position: absolute;
-                        inset: 0;
-                        width: 100%;
-                        height: 100%;
-                      "
-                    ></iframe>
-                  </div>
-                </div>
-              </div>
             </div>
             <iframe
               v-else-if="pdfUrl"
@@ -1061,146 +808,194 @@ onUnmounted(() => {
           </div>
 
           <div
-            v-else-if="activeStep === 'biz'"
-            class="flex h-full w-full flex-1 flex-col overflow-hidden"
+            v-else-if="activeStep === 'biz_surface' || activeStep === 'biz'"
+            class="flex h-full w-full flex-1 flex-col overflow-y-auto p-4"
           >
             <div
-              v-if="showBizReportModuleList"
-              class="flex h-full flex-col overflow-y-auto p-4"
+              v-if="bizDataLoading"
+              class="flex flex-1 items-center justify-center text-gray-400 text-sm"
             >
-              <div class="mb-3 text-sm font-medium text-gray-700">
-                选择业务模块查看漏洞报告
-              </div>
-              <div
-                v-if="bizDataLoading"
-                class="flex items-center justify-center py-8 text-sm text-gray-400"
-              >
-                加载业务数据中...
-              </div>
-              <div
-                v-else-if="bizData.length === 0"
-                class="flex items-center justify-center py-8 text-sm text-gray-400"
-              >
-                暂无业务数据
-              </div>
-              <div v-else class="space-y-4">
-                <template v-for="(group, gIdx) in bizData" :key="gIdx">
+              加载业务数据中...
+            </div>
+            <div
+              v-else-if="bizData.length === 0"
+              class="flex flex-1 items-center justify-center text-gray-400 text-sm"
+            >
+              暂无业务数据
+            </div>
+            <div v-else class="space-y-4">
+              <template v-for="(group, gIdx) in bizData" :key="gIdx">
+                <div
+                  v-for="(modules, category) in group"
+                  :key="category"
+                  class="rounded border border-gray-200 bg-white shadow-sm"
+                >
                   <div
-                    v-for="(modules, category) in group"
-                    :key="category"
-                    class="rounded border border-gray-200 bg-white shadow-sm"
+                    class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
+                    @click="toggleBizCollapse(gIdx + '-' + category)"
+                  >
+                    <div class="text-sm font-medium text-gray-700 capitalize">
+                      {{ String(category).replace(/_/g, ' ') }}
+                      <span class="ml-2 text-xs font-normal text-gray-400"
+                        >({{ modules.length }})</span
+                      >
+                    </div>
+                    <span
+                      class="text-xs text-gray-400 transition-transform duration-200"
+                      :class="{
+                        'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
+                      }"
+                    >
+                      ▸
+                    </span>
+                  </div>
+                  <div
+                    v-if="!bizCollapsed.has(gIdx + '-' + category)"
+                    class="space-y-2 border-t border-gray-100 px-4 py-3"
                   >
                     <div
-                      class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
-                      @click="toggleBizCollapse(gIdx + '-' + category)"
+                      v-for="(item, idx) in modules"
+                      :key="idx"
+                      class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                      :class="
+                        bizVulnResSet.has(item.module_name)
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                          : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                      "
+                      @click="openReportPdf(item.module_name)"
                     >
-                      <div class="text-sm font-medium text-gray-700 capitalize">
-                        {{ String(category).replace(/_/g, ' ') }}
-                        <span class="ml-2 text-xs font-normal text-gray-400"
-                          >({{ modules.length }})</span
-                        >
-                      </div>
-                      <span
-                        class="text-xs text-gray-400 transition-transform duration-200"
-                        :class="{
-                          'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
-                        }"
-                      >
-                        ▸
-                      </span>
-                    </div>
-                    <div
-                      v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 px-4 py-3"
-                    >
+                      <div class="font-medium">{{ item.module_name }}</div>
                       <div
-                        v-for="(item, idx) in modules"
-                        :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
-                        :class="
-                          bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
-                        "
-                        @click="loadBizReportHtml(item.module_name)"
+                        v-if="item.module_path"
+                        class="mt-1 font-mono text-gray-400"
                       >
-                        <div class="font-medium">{{ item.module_name }}</div>
+                        {{ item.module_path }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div
+            v-else-if="activeStep === 'auth_vuln_list'"
+            class="flex h-full w-full flex-1 flex-col overflow-y-auto"
+          >
+            <div
+              v-if="authVulnLoading"
+              class="flex flex-1 items-center justify-center text-gray-400 text-sm"
+            >
+              加载漏洞列表中...
+            </div>
+            <div
+              v-else-if="authVulnList.length === 0"
+              class="flex flex-1 items-center justify-center text-gray-400 text-sm"
+            >
+              暂无认证漏洞
+            </div>
+            <div v-else class="space-y-3 p-2">
+              <div
+                v-for="vuln in authVulnList"
+                :key="vuln.id"
+                class="rounded border border-gray-200 bg-white p-4 shadow-sm"
+              >
+                <div class="mb-2 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-sm font-medium text-gray-700">{{
+                      vuln.vuln_id
+                    }}</span>
+                    <Tag
+                      :color="
+                        vuln.severity === 'critical'
+                          ? 'error'
+                          : vuln.severity === 'high'
+                            ? 'warning'
+                            : vuln.severity === 'medium'
+                              ? 'orange'
+                              : 'green'
+                      "
+                    >
+                      {{ vuln.severity }}
+                    </Tag>
+                    <Tag
+                      :color="
+                        vuln.status === 'confirmed' ? 'success' : 'default'
+                      "
+                    >
+                      {{ vuln.status }}
+                    </Tag>
+                  </div>
+                  <span class="text-xs text-gray-400">{{
+                    vuln.create_time
+                  }}</span>
+                </div>
+                <div class="mb-2 text-sm font-medium text-gray-800">
+                  {{ vuln.title }}
+                </div>
+                <div class="mb-2 text-xs text-gray-500">
+                  <span class="font-medium">漏洞类型:</span>
+                  {{ vuln.vuln_type }}
+                </div>
+                <div v-if="vuln.location" class="mb-2 text-xs text-gray-500">
+                  <span class="font-medium">位置:</span> {{ vuln.location }}
+                </div>
+                <div
+                  v-if="vuln.vuln_detail"
+                  class="mb-2 rounded bg-gray-50 p-2 text-xs text-gray-600"
+                >
+                  <span class="font-medium">详情:</span> {{ vuln.vuln_detail }}
+                </div>
+                <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500">
+                  <span class="font-medium">影响:</span> {{ vuln.impact }}
+                </div>
+                <div
+                  v-if="vuln.prerequisites"
+                  class="mb-2 text-xs text-gray-500"
+                >
+                  <span class="font-medium">前置条件:</span>
+                  {{ vuln.prerequisites }}
+                </div>
+                <div v-if="vuln.exploit_steps" class="mb-2">
+                  <div class="mb-1 text-xs font-medium text-gray-500">
+                    利用步骤:
+                  </div>
+                  <div
+                    class="rounded bg-gray-50 p-2 text-xs text-gray-600 space-y-1"
+                  >
+                    <template
+                      v-for="(line, idx) in vuln.exploit_steps.split(
+                        /(?:\n|;)/,
+                      )"
+                      :key="idx"
+                    >
+                      <div v-if="line.trim()" class="flex items-start gap-2">
                         <div
-                          v-if="item.module_path"
-                          class="mt-1 font-mono text-gray-400"
+                          v-if="/^\d/.test(line.trim())"
+                          class="flex items-start gap-2"
                         >
-                          {{ item.module_path }}
+                          <span
+                            class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] text-blue-600"
+                          >
+                            {{ line.trim().charAt(0) }}
+                          </span>
+                          <span class="break-words">{{
+                            line.trim().replace(/^\d+[.):]?\s*/, '')
+                          }}</span>
+                        </div>
+                        <div v-else class="ml-6 break-words">
+                          {{ line.trim() }}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </template>
-              </div>
-            </div>
-            <div v-else class="flex h-full flex-col">
-              <div
-                class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2"
-              >
-                <button
-                  class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
-                  @click="backBizReportToModuleList"
-                >
-                  ← 返回模块列表
-                </button>
-                <span class="text-xs font-medium text-gray-600">
-                  {{ selectedBizReportName }} - 漏洞报告
-                </span>
-              </div>
-              <div
-                v-if="bizReportHtmlLoading"
-                class="flex flex-1 items-center justify-center text-sm text-gray-400"
-              >
-                加载报告中...
-              </div>
-              <div
-                v-else-if="bizReportHtmlUrl"
-                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
-              >
-                <div
-                  class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
-                >
-                  <span>⚙️</span>
-                  <span class="flex-1">{{ selectedBizReportName }} - 漏洞报告</span>
-                  <button
-                    class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
-                    title="浏览器中打开"
-                    @click="openBizHtmlInBrowser"
-                  >
-                    ⛶ 全屏
-                  </button>
-                </div>
-                <div
-                  class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0"
-                >
-                  <div
-                    class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0"
-                    style="display: flex; flex-direction: column"
-                  >
-                    <div style=" position: relative;flex: 1; min-height: 400px">
-                      <iframe
-                        :srcdoc="bizReportHtmlUrl"
-                        class="border-0"
-                        style="
-                          position: absolute;
-                          inset: 0;
-                          width: 100%;
-                          height: 100%;
-                        "
-                      ></iframe>
-                    </div>
+                    </template>
                   </div>
                 </div>
-              </div>
-              <div
-                v-else
-                class="flex flex-1 items-center justify-center text-sm text-gray-400"
-              >
-                暂无报告
+                <div
+                  v-if="vuln.evidence"
+                  class="rounded bg-green-50 p-2 text-xs text-green-700"
+                >
+                  <span class="font-medium">证据:</span> {{ vuln.evidence }}
+                </div>
               </div>
             </div>
           </div>
@@ -1213,16 +1008,10 @@ onUnmounted(() => {
               <div class="mb-3 text-sm font-medium text-gray-700">
                 选择业务模块查看漏洞
               </div>
-              <div
-                v-if="bizDataLoading"
-                class="flex items-center justify-center py-8 text-sm text-gray-400"
-              >
+              <div v-if="bizDataLoading" class="flex items-center justify-center py-8 text-sm text-gray-400">
                 加载业务数据中...
               </div>
-              <div
-                v-else-if="bizData.length === 0"
-                class="flex items-center justify-center py-8 text-sm text-gray-400"
-              >
+              <div v-else-if="bizData.length === 0" class="flex items-center justify-center py-8 text-sm text-gray-400">
                 暂无业务数据
               </div>
               <div v-else class="space-y-4">
@@ -1280,9 +1069,7 @@ onUnmounted(() => {
               </div>
             </div>
             <div v-else class="flex h-full flex-col">
-              <div
-                class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2"
-              >
+              <div class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2">
                 <button
                   class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                   @click="backToBizModuleList"
@@ -1313,19 +1100,16 @@ onUnmounted(() => {
                 >
                   <div class="mb-2 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                      <span
-                        class="font-mono text-sm font-medium text-gray-700"
-                        >{{ vuln.vuln_id }}</span
-                      >
+                      <span class="font-mono text-sm font-medium text-gray-700">{{
+                        vuln.vuln_id
+                      }}</span>
                       <Tag
                         :color="
-                          vuln.severity === 'critical' ||
-                          vuln.severity === '严重'
+                          vuln.severity === 'critical' || vuln.severity === '严重'
                             ? 'error'
                             : vuln.severity === 'high' || vuln.severity === '高'
                               ? 'warning'
-                              : vuln.severity === 'medium' ||
-                                  vuln.severity === '中'
+                              : vuln.severity === 'medium' || vuln.severity === '中'
                                 ? 'orange'
                                 : 'green'
                         "
@@ -1334,8 +1118,7 @@ onUnmounted(() => {
                       </Tag>
                       <Tag
                         :color="
-                          vuln.status === '成功利用' ||
-                          vuln.status === 'confirmed'
+                          vuln.status === '成功利用' || vuln.status === 'confirmed'
                             ? 'success'
                             : 'default'
                         "
@@ -1364,8 +1147,7 @@ onUnmounted(() => {
                     v-if="vuln.vuln_detail"
                     class="mb-2 rounded bg-gray-50 p-2 text-xs text-gray-600"
                   >
-                    <span class="font-medium">详情:</span>
-                    {{ vuln.vuln_detail }}
+                    <span class="font-medium">详情:</span> {{ vuln.vuln_detail }}
                   </div>
                   <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500">
                     <span class="font-medium">影响:</span> {{ vuln.impact }}
@@ -1426,23 +1208,14 @@ onUnmounted(() => {
             v-else-if="activeStep === 'biz_exploit'"
             class="flex h-full w-full flex-1 flex-col"
           >
-            <div
-              v-if="showBizExploitModuleList"
-              class="flex h-full flex-col overflow-y-auto p-4"
-            >
+            <div v-if="showBizExploitModuleList" class="flex h-full flex-col overflow-y-auto p-4">
               <div class="mb-3 text-sm font-medium text-gray-700">
                 选择业务模块查看漏洞利用报告
               </div>
-              <div
-                v-if="bizDataLoading"
-                class="flex items-center justify-center py-8 text-sm text-gray-400"
-              >
+              <div v-if="bizDataLoading" class="flex items-center justify-center py-8 text-sm text-gray-400">
                 加载业务数据中...
               </div>
-              <div
-                v-else-if="bizData.length === 0"
-                class="flex items-center justify-center py-8 text-sm text-gray-400"
-              >
+              <div v-else-if="bizData.length === 0" class="flex items-center justify-center py-8 text-sm text-gray-400">
                 暂无业务数据
               </div>
               <div v-else class="space-y-4">
@@ -1484,7 +1257,7 @@ onUnmounted(() => {
                             ? 'bg-green-100 text-green-700 hover:bg-green-200'
                             : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
                         "
-                        @click="loadBizExploitHtml(item.module_name)"
+                        @click="loadBizExploitPdf(item.module_name)"
                       >
                         <div class="font-medium">{{ item.module_name }}</div>
                         <div
@@ -1500,9 +1273,7 @@ onUnmounted(() => {
               </div>
             </div>
             <div v-else class="flex h-full flex-col">
-              <div
-                class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2"
-              >
+              <div class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2">
                 <button
                   class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
                   @click="backBizExploitToModuleList"
@@ -1514,50 +1285,17 @@ onUnmounted(() => {
                 </span>
               </div>
               <div
-                v-if="bizExploitHtmlLoading"
+                v-if="bizExploitPdfLoading"
                 class="flex flex-1 items-center justify-center text-sm text-gray-400"
               >
                 加载报告中...
               </div>
-              <div
-                v-else-if="bizExploitHtmlUrl"
-                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
-              >
-                <div
-                  class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
-                >
-                  <span>⚡</span>
-                  <span class="flex-1">{{ selectedBizExploitName }} - 漏洞利用报告</span>
-                  <button
-                    class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
-                    title="浏览器中打开"
-                    @click="openBizExploitHtmlInBrowser"
-                  >
-                    ⛶ 全屏
-                  </button>
-                </div>
-                <div
-                  class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0"
-                >
-                  <div
-                    class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0"
-                    style="display: flex; flex-direction: column"
-                  >
-                    <div style=" position: relative;flex: 1; min-height: 400px">
-                      <iframe
-                        :srcdoc="bizExploitHtmlUrl"
-                        class="border-0"
-                        style="
-                          position: absolute;
-                          inset: 0;
-                          width: 100%;
-                          height: 100%;
-                        "
-                      ></iframe>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <iframe
+                v-else-if="bizExploitPdfUrl"
+                :src="bizExploitPdfUrl"
+                class="h-full w-full rounded border-0"
+                style="min-height: 500px"
+              ></iframe>
               <div
                 v-else
                 class="flex flex-1 items-center justify-center text-sm text-gray-400"
@@ -1586,7 +1324,7 @@ onUnmounted(() => {
       <div class="relative flex flex-col" :style="{ width: '0' }">
         <div
           class="absolute -left-3 top-8 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-xs text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:text-blue-500 hover:shadow-md"
-          :title="rightCollapsed ? '展开推理过程' : '收起推理过程'"
+          :title="rightCollapsed ? '展开思考流程' : '收起思考流程'"
           @click="toggleRight"
         >
           <span class="select-none leading-none text-[10px]">
@@ -1602,7 +1340,7 @@ onUnmounted(() => {
         <div
           class="flex items-center gap-2 border-b bg-gray-50 px-4 py-3 text-sm font-medium"
         >
-          <span class="text-xs">🤖 推理过程</span>
+          <span>🤖 思考流程</span>
           <span
             class="inline-block h-2 w-2 rounded-full"
             :style="{
@@ -1612,24 +1350,16 @@ onUnmounted(() => {
           <span class="text-xs text-gray-400">
             {{ eventStreamConnected ? '已连接' : '未连接' }}
           </span>
-          <div class="ml-auto">
-            <button
-              class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors"
-              @click="loadHistoryMessages(1)"
-            >
-              查看历史
-            </button>
-          </div>
         </div>
         <div
           ref="eventStreamContainer"
           class="flex-1 overflow-y-auto p-4"
-          style="min-height: 400px; max-height: 100%"
+          style="min-height: 400px; max-height: 540px"
         >
           <template v-if="mergedDisplayItems.length === 0">
             <div class="pt-16 text-center text-gray-400">
               <div class="mb-2 text-3xl">⚡</div>
-              <div class="text-xs">
+              <div>
                 {{ eventStreamConnected ? '等待 AI 思考...' : '暂无连接' }}
               </div>
             </div>
@@ -1658,7 +1388,10 @@ onUnmounted(() => {
                 <div
                   class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2"
                 >
-                  <template v-for="(text, tIdx) in item.texts" :key="tIdx">
+                  <template
+                    v-for="(text, tIdx) in item.texts"
+                    :key="tIdx"
+                  >
                     <div v-if="text.trim()" class="text-gray-700">
                       {{ text }}
                     </div>
@@ -1751,48 +1484,37 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <Modal
+      :open="reportModalVisible"
+      title="业务报告"
+      width="80%"
+      :footer="null"
+      @cancel="closeReportPdf"
+    >
+      <div
+        v-if="reportModalLoading"
+        class="flex items-center justify-center py-20 text-gray-400 text-sm"
+      >
+        加载报告中...
+      </div>
+      <iframe
+        v-else-if="reportModalPdfUrl"
+        :src="reportModalPdfUrl"
+        class="h-full w-full rounded border-0"
+        style="min-height: 600px"
+      ></iframe>
+      <div
+        v-else
+        class="flex items-center justify-center py-20 text-gray-400 text-sm"
+      >
+        暂无报告
+      </div>
+    </Modal>
   </Page>
   <Page v-else-if="!loading" description="未找到任务" title="任务详情">
     <div class="pt-20 text-center text-gray-400">未找到对应任务信息</div>
   </Page>
-
-  <Modal
-    :open="historyModalVisible"
-    title="历史会话消息"
-    width="70%"
-    :footer="null"
-    @cancel="historyModalVisible = false; cleanupHistoryObserver()"
-  >
-    <div v-if="historyLoading" class="flex items-center justify-center py-16 text-sm text-gray-400">加载中...</div>
-    <div v-else-if="historySessions.length === 0" class="flex items-center justify-center py-16 text-sm text-gray-400">暂无历史消息</div>
-    <div v-else>
-      <div class="mb-3 flex flex-wrap gap-2">
-        <button
-          v-for="tag in historyFilterTags"
-          :key="tag.key"
-          class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-          :class="historyFilter === tag.key ? 'bg-blue-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-          @click="historyFilter = tag.key"
-        >
-          {{ tag.label }}
-        </button>
-      </div>
-        <div class="space-y-3">
-          <div v-for="(msg, idx) in filteredHistorySessions" :key="idx" class="rounded border border-gray-200 bg-white">
-            <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2 text-xs text-gray-500">
-              <span class="font-medium text-gray-700">{{ getMsgType(msg) }}</span>
-              <span>{{ formatTime(msg.time_created) }}</span>
-            </div>
-            <div class="px-3 py-2">
-              <ExpandableMsg :content="getMsgContent(msg)" />
-            </div>
-          </div>
-          <div ref="historySentinel" class="h-4" />
-          <div v-if="historyLoadingMore" class="py-4 text-center text-xs text-gray-400">加载更多...</div>
-        </div>
-      </div>
-  </Modal>
-  </div>
 </template>
 
 <style scoped>
@@ -1811,38 +1533,4 @@ onUnmounted(() => {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
-
-:deep(.dark) .bg-white { background-color: hsl(var(--card)) !important; }
-:deep(.dark) .bg-gray-50 { background-color: hsl(var(--muted)) !important; }
-:deep(.dark) .bg-gray-100 { background-color: hsl(var(--accent)) !important; }
-:deep(.dark) .bg-gray-200 { background-color: hsl(var(--border)) !important; }
-:deep(.dark) .border-gray-100 { border-color: hsl(var(--border)) !important; }
-:deep(.dark) .border-gray-200 { border-color: hsl(var(--border)) !important; }
-:deep(.dark) .border-gray-300 { border-color: hsl(var(--border)) !important; }
-:deep(.dark) .text-gray-400 { color: hsl(var(--muted-foreground)) !important; }
-:deep(.dark) .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
-:deep(.dark) .text-gray-600 { color: hsl(var(--foreground)) !important; }
-:deep(.dark) .text-gray-700 { color: hsl(var(--foreground)) !important; }
-:deep(.dark) .text-gray-800 { color: hsl(var(--foreground)) !important; }
-:deep(.dark) .ring-gray-300 { --tw-ring-color: hsl(var(--border)) !important; }
-:deep(.dark) .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3) !important; }
-:deep(.dark) .bg-blue-50 { background-color: hsl(217 91% 60% / 0.15) !important; }
-:deep(.dark) .bg-blue-100 { background-color: hsl(217 91% 60% / 0.25) !important; }
-:deep(.dark) .text-blue-600 { color: hsl(217 91% 65%) !important; }
-:deep(.dark) .text-blue-700 { color: hsl(217 91% 70%) !important; }
-:deep(.dark) .text-blue-500 { color: hsl(217 91% 65%) !important; }
-:deep(.dark) .hover\:bg-blue-50:hover { background-color: hsl(217 91% 60% / 0.15) !important; }
-:deep(.dark) .hover\:text-blue-600:hover { color: hsl(217 91% 65%) !important; }
-:deep(.dark) .hover\:text-blue-500:hover { color: hsl(217 91% 65%) !important; }
-:deep(.dark) .bg-green-50 { background-color: hsl(142 71% 45% / 0.15) !important; }
-:deep(.dark) .bg-green-100 { background-color: hsl(142 71% 45% / 0.25) !important; }
-:deep(.dark) .text-green-700 { color: hsl(142 71% 55%) !important; }
-:deep(.dark) .hover\:bg-green-200:hover { background-color: hsl(142 71% 45% / 0.35) !important; }
-:deep(.dark) .from-blue-50 { --tw-gradient-from: hsl(217 91% 60% / 0.15) !important; }
-:deep(.dark) .to-blue-100 { --tw-gradient-to: hsl(217 91% 60% / 0.25) !important; }
-:deep(.dark) .border-blue-100 { border-color: hsl(217 91% 60% / 0.3) !important; }
-:deep(.dark) .border-blue-200 { border-color: hsl(217 91% 60% / 0.4) !important; }
-:deep(.dark) .bg-blue-400 { background-color: hsl(217 91% 60%) !important; }
-:deep(.dark) .bg-blue-500 { background-color: hsl(217 91% 55%) !important; }
-:deep(.dark) .text-blue-400 { color: hsl(217 91% 65%) !important; }
 </style>

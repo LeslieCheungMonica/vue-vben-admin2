@@ -8,29 +8,14 @@
     "profile": "个人中心"
   },
   "dashboard": {
-    "title": "渗透漏扫智能体",
+    "title": "AI漏扫渗透 工作台",
     "analytics": "资源管理",
-    "workspace": "智能体任务管理",
+    "workspace": "任务管理",
     "agentResource": "智能体资源管理"
   },
   "cosmic": {
     "title": "Cosmic 工作台",
     "docs": "文档管理",
     "tasks": "任务管理"
-  },
-  "sensitive": {
-    "title": "日志分析智能体",
-    "home": "总览",
-    "data": "数据查询",
-    "detection": "检测结果",
-    "report": "评估报告",
-    "model": "模型配置",
-    "knowledge": "知识增强",
-    "agent": "敏感信息泄漏防控"
-  },
-  "knowledge": {
-    "list": "知识库列表",
-    "upload": "文档上传",
-    "search": "知识检索"
   }
 }
