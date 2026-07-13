@@ -21,6 +21,7 @@ export namespace TaskApi {
     status: 'run-except' | 'running' | 'stopped' | 'wait-to-start';
     created_at: string;
     api_example?: string;
+    skip_exploit?: string;
   }
 
   export interface TaskListResult {
@@ -41,6 +42,7 @@ export namespace TaskApi {
     core_biz_domain?: string;
     core_biz_sub_domain_demo?: string;
     api_example?: string;
+    skip_exploit?: string;
   }
 
   export interface TaskCreateResult {
@@ -67,6 +69,7 @@ export namespace TaskApi {
     core_biz_domain?: string;
     core_biz_sub_domain_demo?: string;
     api_example?: string;
+    skip_exploit?: string;
   }
 
   export interface AuthVulnItem {
@@ -179,10 +182,10 @@ export async function updateTaskApi(params: TaskApi.TaskUpdateParams) {
   return data;
 }
 
-export async function getAuthVulnListApi(taskId: string) {
+export async function getCommonVulnListApi(taskId: string, vulnType: string) {
   const { data } = await baseRequestClient.post<
     ApiResponse<TaskApi.AuthVulnListResult>
-  >('/wape/auth_vuln_list', { task_id: taskId });
+  >('/wape/common_vuln_list', { task_id: taskId, vuln_type: vulnType });
   return data;
 }
 
@@ -197,6 +200,23 @@ export async function getBizVulnListApi(taskId: string) {
   const { data } = await baseRequestClient.post<
     ApiResponse<TaskApi.BizVulnListResult>
   >('/wape/biz_vuln_list', { task_id: taskId });
+  return data;
+}
+
+export async function bizVulnScanScopeSelectApi(
+  taskId: string,
+  items: { biz_name: string; option: 'select' | 'cancel'; module_path?: string; domain?: string }[],
+) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; message: string }>
+  >('/wape/biz_vuln_scan_scope_select', { task_id: taskId, items });
+  return data;
+}
+
+export async function getBizVulnScanScopeSelectListApi(taskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; items: Record<string, { module_name: string; module_path: string }[]>[] }>
+  >('/wape/biz_vuln_scan_scope_select_list', { task_id: taskId });
   return data;
 }
 

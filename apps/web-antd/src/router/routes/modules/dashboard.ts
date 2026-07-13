@@ -58,6 +58,15 @@ const routes: RouteRecordRaw[] = [
           title: '业务范围',
         },
       },
+      {
+        name: 'TaskVulnDetail',
+        path: 'task/vuln-detail/:taskId',
+        component: () => import('#/views/dashboard/workspace/vuln-detail.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '漏洞明细',
+        },
+      },
     ],
   },
 ];
