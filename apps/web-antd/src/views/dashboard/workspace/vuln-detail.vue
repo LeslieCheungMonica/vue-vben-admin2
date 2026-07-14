@@ -4,35 +4,61 @@ import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Checkbox, Input, Select, Tag } from 'ant-design-vue';
+import { Button, Checkbox, Input, Select } from 'ant-design-vue';
 
-import { getCommonVulnListApi } from '#/api/core/task';
-import type { AuthVulnItem } from '#/api/core/task';
+import { getVulnDetailListApi } from '#/api/core/task';
+import type { VulnDetailItem } from '#/api/core/task';
 
 const route = useRoute();
 const taskId = route.params.taskId as string;
 
 const keyword = ref('');
-const severityFilter = ref<string>('all');
-const vulnTypeFilter = ref<string>('auth');
-const vulnList = ref<AuthVulnItem[]>([]);
+const confidenceFilter = ref<string>('all');
+const sourceTableFilter = ref<string>('auth');
+const vulnList = ref<VulnDetailItem[]>([]);
 const loading = ref(false);
-const selectedVuln = ref<AuthVulnItem | null>(null);
+const selectedVuln = ref<VulnDetailItem | null>(null);
 const selectedIds = ref<Set<number>>(new Set());
 const page = ref(1);
 const pageSize = 10;
+const total = ref(0);
 
-const pagedList = computed(() => {
-  const start = (page.value - 1) * pageSize;
-  return filteredList.value.slice(start, start + pageSize);
+const confidenceOptions = [
+  { label: '全部风险等级', value: 'all' },
+  { label: '高危', value: '高危' },
+  { label: '中危', value: '中危' },
+  { label: '低危', value: '低危' },
+];
+
+const sourceTableOptions = [
+  { label: 'auth', value: 'auth' },
+  { label: 'authz', value: 'authz' },
+  { label: 'injection', value: 'injection' },
+  { label: 'ssrf', value: 'ssrf' },
+  { label: 'xss', value: 'xss' },
+  { label: 'biz', value: 'biz' },
+];
+
+const filteredList = computed(() => {
+  let list = vulnList.value;
+  if (keyword.value) {
+    const kw = keyword.value.toLowerCase();
+    list = list.filter(
+      (v) =>
+        v.title?.toLowerCase().includes(kw) ||
+        v.vuln_id?.toLowerCase().includes(kw),
+    );
+  }
+  return list;
 });
 
-const totalPages = computed(() => Math.ceil(filteredList.value.length / pageSize));
+const totalPages = computed(() => Math.ceil(total.value / pageSize));
 
-function goPage(p: number) {
-  if (p < 1 || p > totalPages.value) return;
-  page.value = p;
-}
+const confidenceBgMap: Record<string, string> = {
+  '高危': 'bg-red-50 border-red-200',
+  '中危': 'bg-yellow-50 border-yellow-200',
+  '低危': 'bg-green-50 border-green-200',
+};
 
 function toggleSelect(id: number) {
   const s = new Set(selectedIds.value);
@@ -54,56 +80,45 @@ const isAllSelected = computed(
     filteredList.value.every((v) => selectedIds.value.has(v.id)),
 );
 
-const severityOptions = [
-  { label: '全部风险等级', value: 'all' },
-  { label: '高危', value: 'high' },
-  { label: '中危', value: 'medium' },
-  { label: '低危', value: 'low' },
-];
-
-const vulnTypeOptions = [
-  { label: 'auth', value: 'auth' },
-  { label: 'authz', value: 'authz' },
-  { label: 'injection', value: 'injection' },
-  { label: 'ssrf', value: 'ssrf' },
-  { label: 'xss', value: 'xss' },
-  { label: 'biz', value: 'biz' },
-];
-
-const filteredList = computed(() => {
-  let list = vulnList.value;
-  if (keyword.value) {
-    const kw = keyword.value.toLowerCase();
-    list = list.filter(
-      (v) =>
-        v.title?.toLowerCase().includes(kw) ||
-        v.vuln_id?.toLowerCase().includes(kw),
-    );
-  }
-  if (severityFilter.value !== 'all') {
-    list = list.filter((v) => v.severity === severityFilter.value);
-  }
-  return list;
-});
-
-const severityColorMap: Record<string, string> = {
-  critical: 'red',
-  high: 'orange',
-  medium: 'gold',
-  low: 'green',
-};
-
-const severityLabelMap: Record<string, string> = {
-  critical: '严重',
-  high: '高危',
-  medium: '中危',
-  low: '低危',
-};
-
 async function fetchVulns() {
   loading.value = true;
+  page.value = 1;
   try {
-    const res = await getCommonVulnListApi(taskId, vulnTypeFilter.value);
+    const res = await getVulnDetailListApi(
+      taskId,
+      sourceTableFilter.value,
+      page.value,
+      pageSize,
+      confidenceFilter.value !== 'all' ? confidenceFilter.value : undefined,
+    );
+    vulnList.value = res.items ?? [];
+    total.value = res.total ?? 0;
+    if (vulnList.value.length > 0) {
+      selectedVuln.value = vulnList.value[0];
+    } else {
+      selectedVuln.value = null;
+    }
+  } catch {
+    vulnList.value = [];
+    total.value = 0;
+    selectedVuln.value = null;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function goPage(p: number) {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+  loading.value = true;
+  try {
+    const res = await getVulnDetailListApi(
+      taskId,
+      sourceTableFilter.value,
+      page.value,
+      pageSize,
+      confidenceFilter.value !== 'all' ? confidenceFilter.value : undefined,
+    );
     vulnList.value = res.items ?? [];
     if (vulnList.value.length > 0) {
       selectedVuln.value = vulnList.value[0];
@@ -118,8 +133,15 @@ async function fetchVulns() {
   }
 }
 
-function selectVuln(vuln: AuthVulnItem) {
+function selectVuln(vuln: VulnDetailItem) {
   selectedVuln.value = vuln;
+}
+
+function confidenceClass(confidence: string) {
+  if (confidence === '高危') return 'bg-red-100 text-red-700';
+  if (confidence === '中危') return 'bg-yellow-100 text-yellow-700';
+  if (confidence === '低危') return 'bg-green-100 text-green-700';
+  return 'bg-gray-100 text-gray-600';
 }
 
 onMounted(() => {
@@ -146,7 +168,7 @@ onMounted(() => {
           <span
             class="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500"
           >
-            {{ filteredList.length }}
+            {{ total }}
           </span>
           <Checkbox
             :checked="isAllSelected"
@@ -166,18 +188,18 @@ onMounted(() => {
           </Input>
           <div class="flex items-center gap-1.5">
             <Select
-              v-model:value="severityFilter"
-              :options="severityOptions"
-              class="w-[130px]"
+              v-model:value="confidenceFilter"
+              :options="confidenceOptions"
+              class="w-[120px] text-xs"
               size="small"
             />
             <Select
-              v-model:value="vulnTypeFilter"
-              :options="vulnTypeOptions"
-              class="w-[110px]"
+              v-model:value="sourceTableFilter"
+              :options="sourceTableOptions"
+              class="w-[100px] text-xs"
               size="small"
             />
-            <Button type="primary" ghost size="small" class="ml-auto" @click="fetchVulns">
+            <Button type="primary" ghost size="small" class="ml-auto text-xs" @click="fetchVulns">
               查询
             </Button>
           </div>
@@ -204,12 +226,13 @@ onMounted(() => {
             </div>
           </div>
           <div
-            v-for="vuln in pagedList"
+            v-for="vuln in filteredList"
             :key="vuln.id"
-            class="cursor-pointer border-b border-gray-50 px-4 py-3 transition-all hover:bg-blue-50/60"
-            :class="{
-              'border-l-2 border-l-blue-500 bg-blue-50/80': selectedVuln?.id === vuln.id,
-            }"
+            class="mx-2 mb-1.5 cursor-pointer rounded-lg border px-3 py-2.5 transition-all hover:opacity-90"
+            :class="[
+              confidenceBgMap[vuln.confidence] || 'bg-gray-50 border-gray-200',
+              selectedVuln?.id === vuln.id ? '!bg-blue-100/70' : '',
+            ]"
             @click="selectVuln(vuln)"
           >
             <div class="flex items-start gap-2">
@@ -231,29 +254,29 @@ onMounted(() => {
                   >
                     {{ vuln.title }}
                   </div>
-                  <Tag
-                    :color="severityColorMap[vuln.severity] || 'default'"
-                    class="flex-shrink-0 !m-0 !text-[11px] !px-2 !py-0 !rounded-md !border-0"
+                  <span
+                    class="flex-shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium"
+                    :class="confidenceClass(vuln.confidence)"
                   >
-                    {{ severityLabelMap[vuln.severity] || vuln.severity }}
-                  </Tag>
+                    {{ vuln.confidence }}
+                  </span>
                 </div>
                 <div class="mt-1.5 flex items-center gap-2 text-xs text-gray-400">
                   <span class="font-mono">{{ vuln.vuln_id }}</span>
                   <span class="text-gray-300">|</span>
                   <span>{{ vuln.create_time }}</span>
                   <span
-                    v-if="vuln.vuln_type"
+                    v-if="vuln.vulnerability_type"
                     class="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-gray-500"
                   >
-                    {{ vuln.vuln_type }}
+                    {{ vuln.vulnerability_type }}
                   </span>
                 </div>
                 <div
-                  v-if="vuln.vuln_detail"
+                  v-if="vuln.notes"
                   class="mt-1.5 line-clamp-2 text-xs leading-relaxed text-gray-500"
                 >
-                  {{ vuln.vuln_detail }}
+                  {{ vuln.notes }}
                 </div>
               </div>
             </div>
@@ -263,7 +286,7 @@ onMounted(() => {
           v-if="totalPages > 1"
           class="flex items-center justify-between border-t border-gray-100 px-3 py-2 text-xs text-gray-500"
         >
-          <span>共 {{ filteredList.length }} 条</span>
+          <span>共 {{ total }} 条</span>
           <div class="flex items-center gap-1">
             <button
               class="rounded px-2 py-1 transition-colors hover:bg-gray-100 disabled:opacity-40"
@@ -305,12 +328,12 @@ onMounted(() => {
           <div
             class="flex items-center gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-5 py-3.5"
           >
-            <Tag
-              :color="severityColorMap[selectedVuln.severity] || 'default'"
-              class="!m-0 !text-xs !px-2.5 !py-0.5 !rounded-md !border-0"
+            <span
+              class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
+              :class="confidenceClass(selectedVuln.confidence)"
             >
-              {{ severityLabelMap[selectedVuln.severity] || selectedVuln.severity }}
-            </Tag>
+              {{ selectedVuln.confidence }}
+            </span>
             <span
               class="font-mono text-xs text-gray-400"
             >{{ selectedVuln.vuln_id }}</span
@@ -324,79 +347,72 @@ onMounted(() => {
           </div>
           <div class="flex-1 overflow-y-auto p-5 text-sm">
             <div class="space-y-5">
-              <div v-if="selectedVuln.vuln_detail">
-                <div
-                  class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400"
-                >
-                  <span>📋</span>
-                  <span>漏洞详情</span>
+              <div v-if="selectedVuln.notes">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>📋</span><span>漏洞详情</span>
                 </div>
-                <div
-                  class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700"
-                >
-                  {{ selectedVuln.vuln_detail }}
+                <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                  {{ selectedVuln.notes }}
                 </div>
               </div>
 
-              <div v-if="selectedVuln.location">
-                <div
-                  class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400"
-                >
-                  <span>📍</span>
-                  <span>漏洞位置</span>
+              <div v-if="selectedVuln.source_endpoint">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>📍</span><span>源端点</span>
                 </div>
-                <div
-                  class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600"
-                >
-                  {{ selectedVuln.location }}
+                <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                  {{ selectedVuln.source_endpoint }}
                 </div>
               </div>
 
-              <div v-if="selectedVuln.impact">
-                <div
-                  class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400"
-                >
-                  <span>💥</span>
-                  <span>影响</span>
+              <div v-if="selectedVuln.vulnerable_code_location">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>🔗</span><span>漏洞代码位置</span>
+                </div>
+                <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                  {{ selectedVuln.vulnerable_code_location }}
+                </div>
+              </div>
+
+              <div v-if="selectedVuln.missing_defense">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>🛡️</span><span>缺失的防御</span>
                 </div>
                 <div class="rounded-lg bg-orange-50 p-3 text-sm text-orange-800">
-                  {{ selectedVuln.impact }}
+                  {{ selectedVuln.missing_defense }}
                 </div>
               </div>
 
-              <div v-if="selectedVuln.prerequisites">
-                <div
-                  class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400"
-                >
-                  <span>🔐</span>
-                  <span>前置条件</span>
+              <div v-if="selectedVuln.exploitation_hypothesis">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>🔐</span><span>利用假设</span>
                 </div>
                 <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-                  {{ selectedVuln.prerequisites }}
+                  {{ selectedVuln.exploitation_hypothesis }}
+                </div>
+              </div>
+
+              <div v-if="selectedVuln.suggested_exploit_technique">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>⚡</span><span>建议利用技术</span>
+                </div>
+                <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                  {{ selectedVuln.suggested_exploit_technique }}
                 </div>
               </div>
 
               <div v-if="selectedVuln.exploit_steps">
-                <div
-                  class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400"
-                >
-                  <span>⚡</span>
-                  <span>利用步骤</span>
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>⚡</span><span>利用步骤</span>
                 </div>
-                <div
-                  class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed"
-                >
+                <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed">
                   <div
-                    v-for="(line, idx) in selectedVuln.exploit_steps.split(
-                      /(?:\n|;)/,
-                    )"
+                    v-for="(line, idx) in selectedVuln.exploit_steps.split(/(?:\n|;)/)"
                     :key="idx"
                     v-show="line.trim()"
                     class="mb-2 flex items-start gap-2.5 last:mb-0"
                   >
-                    <span
-                      class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-600"
-                    >
+                    <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-600">
                       {{ idx + 1 }}
                     </span>
                     <span class="pt-0.5 text-gray-700">{{ line.trim() }}</span>
@@ -404,17 +420,12 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div v-if="selectedVuln.evidence">
-                <div
-                  class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400"
-                >
-                  <span>✅</span>
-                  <span>证据</span>
+              <div v-if="selectedVuln.exploit_evidence">
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>✅</span><span>证据</span>
                 </div>
-                <div
-                  class="rounded-lg border border-green-200 bg-green-50 p-3 font-mono text-xs leading-relaxed text-green-700"
-                >
-                  {{ selectedVuln.evidence }}
+                <div class="rounded-lg border border-green-200 bg-green-50 p-3 font-mono text-xs leading-relaxed text-green-700">
+                  {{ selectedVuln.exploit_evidence }}
                 </div>
               </div>
             </div>

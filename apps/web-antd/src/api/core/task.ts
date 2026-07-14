@@ -182,6 +182,120 @@ export async function updateTaskApi(params: TaskApi.TaskUpdateParams) {
   return data;
 }
 
+export interface VulnDetailItem {
+  source_table: string;
+  id: number;
+  task_id: string;
+  create_time: string;
+  vuln_id: string;
+  vulnerability_type: string;
+  title: string;
+  confidence: string;
+  notes: string;
+  externally_exploitable: string;
+  source_endpoint: string;
+  vulnerable_code_location: string;
+  missing_defense: string;
+  exploitation_hypothesis: string;
+  suggested_exploit_technique: string;
+  endpoint: string;
+  guard_evidence: string;
+  side_effect: string;
+  reason: string;
+  minimal_witness: string;
+  source: string;
+  combined_sources: string;
+  path: string;
+  sink_call: string;
+  slot_type: string;
+  sanitization_observed: string;
+  concat_occurrences: string;
+  verdict: string;
+  mismatch_reason: string;
+  witness_payload: string;
+  vulnerable_parameter: string;
+  source_detail: string;
+  sink_function: string;
+  render_context: string;
+  encoding_observed: string;
+  biz_name: string;
+  frontend_trigger: string;
+  full_call_chain: string;
+  exploit_title: string;
+  exploit_severity: string;
+  exploit_status: string;
+  exploit_vuln_detail: string;
+  exploit_location: string;
+  exploit_blockers: string;
+  exploit_impact: string;
+  exploit_prerequisites: string;
+  exploit_steps: string;
+  exploit_evidence: string;
+}
+
+export interface VulnDetailListResult {
+  status: string;
+  items: VulnDetailItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  message: string;
+}
+
+export async function getVulnDetailListApi(
+  taskId: string,
+  sourceTable: string,
+  page: number = 1,
+  pageSize: number = 10,
+  confidence?: string,
+) {
+  const params: Record<string, any> = {
+    task_id: taskId,
+    source_table: sourceTable,
+    page,
+    page_size: pageSize,
+  };
+  if (confidence && confidence !== 'all') params.confidence = confidence;
+  const { data } = await baseRequestClient.post<
+    ApiResponse<VulnDetailListResult>
+  >('/wape/vuln_detail_list', params);
+  return data;
+}
+
+export interface RepeatTaskItem {
+  repeat_task_id: string;
+  repeat_task_name: string;
+  resource_id: number;
+  resource_path: string;
+  status: string;
+  repeat_task_type: string;
+  task_id: string;
+  vuln_ids: string;
+  created_at: string;
+}
+
+export async function createRepeatTaskApi(params: {
+  task_id: string;
+  repeat_task_name: string;
+  resource_id: number;
+  repeat_task_type: string;
+  vuln_ids?: string;
+}) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; repeat_task_id: string; repeat_task_name: string; task_id: string; message: string }>
+  >('/wape/repeat_task_create', params);
+  return data;
+}
+
+export async function getRepeatTaskListApi(keyword?: string) {
+  const params: Record<string, string> = {};
+  if (keyword) params.repeat_task_id_keyword = keyword;
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; items: RepeatTaskItem[]; message: string }>
+  >('/wape/repeat_task_list', params);
+  return data;
+}
+
 export async function getCommonVulnListApi(taskId: string, vulnType: string) {
   const { data } = await baseRequestClient.post<
     ApiResponse<TaskApi.AuthVulnListResult>

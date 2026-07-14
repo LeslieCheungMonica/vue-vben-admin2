@@ -67,6 +67,15 @@ const routes: RouteRecordRaw[] = [
           title: '漏洞明细',
         },
       },
+      {
+        name: 'TaskRescan',
+        path: 'task/rescan/:taskId',
+        component: () => import('#/views/dashboard/workspace/rescan.vue'),
+        meta: {
+          hideInMenu: true,
+          title: '复扫任务',
+        },
+      },
     ],
   },
 ];

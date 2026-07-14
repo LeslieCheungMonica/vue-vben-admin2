@@ -449,6 +449,14 @@ onMounted(() => {
               >
                 漏洞明细
               </Button>
+              <Button
+                size="small"
+                @click="
+                  router.push(`/dashboard/task/rescan/${record.task_id}`)
+                "
+              >
+                复扫任务
+              </Button>
               <Button size="small" @click="showDetail(record)">详情</Button>
               <Button size="small" @click="handleDownload(record)">下载</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
