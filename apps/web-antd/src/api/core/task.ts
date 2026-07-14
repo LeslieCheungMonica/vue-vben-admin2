@@ -274,6 +274,13 @@ export interface RepeatTaskItem {
   created_at: string;
 }
 
+export async function stopRepeatTaskApi(repeatTaskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; message: string }>
+  >('/wape/repeat_task_stop', { repeat_task_id: repeatTaskId });
+  return data;
+}
+
 export async function startRepeatTaskApi(repeatTaskId: string) {
   const { data } = await baseRequestClient.post<
     ApiResponse<{ status: string; message: string }>

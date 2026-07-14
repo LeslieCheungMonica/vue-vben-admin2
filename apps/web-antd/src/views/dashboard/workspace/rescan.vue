@@ -8,7 +8,7 @@ import { Button, Card, Form, Input, message, Modal, Select, Space, Table, Tag } 
 
 import { getResourceListApi } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
-import { createRepeatTaskApi, deleteRepeatTaskApi, getRepeatTaskListApi, startRepeatTaskApi, updateRepeatTaskApi } from '#/api/core/task';
+import { createRepeatTaskApi, deleteRepeatTaskApi, getRepeatTaskListApi, startRepeatTaskApi, stopRepeatTaskApi, updateRepeatTaskApi } from '#/api/core/task';
 import type { RepeatTaskItem } from '#/api/core/task';
 
 const route = useRoute();
@@ -115,7 +115,8 @@ function handleStart(record: RepeatTaskItem) {
     onOk: async () => {
       try {
         if (isRunning) {
-          message.info('停止复扫任务（待对接接口）');
+          await stopRepeatTaskApi(record.repeat_task_id);
+          message.success('复扫任务已停止');
         } else {
           await startRepeatTaskApi(record.repeat_task_id);
           message.success('复扫任务已启动');

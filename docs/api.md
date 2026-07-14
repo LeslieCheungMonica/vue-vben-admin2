@@ -1090,10 +1090,11 @@ curl -X POST http://127.0.0.1:7654/wape/repeat_task_start \
 
 **POST** `/wape/repeat_task_list`
 
-查询所有复扫任务，支持按 ID 模糊搜索。
+查询指定原任务下的所有复扫任务，支持按复扫任务 ID 模糊搜索。
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| task_id | string | 是 | 关联的原扫描任务 ID |
 | repeat_task_id_keyword | string | 否 | 按复扫任务 ID 模糊搜索 |
 
 **返回字段说明：**
@@ -1113,7 +1114,7 @@ curl -X POST http://127.0.0.1:7654/wape/repeat_task_start \
 ```bash
 curl -X POST http://127.0.0.1:7654/wape/repeat_task_list \
   -H "Content-Type: application/json" \
-  -d '{"repeat_task_id_keyword": "wape-repeat-20250714"}'
+  -d '{"task_id": "wape-20250516010101", "repeat_task_id_keyword": "wape-repeat-20250714"}'
 ```
 
 ```json
@@ -1192,5 +1193,30 @@ curl -X POST http://127.0.0.1:7654/wape/repeat_task_delete \
 {
   "status": "completed",
   "message": "复扫任务已删除"
+}
+```
+
+---
+
+## 31. 复扫任务停止
+
+**POST** `/wape/repeat_task_stop`
+
+停止正在运行的复扫任务。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| repeat_task_id | string | 是 | 复扫任务 ID |
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/repeat_task_stop \
+  -H "Content-Type: application/json" \
+  -d '{"repeat_task_id": "wape-repeat-20250714010101"}'
+```
+
+```json
+{
+  "status": "completed",
+  "message": "复扫任务已停止: wape-repeat-20250714010101"
 }
 ```
