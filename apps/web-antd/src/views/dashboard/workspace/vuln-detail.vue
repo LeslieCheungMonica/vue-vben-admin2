@@ -1,16 +1,209 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, triggerRef } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Checkbox, Input, Select } from 'ant-design-vue';
+import { Button, Checkbox, Input, message, Select, Tag } from 'ant-design-vue';
 
-import { getVulnDetailListApi } from '#/api/core/task';
+import { getRepeatTaskListApi, getVulnDetailListApi, updateRepeatTaskApi } from '#/api/core/task';
 import type { VulnDetailItem } from '#/api/core/task';
+
+interface PartState {
+  id: string;
+  sessionId: string;
+  type: 'reasoning' | 'tool' | 'step' | 'message';
+  text: string;
+  toolName?: string;
+  toolCallId?: string;
+  toolStatus?: 'pending' | 'running' | 'completed';
+  toolInput?: string;
+  toolOutput?: string;
+  stepType?: 'start' | 'finish';
+  hidden?: boolean;
+  hideContent?: boolean;
+  updatedAt: number;
+}
 
 const route = useRoute();
 const taskId = route.params.taskId as string;
+const repeatTaskId = route.query.repeatTaskId as string | undefined;
+
+const FLUSH_INTERVAL = 150;
+const displayItems = shallowRef<PartState[]>([]);
+const mergedDisplayItems = computed(() => {
+  const result: (
+    | { type: 'merged-reasoning'; texts: string[]; ids: string[] }
+    | PartState
+  )[] = [];
+  let current: {
+    type: 'merged-reasoning';
+    texts: string[];
+    ids: string[];
+  } | null = null;
+  for (const item of displayItems.value) {
+    if (item.type === 'reasoning') {
+      const trimmed = item.text.trim();
+      if (!trimmed || /^<\/?thinking>\s*<\/?thinking>?\s*$/.test(trimmed)) continue;
+      if (current) {
+        const cleaned = item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n');
+        current.texts.push(cleaned);
+        current.ids.push(item.id);
+      } else {
+        current = {
+          type: 'merged-reasoning',
+          texts: [item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n')],
+          ids: [item.id],
+        };
+        result.push(current);
+      }
+    } else {
+      current = null;
+      result.push(item);
+    }
+  }
+  return result;
+});
+const eventStreamConnected = ref(false);
+let eventSource: EventSource | null = null;
+let flushTimer: ReturnType<typeof setInterval> | null = null;
+const partsMap = new Map<string, PartState>();
+const dirtyParts = new Set<string>();
+const eventStreamContainer = ref<HTMLDivElement | null>(null);
+
+const toolStatusIcon: Record<string, string> = {
+  pending: '⏳',
+  running: '🔄',
+  completed: '✅',
+};
+
+function getOrCreatePart(id: string, sessionId: string, type: PartState['type']) {
+  let part = partsMap.get(id);
+  if (!part) {
+    part = { id, sessionId, type, text: '', updatedAt: Date.now() };
+    partsMap.set(id, part);
+  }
+  return part;
+}
+
+function processEvent(data: any) {
+  const type: string = data.type;
+  const props = data.properties || {};
+
+  if (type === 'message.part.delta' && props.field === 'text') {
+    const partId = props.partID;
+    if (!partId) return;
+    const existing = partsMap.get(partId);
+    if (existing?.hidden) return;
+    const part = getOrCreatePart(partId, props.sessionID, 'reasoning');
+    part.text += props.delta || '';
+    part.updatedAt = Date.now();
+    dirtyParts.add(partId);
+    return;
+  }
+
+  if (type === 'message.part.updated') {
+    const partData = props.part || {};
+    const partId = partData.id || props.partID;
+    if (!partId) return;
+    const partType: string = partData.type || '';
+    const part = getOrCreatePart(partId, props.sessionID, partType as any);
+    if (partType === 'reasoning') {
+      part.text = partData.text || part.text;
+    } else if (partType === 'tool') {
+      const tool = partData.tool || partData.toolName;
+      part.type = 'tool';
+      part.toolName = tool;
+      part.toolCallId = partData.callID;
+      const state = partData.state || {};
+      if (state.status) part.toolStatus = state.status;
+      if (state.input) {
+        part.toolInput = typeof state.input === 'string' ? state.input : JSON.stringify(state.input, null, 2);
+      }
+      if (state.output) {
+        part.toolOutput = typeof state.output === 'string' ? state.output : JSON.stringify(state.output, null, 2);
+      }
+    } else if (partType === 'step-start') {
+      part.type = 'step';
+      part.stepType = 'start';
+    } else if (partType === 'step-finish') {
+      part.type = 'step';
+      part.stepType = 'finish';
+      part.text = partData.reason || partData.snapshot || '';
+    } else if (partType === 'message') {
+      part.type = 'message';
+    }
+    part.updatedAt = Date.now();
+    dirtyParts.add(partId);
+    return;
+  }
+
+  if (type === 'message.updated') {
+    const info = props.info || {};
+    const msgId = info.id;
+    if (!msgId) return;
+    if (info.finish) {
+      const part = getOrCreatePart(`finish:${msgId}`, info.sessionID, 'step');
+      part.stepType = 'finish';
+      part.text = `[完成] ${info.finish}  (tokens: ${info.tokens?.total || '-'})`;
+      part.updatedAt = Date.now();
+      dirtyParts.add(part.id);
+    }
+    return;
+  }
+
+  if (type === 'session.status' || type === 'session.updated') return;
+}
+
+function flushBuffer() {
+  if (dirtyParts.size === 0) return;
+  for (const id of dirtyParts) {
+    const part = partsMap.get(id);
+    if (!part || part.hidden) continue;
+    const existingIdx = displayItems.value.findIndex((d) => d.id === id);
+    if (existingIdx >= 0) {
+      displayItems.value[existingIdx] = { ...part };
+    } else {
+      displayItems.value.push({ ...part });
+    }
+  }
+  dirtyParts.clear();
+  triggerRef(displayItems);
+  const el = eventStreamContainer.value;
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function connectEventStream(tid: string) {
+  disconnectEventStream();
+  displayItems.value = [];
+  partsMap.clear();
+  dirtyParts.clear();
+  eventStreamConnected.value = false;
+  flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL);
+  const url = `/api/wape/event_stream/${tid}`;
+  eventSource = new EventSource(url);
+  eventSource.onopen = () => { eventStreamConnected.value = true; };
+  eventSource.onmessage = (event) => {
+    try { const d = JSON.parse(event.data); processEvent(d); } catch { /* ignore */ }
+  };
+  eventSource.onerror = () => { eventStreamConnected.value = false; };
+}
+
+function disconnectEventStream() {
+  if (flushTimer) { clearInterval(flushTimer); flushTimer = null; }
+  flushBuffer();
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  eventStreamConnected.value = false;
+}
+
+onMounted(() => {
+  fetchVulns();
+  if (repeatTaskId) connectEventStream(repeatTaskId);
+});
+
+onUnmounted(() => {
+  disconnectEventStream();
+});
 
 const keyword = ref('');
 const confidenceFilter = ref<string>('all');
@@ -98,6 +291,19 @@ async function fetchVulns() {
     } else {
       selectedVuln.value = null;
     }
+    if (repeatTaskId) {
+      try {
+        const repeatRes = await getRepeatTaskListApi(taskId);
+        const repeatTask = repeatRes.items?.find((r) => r.repeat_task_id === repeatTaskId);
+        if (repeatTask?.vuln_ids) {
+          const savedIds = repeatTask.vuln_ids.split(',').map((s) => s.trim()).filter(Boolean);
+          const matched = new Set(
+            vulnList.value.filter((v) => savedIds.includes(v.vuln_id)).map((v) => v.id),
+          );
+          selectedIds.value = matched;
+        }
+      } catch { /* ignore */ }
+    }
   } catch {
     vulnList.value = [];
     total.value = 0;
@@ -105,6 +311,21 @@ async function fetchVulns() {
   } finally {
     loading.value = false;
   }
+}
+
+async function syncSelectedIds() {
+  if (!repeatTaskId) return;
+  try {
+    const repeatRes = await getRepeatTaskListApi(taskId);
+    const repeatTask = repeatRes.items?.find((r) => r.repeat_task_id === repeatTaskId);
+    if (repeatTask?.vuln_ids) {
+      const savedIds = repeatTask.vuln_ids.split(',').map((s) => s.trim()).filter(Boolean);
+      const matched = new Set(
+        vulnList.value.filter((v) => savedIds.includes(v.vuln_id)).map((v) => v.id),
+      );
+      selectedIds.value = matched;
+    }
+  } catch { /* ignore */ }
 }
 
 async function goPage(p: number) {
@@ -125,6 +346,7 @@ async function goPage(p: number) {
     } else {
       selectedVuln.value = null;
     }
+    await syncSelectedIds();
   } catch {
     vulnList.value = [];
     selectedVuln.value = null;
@@ -160,6 +382,24 @@ const hasExploitData = computed(() => {
     v.exploit_evidence
   );
 });
+
+async function handleSaveVulnIds() {
+  if (!repeatTaskId) return;
+  const vulnIds = filteredList.value
+    .filter((v) => selectedIds.value.has(v.id))
+    .map((v) => v.vuln_id)
+    .filter(Boolean)
+    .join(',');
+  try {
+    await updateRepeatTaskApi({
+      repeat_task_id: repeatTaskId,
+      vuln_ids: vulnIds,
+    });
+    message.success('漏洞 ID 已保存');
+  } catch {
+    message.error('保存失败');
+  }
+}
 
 function confidenceClass(confidence: string) {
   if (confidence === '高危') return 'bg-red-100 text-red-700';
@@ -199,6 +439,16 @@ onMounted(() => {
             class="ml-2"
             @change="toggleSelectAll"
           />
+          <Button
+            v-if="repeatTaskId"
+            size="small"
+            type="primary"
+            ghost
+            class="ml-1 text-xs"
+            @click="handleSaveVulnIds"
+          >
+            保存
+          </Button>
         </div>
         <div class="flex flex-col gap-2.5 border-b border-gray-100 px-4 py-3">
           <Input
@@ -538,29 +788,110 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Right: Placeholder -->
+      <!-- Right: Thinking Flow -->
       <div
         class="flex w-[320px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       >
         <div
           class="flex items-center gap-2 border-b border-gray-100 px-4 py-3"
         >
-          <div
-            class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-sm"
-          >
-            📎
-          </div>
-          <span class="text-sm font-semibold text-gray-800">补充信息</span>
+          <span>🤖 思考流程</span>
+          <span
+            class="inline-block h-2 w-2 rounded-full"
+            :style="{
+              backgroundColor: eventStreamConnected ? '#52c41a' : '#d9d9d9',
+            }"
+          ></span>
+          <span class="text-xs text-gray-400">
+            {{ eventStreamConnected ? '已连接' : '未连接' }}
+          </span>
         </div>
         <div
-          class="flex flex-1 items-center justify-center text-sm text-gray-400"
+          ref="eventStreamContainer"
+          class="flex-1 overflow-y-auto p-4"
+          style="min-height: 400px; max-height: 100%"
         >
-          <div class="flex flex-col items-center gap-1">
-            <span class="text-2xl">📄</span>
-            <span>暂无数据</span>
+          <template v-if="mergedDisplayItems.length === 0">
+            <div class="pt-16 text-center text-gray-400">
+              <div class="mb-2 text-3xl">⚡</div>
+              <div>
+                {{ eventStreamConnected ? '等待 AI 思考...' : '暂无连接' }}
+              </div>
+            </div>
+          </template>
+
+          <div class="space-y-3">
+            <div
+              v-for="item in mergedDisplayItems"
+              :key="item.type === 'merged-reasoning' ? item.ids[0] : item.id"
+              class="animate-fade-in"
+            >
+              <div
+                v-if="item.type === 'merged-reasoning'"
+                class="rounded-lg border border-blue-100 bg-blue-50/60 p-3"
+              >
+                <div class="mb-1.5 flex items-center gap-1.5 text-xs text-blue-400">
+                  <span>💭</span><span>推理中</span>
+                  <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400"></span>
+                </div>
+                <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2">
+                  <template v-for="(text, tIdx) in item.texts" :key="tIdx">
+                    <div v-if="text.trim()" class="text-gray-700">{{ text }}</div>
+                  </template>
+                  <span class="inline-block h-3.5 w-0.5 animate-pulse bg-blue-300 align-text-bottom"></span>
+                </div>
+              </div>
+
+              <div
+                v-if="item.type === 'tool'"
+                class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+              >
+                <div class="mb-1.5 flex items-center gap-2">
+                  <span class="text-base">{{ toolStatusIcon[item.toolStatus || ''] || '🔧' }}</span>
+                  <span class="text-xs font-medium text-gray-500">{{ item.toolName || '工具调用' }}</span>
+                  <Tag
+                    v-if="item.toolStatus"
+                    :color="item.toolStatus === 'completed' ? 'success' : item.toolStatus === 'running' ? 'processing' : 'default'"
+                    class="!text-xs !px-1.5 !py-0"
+                  >{{ item.toolStatus }}</Tag>
+                </div>
+                <div v-if="item.toolInput" class="mb-1 rounded bg-gray-100 p-2 text-xs text-gray-600 font-mono">
+                  {{ item.toolInput }}
+                </div>
+                <div v-if="item.toolOutput" class="rounded bg-green-50 p-2 text-xs text-green-700 font-mono whitespace-pre-wrap">
+                  {{ item.toolOutput }}
+                </div>
+              </div>
+
+              <div
+                v-if="item.type === 'step'"
+                class="flex items-center gap-2 text-xs text-gray-400"
+              >
+                <span v-if="item.stepType === 'start'" class="text-blue-400">┌─</span>
+                <span v-else-if="item.stepType === 'finish'" class="text-green-400">└─</span>
+                <span>{{ item.text }}</span>
+              </div>
+
+              <div
+                v-if="item.type === 'message'"
+                class="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-xs text-gray-500"
+              >
+                {{ item.text }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </Page>
 </template>
+
+<style scoped>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+</style>

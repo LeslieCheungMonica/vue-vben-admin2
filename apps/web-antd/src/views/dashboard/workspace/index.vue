@@ -444,14 +444,6 @@ onMounted(() => {
               <Button
                 size="small"
                 @click="
-                  router.push(`/dashboard/task/vuln-detail/${record.task_id}`)
-                "
-              >
-                漏洞明细
-              </Button>
-              <Button
-                size="small"
-                @click="
                   router.push(`/dashboard/task/rescan/${record.task_id}`)
                 "
               >

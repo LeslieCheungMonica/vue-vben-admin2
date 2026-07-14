@@ -274,6 +274,13 @@ export interface RepeatTaskItem {
   created_at: string;
 }
 
+export async function startRepeatTaskApi(repeatTaskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; message: string }>
+  >('/wape/repeat_task_start', { repeat_task_id: repeatTaskId });
+  return data;
+}
+
 export async function updateRepeatTaskApi(params: {
   repeat_task_id: string;
   repeat_task_name?: string;
@@ -309,8 +316,8 @@ export async function createRepeatTaskApi(params: {
   return data;
 }
 
-export async function getRepeatTaskListApi(keyword?: string) {
-  const params: Record<string, string> = {};
+export async function getRepeatTaskListApi(taskId: string, keyword?: string) {
+  const params: Record<string, string> = { task_id: taskId };
   if (keyword) params.repeat_task_id_keyword = keyword;
   const { data } = await baseRequestClient.post<
     ApiResponse<{ status: string; items: RepeatTaskItem[]; message: string }>

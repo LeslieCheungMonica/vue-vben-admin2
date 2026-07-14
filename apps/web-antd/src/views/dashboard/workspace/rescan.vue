@@ -4,11 +4,11 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Form, Input, message, Modal, Select, Space, Table, Tag, Tooltip } from 'ant-design-vue';
+import { Button, Card, Form, Input, message, Modal, Select, Space, Table, Tag } from 'ant-design-vue';
 
 import { getResourceListApi } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
-import { createRepeatTaskApi, deleteRepeatTaskApi, getRepeatTaskListApi, updateRepeatTaskApi } from '#/api/core/task';
+import { createRepeatTaskApi, deleteRepeatTaskApi, getRepeatTaskListApi, startRepeatTaskApi, updateRepeatTaskApi } from '#/api/core/task';
 import type { RepeatTaskItem } from '#/api/core/task';
 
 const route = useRoute();
@@ -57,7 +57,7 @@ const columns = [
 async function fetchTasks() {
   loading.value = true;
   try {
-    const res = await getRepeatTaskListApi();
+    const res = await getRepeatTaskListApi(taskId);
     tasks.value = res.items ?? [];
   } catch {
     tasks.value = [];
@@ -106,19 +106,30 @@ async function handleCreate() {
 }
 
 function handleStart(record: RepeatTaskItem) {
+  const isRunning = record.status === 'running';
+  const actionLabel = isRunning ? '停止' : record.status === 'stopped' ? '继续' : '启动';
   modalApi.confirm({
-    title: '确认启动',
-    content: `确定启动复扫任务 [${record.repeat_task_name}] 吗？`,
-    okText: '启动',
+    title: `确认${actionLabel}`,
+    content: `确定${actionLabel}复扫任务 [${record.repeat_task_name}] 吗？`,
+    okText: actionLabel,
     onOk: async () => {
-      message.success('复扫任务已启动');
-      await fetchTasks();
+      try {
+        if (isRunning) {
+          message.info('停止复扫任务（待对接接口）');
+        } else {
+          await startRepeatTaskApi(record.repeat_task_id);
+          message.success('复扫任务已启动');
+        }
+        await fetchTasks();
+      } catch {
+        message.error(`${actionLabel}复扫任务失败`);
+      }
     },
   });
 }
 
 function handleDetail(record: RepeatTaskItem) {
-  router.push(`/dashboard/task/vuln-detail/${record.task_id}`);
+  router.push(`/dashboard/task/vuln-detail/${record.task_id}?repeatTaskId=${record.repeat_task_id}`);
 }
 
 const editModalVisible = ref(false);
@@ -226,9 +237,13 @@ onMounted(() => {
           </template>
           <template v-if="column.key === 'action'">
             <Space :size="4">
-              <Tooltip title="启动复扫任务">
-                <Button size="small" type="primary" @click="handleStart(record)">启动</Button>
-              </Tooltip>
+              <Button
+                size="small"
+                :type="record.status === 'running' ? 'default' : 'primary'"
+                @click="handleStart(record)"
+              >
+                {{ record.status === 'running' ? '停止' : record.status === 'stopped' ? '继续' : '启动' }}
+              </Button>
               <Button size="small" @click="handleDetail(record)">详情</Button>
               <Button size="small" @click="handleEdit(record)">编辑</Button>
               <Button danger size="small" @click="handleDelete(record)">删除</Button>
