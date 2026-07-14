@@ -260,22 +260,27 @@ function toggleSelect(id: number) {
 }
 
 function toggleSelectAll() {
-  if (isAllSelected.value) {
+  if (allSelectedOnPage.value) {
     selectedIds.value = new Set();
+    isAllSelected.value = false;
   } else {
     selectedIds.value = new Set(filteredList.value.map((v) => v.id));
+    isAllSelected.value = true;
   }
 }
 
-const isAllSelected = computed(
+const allSelectedOnPage = computed(
   () =>
     filteredList.value.length > 0 &&
     filteredList.value.every((v) => selectedIds.value.has(v.id)),
 );
 
+const isAllSelected = ref(false);
+
 async function fetchVulns() {
   loading.value = true;
   page.value = 1;
+  isAllSelected.value = false;
   try {
     const res = await getVulnDetailListApi(
       taskId,
@@ -295,13 +300,30 @@ async function fetchVulns() {
       try {
         const repeatRes = await getRepeatTaskListApi(taskId);
         const repeatTask = repeatRes.items?.find((r) => r.repeat_task_id === repeatTaskId);
-        if (repeatTask?.vuln_ids) {
-          const savedIds = repeatTask.vuln_ids.split(',').map((s) => s.trim()).filter(Boolean);
-          const matched = new Set(
-            vulnList.value.filter((v) => savedIds.includes(v.vuln_id)).map((v) => v.id),
-          );
-          selectedIds.value = matched;
+      if (repeatTask?.vuln_ids) {
+        let savedIds: string[] = [];
+        let savedBiz: { biz_name: string; vuln_ids: string }[] = [];
+        try {
+          const parsed = JSON.parse(repeatTask.vuln_ids);
+          if (sourceTableFilter.value === 'biz' && Array.isArray(parsed.biz)) {
+            savedBiz = parsed.biz;
+          } else if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+            const val = parsed[sourceTableFilter.value];
+            if (typeof val === 'string') savedIds = val.split(',').map((s: string) => s.trim()).filter(Boolean);
+          }
+        } catch {
+          savedIds = repeatTask.vuln_ids.split(',').map((s) => s.trim()).filter(Boolean);
         }
+        const matched = new Set(
+          vulnList.value.filter((v) => {
+            if (sourceTableFilter.value === 'biz') {
+              return savedBiz.some((b) => b.biz_name === v.biz_name && b.vuln_ids.split(',').map((s) => s.trim()).includes(v.vuln_id));
+            }
+            return savedIds.includes(v.vuln_id);
+          }).map((v) => v.id),
+        );
+        selectedIds.value = matched;
+      }
       } catch { /* ignore */ }
     }
   } catch {
@@ -319,9 +341,26 @@ async function syncSelectedIds() {
     const repeatRes = await getRepeatTaskListApi(taskId);
     const repeatTask = repeatRes.items?.find((r) => r.repeat_task_id === repeatTaskId);
     if (repeatTask?.vuln_ids) {
-      const savedIds = repeatTask.vuln_ids.split(',').map((s) => s.trim()).filter(Boolean);
+      let savedIds: string[] = [];
+      let savedBiz: { biz_name: string; vuln_ids: string }[] = [];
+      try {
+        const parsed = JSON.parse(repeatTask.vuln_ids);
+        if (sourceTableFilter.value === 'biz' && Array.isArray(parsed.biz)) {
+          savedBiz = parsed.biz;
+        } else if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+          const val = parsed[sourceTableFilter.value];
+          if (typeof val === 'string') savedIds = val.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+      } catch {
+        savedIds = repeatTask.vuln_ids.split(',').map((s) => s.trim()).filter(Boolean);
+      }
       const matched = new Set(
-        vulnList.value.filter((v) => savedIds.includes(v.vuln_id)).map((v) => v.id),
+        vulnList.value.filter((v) => {
+          if (sourceTableFilter.value === 'biz') {
+            return savedBiz.some((b) => b.biz_name === v.biz_name && b.vuln_ids.split(',').map((s) => s.trim()).includes(v.vuln_id));
+          }
+          return savedIds.includes(v.vuln_id);
+        }).map((v) => v.id),
       );
       selectedIds.value = matched;
     }
@@ -331,6 +370,7 @@ async function syncSelectedIds() {
 async function goPage(p: number) {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
+  isAllSelected.value = false;
   loading.value = true;
   try {
     const res = await getVulnDetailListApi(
@@ -385,8 +425,20 @@ const hasExploitData = computed(() => {
 
 async function handleSaveVulnIds() {
   if (!repeatTaskId) return;
-  const selected = filteredList.value.filter((v) => selectedIds.value.has(v.id));
   const currentType = sourceTableFilter.value;
+
+  let allVulns: VulnDetailItem[] = [];
+  try {
+    const first = await getVulnDetailListApi(taskId, currentType, 1, 10000);
+    allVulns = first.items ?? [];
+  } catch {
+    message.error('获取全量漏洞数据失败');
+    return;
+  }
+
+  const selected = allSelectedOnPage.value
+    ? allVulns
+    : allVulns.filter((v) => selectedIds.value.has(v.id));
 
   let existing: Record<string, any> = {};
   try {
@@ -458,7 +510,7 @@ onMounted(() => {
             {{ total }}
           </span>
           <Checkbox
-            :checked="isAllSelected"
+            :checked="allSelectedOnPage"
             class="ml-2"
             @change="toggleSelectAll"
           />
