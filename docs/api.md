@@ -1135,3 +1135,62 @@ curl -X POST http://127.0.0.1:7654/wape/repeat_task_list \
   "message": "查询到 1 条记录"
 }
 ```
+
+---
+
+## 29. 复扫任务更新
+
+**POST** `/wape/repeat_task_update`
+
+更新复扫任务的字段，只传需要修改的字段。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| repeat_task_id | string | 是 | 复扫任务 ID |
+| repeat_task_name | string | 否 | 复扫任务名称 |
+| resource_id | int | 否 | 资源 ID |
+| resource_path | string | 否 | 资源路径 |
+| status | string | 否 | 状态 |
+| repeat_task_type | string | 否 | 复扫任务类型 |
+| vuln_ids | string | 否 | 要复扫的漏洞 ID 列表 |
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/repeat_task_update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repeat_task_id": "wape-repeat-20250714010101",
+    "status": "running"
+  }'
+```
+
+```json
+{
+  "status": "completed",
+  "message": "复扫任务更新成功"
+}
+```
+
+---
+
+## 30. 复扫任务删除
+
+**POST** `/wape/repeat_task_delete`
+
+删除指定的复扫任务。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| repeat_task_id | string | 是 | 复扫任务 ID |
+
+```bash
+curl -X POST http://127.0.0.1:7654/wape/repeat_task_delete \
+  -H "Content-Type: application/json" \
+  -d '{"repeat_task_id": "wape-repeat-20250714010101"}'
+```
+
+```json
+{
+  "status": "completed",
+  "message": "复扫任务已删除"
+}
+```

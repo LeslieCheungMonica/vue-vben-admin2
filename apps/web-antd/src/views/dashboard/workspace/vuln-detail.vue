@@ -137,6 +137,30 @@ function selectVuln(vuln: VulnDetailItem) {
   selectedVuln.value = vuln;
 }
 
+const exploitStatusBadgeClass = computed(() => {
+  const s = selectedVuln.value?.exploit_status || '';
+  if (s.includes('验证受阻') || s.includes('失败')) return 'bg-red-100 border-red-300 text-red-700';
+  if (s.includes('成功利用') || s.includes('成功')) return 'bg-green-100 border-green-300 text-green-700';
+  return 'bg-gray-100 border-gray-300 text-gray-700';
+});
+
+const hasExploitData = computed(() => {
+  if (!selectedVuln.value) return false;
+  const v = selectedVuln.value;
+  return !!(
+    v.exploit_title ||
+    v.exploit_severity ||
+    v.exploit_status ||
+    v.exploit_vuln_detail ||
+    v.exploit_location ||
+    v.exploit_blockers ||
+    v.exploit_impact ||
+    v.exploit_prerequisites ||
+    v.exploit_steps ||
+    v.exploit_evidence
+  );
+});
+
 function confidenceClass(confidence: string) {
   if (confidence === '高危') return 'bg-red-100 text-red-700';
   if (confidence === '中危') return 'bg-yellow-100 text-yellow-700';
@@ -345,90 +369,162 @@ onMounted(() => {
               selectedVuln.create_time
             }}</span>
           </div>
-          <div class="flex-1 overflow-y-auto p-5 text-sm">
-            <div class="space-y-5">
-              <div v-if="selectedVuln.notes">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>📋</span><span>漏洞详情</span>
-                </div>
-                <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
-                  {{ selectedVuln.notes }}
-                </div>
+          <div class="flex flex-1 flex-col overflow-hidden">
+            <div class="flex-1 overflow-y-auto p-5 text-sm">
+              <div class="flex items-center gap-1.5 mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <span>🔍</span><span>漏洞扫描基本信息</span>
               </div>
-
-              <div v-if="selectedVuln.source_endpoint">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>📍</span><span>源端点</span>
+              <div class="space-y-4">
+                <div v-if="selectedVuln.notes">
+                  <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span>📋</span><span>漏洞详情</span>
+                  </div>
+                  <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                    {{ selectedVuln.notes }}
+                  </div>
                 </div>
-                <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
-                  {{ selectedVuln.source_endpoint }}
+                <div v-if="selectedVuln.source_endpoint">
+                  <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span>📍</span><span>源端点</span>
+                  </div>
+                  <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                    {{ selectedVuln.source_endpoint }}
+                  </div>
                 </div>
-              </div>
-
-              <div v-if="selectedVuln.vulnerable_code_location">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>🔗</span><span>漏洞代码位置</span>
+                <div v-if="selectedVuln.vulnerable_code_location">
+                  <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span>🔗</span><span>漏洞代码位置</span>
+                  </div>
+                  <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                    {{ selectedVuln.vulnerable_code_location }}
+                  </div>
                 </div>
-                <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
-                  {{ selectedVuln.vulnerable_code_location }}
+                <div v-if="selectedVuln.missing_defense">
+                  <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span>🛡️</span><span>缺失的防御</span>
+                  </div>
+                  <div class="rounded-lg bg-orange-50 p-3 text-sm text-orange-800">
+                    {{ selectedVuln.missing_defense }}
+                  </div>
                 </div>
-              </div>
-
-              <div v-if="selectedVuln.missing_defense">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>🛡️</span><span>缺失的防御</span>
+                <div v-if="selectedVuln.exploitation_hypothesis">
+                  <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span>🔐</span><span>利用假设</span>
+                  </div>
+                  <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                    {{ selectedVuln.exploitation_hypothesis }}
+                  </div>
                 </div>
-                <div class="rounded-lg bg-orange-50 p-3 text-sm text-orange-800">
-                  {{ selectedVuln.missing_defense }}
-                </div>
-              </div>
-
-              <div v-if="selectedVuln.exploitation_hypothesis">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>🔐</span><span>利用假设</span>
-                </div>
-                <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-                  {{ selectedVuln.exploitation_hypothesis }}
-                </div>
-              </div>
-
-              <div v-if="selectedVuln.suggested_exploit_technique">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>⚡</span><span>建议利用技术</span>
-                </div>
-                <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-                  {{ selectedVuln.suggested_exploit_technique }}
-                </div>
-              </div>
-
-              <div v-if="selectedVuln.exploit_steps">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>⚡</span><span>利用步骤</span>
-                </div>
-                <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed">
-                  <div
-                    v-for="(line, idx) in selectedVuln.exploit_steps.split(/(?:\n|;)/)"
-                    :key="idx"
-                    v-show="line.trim()"
-                    class="mb-2 flex items-start gap-2.5 last:mb-0"
-                  >
-                    <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-600">
-                      {{ idx + 1 }}
-                    </span>
-                    <span class="pt-0.5 text-gray-700">{{ line.trim() }}</span>
+                <div v-if="selectedVuln.suggested_exploit_technique">
+                  <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    <span>⚡</span><span>建议利用技术</span>
+                  </div>
+                  <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                    {{ selectedVuln.suggested_exploit_technique }}
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div v-if="selectedVuln.exploit_evidence">
-                <div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>✅</span><span>证据</span>
+            <template v-if="hasExploitData">
+              <div class="h-8 bg-white"></div>
+              <div
+                class="flex-1 overflow-y-auto px-5 pb-5 pt-1 text-sm"
+              >
+                <div class="mb-4 flex items-center justify-between">
+                  <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <span>⚔️</span><span>渗透信息</span>
+                  </div>
+                  <span v-if="selectedVuln.exploit_status" class="rounded-md px-2 py-0.5 text-xs font-medium" :class="exploitStatusBadgeClass">
+                    {{ selectedVuln.exploit_status }}
+                  </span>
                 </div>
-                <div class="rounded-lg border border-green-200 bg-green-50 p-3 font-mono text-xs leading-relaxed text-green-700">
-                  {{ selectedVuln.exploit_evidence }}
+                <div class="space-y-4">
+                  <div v-if="selectedVuln.exploit_title">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>🏷️</span><span>利用标题</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                      {{ selectedVuln.exploit_title }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_severity">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>⚠️</span><span>利用严重级别</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                      {{ selectedVuln.exploit_severity }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_vuln_detail">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>📋</span><span>利用详情</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                      {{ selectedVuln.exploit_vuln_detail }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_location">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>📍</span><span>利用位置</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                      {{ selectedVuln.exploit_location }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_blockers">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>🚧</span><span>利用阻碍</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                      {{ selectedVuln.exploit_blockers }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_impact">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>💥</span><span>利用影响</span>
+                    </div>
+                    <div class="rounded-lg bg-orange-50 p-3 text-sm text-orange-800">
+                      {{ selectedVuln.exploit_impact }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_prerequisites">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>🔐</span><span>利用前提</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                      {{ selectedVuln.exploit_prerequisites }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_steps">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>⚡</span><span>利用步骤</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed">
+                      <div
+                        v-for="(line, idx) in selectedVuln.exploit_steps.split(/(?:\n|;)/)"
+                        :key="idx"
+                        v-show="line.trim()"
+                        class="mb-2 flex items-start gap-2.5 last:mb-0"
+                      >
+                        <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-600">
+                          {{ idx + 1 }}
+                        </span>
+                        <span class="pt-0.5 text-gray-700">{{ line.trim() }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="selectedVuln.exploit_evidence">
+                    <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      <span>✅</span><span>证据</span>
+                    </div>
+                    <div class="rounded-lg border border-green-200 bg-green-50 p-3 font-mono text-xs leading-relaxed text-green-700">
+                      {{ selectedVuln.exploit_evidence }}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
         </template>
         <div

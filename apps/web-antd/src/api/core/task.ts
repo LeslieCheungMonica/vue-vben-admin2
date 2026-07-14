@@ -274,6 +274,28 @@ export interface RepeatTaskItem {
   created_at: string;
 }
 
+export async function updateRepeatTaskApi(params: {
+  repeat_task_id: string;
+  repeat_task_name?: string;
+  resource_id?: number;
+  resource_path?: string;
+  status?: string;
+  repeat_task_type?: string;
+  vuln_ids?: string;
+}) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; message: string }>
+  >('/wape/repeat_task_update', params);
+  return data;
+}
+
+export async function deleteRepeatTaskApi(repeatTaskId: string) {
+  const { data } = await baseRequestClient.post<
+    ApiResponse<{ status: string; message: string }>
+  >('/wape/repeat_task_delete', { repeat_task_id: repeatTaskId });
+  return data;
+}
+
 export async function createRepeatTaskApi(params: {
   task_id: string;
   repeat_task_name: string;

@@ -8,7 +8,7 @@ import { Button, Card, Form, Input, message, Modal, Select, Space, Table, Tag, T
 
 import { getResourceListApi } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
-import { createRepeatTaskApi, getRepeatTaskListApi } from '#/api/core/task';
+import { createRepeatTaskApi, deleteRepeatTaskApi, getRepeatTaskListApi, updateRepeatTaskApi } from '#/api/core/task';
 import type { RepeatTaskItem } from '#/api/core/task';
 
 const route = useRoute();
@@ -118,11 +118,55 @@ function handleStart(record: RepeatTaskItem) {
 }
 
 function handleDetail(record: RepeatTaskItem) {
-  router.push(`/dashboard/task/detail/${taskId}`);
+  router.push(`/dashboard/task/vuln-detail/${record.task_id}`);
 }
 
-function handleEdit(record: RepeatTaskItem) {
-  message.info('编辑复扫任务（待对接接口）');
+const editModalVisible = ref(false);
+const editLoading = ref(false);
+const editForm = ref({
+  repeat_task_id: '',
+  repeat_task_name: '',
+  resource_id: 0,
+  repeat_task_type: 'code',
+});
+
+async function handleEdit(record: RepeatTaskItem) {
+  try {
+    const res = await getResourceListApi();
+    resources.value = res.items ?? [];
+  } catch {
+    resources.value = [];
+  }
+  editForm.value = {
+    repeat_task_id: record.repeat_task_id,
+    repeat_task_name: record.repeat_task_name,
+    resource_id: record.resource_id,
+    repeat_task_type: record.repeat_task_type || 'code',
+  };
+  editModalVisible.value = true;
+}
+
+async function handleEditSubmit() {
+  if (!editForm.value.repeat_task_name) {
+    message.warning('请输入复扫任务名称');
+    return;
+  }
+  editLoading.value = true;
+  try {
+    await updateRepeatTaskApi({
+      repeat_task_id: editForm.value.repeat_task_id,
+      repeat_task_name: editForm.value.repeat_task_name,
+      resource_id: editForm.value.resource_id,
+      repeat_task_type: editForm.value.repeat_task_type,
+    });
+    message.success('复扫任务更新成功');
+    editModalVisible.value = false;
+    await fetchTasks();
+  } catch {
+    message.error('更新复扫任务失败');
+  } finally {
+    editLoading.value = false;
+  }
 }
 
 function handleDelete(record: RepeatTaskItem) {
@@ -132,8 +176,13 @@ function handleDelete(record: RepeatTaskItem) {
     okText: '删除',
     okType: 'danger',
     onOk: async () => {
-      message.success('复扫任务已删除');
-      await fetchTasks();
+      try {
+        await deleteRepeatTaskApi(record.repeat_task_id);
+        message.success('复扫任务已删除');
+        await fetchTasks();
+      } catch {
+        message.error('删除复扫任务失败');
+      }
     },
   });
 }
@@ -171,6 +220,9 @@ onMounted(() => {
             <Tag :color="statusColorMap[record.status] || 'default'">
               {{ statusLabelMap[record.status] || record.status }}
             </Tag>
+          </template>
+          <template v-if="column.key === 'repeat_task_type'">
+            {{ record.repeat_task_type === 'code' ? '源码' : record.repeat_task_type === 'pta' ? '渗透' : record.repeat_task_type }}
           </template>
           <template v-if="column.key === 'action'">
             <Space :size="4">
@@ -215,8 +267,41 @@ onMounted(() => {
         </Form.Item>
         <Form.Item label="复扫任务类型" required>
           <Select v-model:value="createForm.repeat_task_type">
-            <Select.Option value="code">源码 code</Select.Option>
-            <Select.Option value="pta">渗透 pta</Select.Option>
+            <Select.Option value="code">源码</Select.Option>
+            <Select.Option value="pta">渗透</Select.Option>
+          </Select>
+        </Form.Item>
+      </Form>
+    </Modal>
+
+    <Modal
+      v-model:visible="editModalVisible"
+      :confirm-loading="editLoading"
+      cancel-text="取消"
+      ok-text="保存"
+      title="编辑复扫任务"
+      @ok="handleEditSubmit"
+    >
+      <Form layout="vertical">
+        <Form.Item label="复扫任务名称" required>
+          <Input v-model:value="editForm.repeat_task_name" />
+        </Form.Item>
+        <Form.Item label="选择资源" required>
+          <Select
+            v-model:value="editForm.resource_id"
+            :options="
+              resources.map((r) => ({
+                label: `${r.code}:${r.version} - ${r.description || '无描述'}`,
+                value: r.id,
+              }))
+            "
+            placeholder="请选择资源"
+          />
+        </Form.Item>
+        <Form.Item label="复扫任务类型" required>
+          <Select v-model:value="editForm.repeat_task_type">
+            <Select.Option value="code">源码</Select.Option>
+            <Select.Option value="pta">渗透</Select.Option>
           </Select>
         </Form.Item>
       </Form>
