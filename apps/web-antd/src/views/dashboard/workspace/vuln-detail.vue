@@ -385,15 +385,38 @@ const hasExploitData = computed(() => {
 
 async function handleSaveVulnIds() {
   if (!repeatTaskId) return;
-  const vulnIds = filteredList.value
-    .filter((v) => selectedIds.value.has(v.id))
-    .map((v) => v.vuln_id)
-    .filter(Boolean)
-    .join(',');
+  const selected = filteredList.value.filter((v) => selectedIds.value.has(v.id));
+  const currentType = sourceTableFilter.value;
+
+  let existing: Record<string, any> = {};
+  try {
+    const repeatRes = await getRepeatTaskListApi(taskId);
+    const repeatTask = repeatRes.items?.find((r) => r.repeat_task_id === repeatTaskId);
+    if (repeatTask?.vuln_ids) {
+      existing = JSON.parse(repeatTask.vuln_ids);
+    }
+  } catch { /* ignore */ }
+
+  if (currentType === 'biz') {
+    const groups: Record<string, string[]> = {};
+    for (const v of selected) {
+      const name = v.biz_name || 'default';
+      if (!groups[name]) groups[name] = [];
+      groups[name].push(v.vuln_id);
+    }
+    existing.biz = Object.entries(groups).map(([biz_name, ids]) => ({
+      biz_name,
+      vuln_ids: ids.filter(Boolean).join(','),
+    }));
+  } else {
+    const ids = selected.map((v) => v.vuln_id).filter(Boolean).join(',');
+    existing[currentType] = ids;
+  }
+
   try {
     await updateRepeatTaskApi({
       repeat_task_id: repeatTaskId,
-      vuln_ids: vulnIds,
+      vuln_ids: JSON.stringify(existing),
     });
     message.success('漏洞 ID 已保存');
   } catch {
