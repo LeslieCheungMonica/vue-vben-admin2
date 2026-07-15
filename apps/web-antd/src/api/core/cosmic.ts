@@ -62,19 +62,51 @@ export namespace CosmicApi {
 
   export interface EvidenceDetail {
     exists: boolean;
-    reason: string;
+    reason?: string;
     searched_keywords?: string[];
     searched_paths?: string[];
+    file_path?: string | null;
+    line_start?: number | null;
+    line_end?: number | null;
+    code_snippet?: string | null;
+    component_name?: string | null;
+    route_path?: string | null;
+    missing_reason?: string | null;
+    api?: string;
+    handler?: string;
+    service_name?: string;
+    line?: number;
+    method?: string;
   }
 
   export interface Evidence {
     input_path: string;
     exists: boolean;
     reason: string;
-    details?: {
+    conclusion?: string;
+    summary?: {
+      frontend_status?: string;
+      backend_status?: string;
+      overall?: string;
+    };
+    evidence?: {
       frontend?: EvidenceDetail;
       backend?: EvidenceDetail;
     };
+    business_context?: {
+      service_responsibility?: string;
+      data_flow?: string;
+      related_modules?: string[];
+      note?: string;
+    };
+    searched_info?: {
+      frontend_keywords?: string[];
+      frontend_paths?: string[];
+      backend_keywords?: string[];
+      backend_paths?: string[];
+    };
+    confidence?: number;
+    recommendation?: string;
   }
 
   export interface TaskDetailNode {

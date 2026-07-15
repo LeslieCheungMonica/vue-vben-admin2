@@ -35,6 +35,7 @@ interface AntTreeNode {
   isLeaf: boolean;
   evidence?: CosmicApi.Evidence;
   status: 'exists' | 'not-exists' | 'pending' | 'module';
+  inputPath?: string;
 }
 
 const route = useRoute();
@@ -51,22 +52,17 @@ const selectedKeys = ref<string[]>([]);
 function toAntTree(node: CosmicApi.TaskDetailNode, path: string): AntTreeNode {
   const currentPath = path ? `${path}-${node.name}` : node.name;
   const isLeaf = !node.children || node.children.length === 0;
-
-  let status: AntTreeNode['status'] = 'module';
-  if (isLeaf) {
-    if (node.evidence) {
-      status = node.evidence.exists ? 'exists' : 'not-exists';
-    } else {
-      status = 'pending';
-    }
+  let status: AntTreeNode['status'] = 'pending';
+  if (node.evidence) {
+    status = node.evidence.exists ? 'exists' : 'not-exists';
   }
-
   return {
     key: currentPath,
     title: node.name,
     isLeaf,
-    evidence: node.evidence,
     status,
+    evidence: node.evidence,
+    inputPath: node.evidence?.input_path,
     children: node.children
       ? node.children.map((c) => toAntTree(c, currentPath))
       : undefined,
@@ -131,7 +127,7 @@ function handleSelect(keys: string[], info: any) {
   selectedKeys.value = keys;
   const node = info.node as AntTreeNode;
   if (node.isLeaf && node.evidence) {
-    selectedEvidence.value = node.evidence;
+    selectedEvidence.value = { ...node.evidence, input_path: node.inputPath || node.evidence.input_path };
   } else if (!node.isLeaf) {
     const key = node.key;
     if (expandedKeys.value.includes(key)) {
@@ -459,7 +455,6 @@ onUnmounted(() => {
             class="flex-1 overflow-auto p-4 space-y-4"
             style="min-height: 300px"
           >
-            <!-- Summary card -->
             <div
               class="rounded-lg border p-4"
               :class="
@@ -491,136 +486,181 @@ onUnmounted(() => {
               <div class="space-y-2 text-sm">
                 <div class="flex items-start gap-2">
                   <span class="shrink-0 mt-0.5 text-gray-400">📁</span>
-                  <code
-                    class="break-all rounded bg-gray-100/80 px-2 py-0.5 text-xs text-gray-600"
-                    >{{ selectedEvidence.input_path }}</code
-                  >
+                  <code class="break-all rounded bg-gray-100/80 px-2 py-0.5 text-xs text-gray-600">{{ selectedEvidence.input_path }}</code>
                 </div>
                 <div class="flex items-start gap-2">
                   <span class="shrink-0 mt-0.5 text-gray-400">💬</span>
-                  <p class="text-gray-600 leading-relaxed">
-                    {{ selectedEvidence.reason }}
-                  </p>
+                  <p class="text-gray-600 leading-relaxed">{{ selectedEvidence.reason }}</p>
                 </div>
               </div>
             </div>
 
-            <!-- Frontend analysis -->
-            <div
-              v-if="selectedEvidence.details?.frontend"
-              class="rounded-lg border border-gray-200 overflow-hidden"
-            >
-              <div
-                class="flex items-center gap-2 bg-gray-50 px-4 py-2.5 border-b border-gray-200"
-              >
+            <div v-if="selectedEvidence.summary" class="rounded-lg border border-gray-200 p-4">
+              <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">📊 总结</div>
+              <div class="space-y-1.5 text-sm">
+                <div v-if="selectedEvidence.summary.overall" class="flex items-center gap-2">
+                  <span class="text-xs text-gray-400 w-16 shrink-0">整体</span>
+                  <span>{{ selectedEvidence.summary.overall }}</span>
+                </div>
+                <div v-if="selectedEvidence.summary.frontend_status" class="flex items-center gap-2">
+                  <span class="text-xs text-gray-400 w-16 shrink-0">前端</span>
+                  <span>{{ selectedEvidence.summary.frontend_status }}</span>
+                </div>
+                <div v-if="selectedEvidence.summary.backend_status" class="flex items-center gap-2">
+                  <span class="text-xs text-gray-400 w-16 shrink-0">后端</span>
+                  <span>{{ selectedEvidence.summary.backend_status }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="selectedEvidence.conclusion" class="rounded-lg border border-gray-200 p-4">
+              <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">📝 结论</div>
+              <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ selectedEvidence.conclusion }}</p>
+            </div>
+
+            <div v-if="selectedEvidence.evidence?.frontend" class="rounded-lg border border-gray-200 overflow-hidden">
+              <div class="flex items-center gap-2 bg-gray-50 px-4 py-2.5 border-b border-gray-200">
                 <span>🖥️</span>
                 <span class="text-sm font-medium text-gray-700">前端分析</span>
-                <Tag
-                  :color="
-                    selectedEvidence.details.frontend.exists
-                      ? 'success'
-                      : 'error'
-                  "
-                  class="ml-auto"
-                  >{{
-                    selectedEvidence.details.frontend.exists
-                      ? '已找到'
-                      : '未找到'
-                  }}</Tag
-                >
+                <Tag :color="selectedEvidence.evidence.frontend.exists ? 'success' : 'error'" class="ml-auto">
+                  {{ selectedEvidence.evidence.frontend.exists ? '已找到' : '未找到' }}
+                </Tag>
               </div>
               <div class="p-4 space-y-3">
-                <div>
-                  <div class="text-xs text-gray-400 mb-1">分析理由</div>
-                  <p class="text-sm text-gray-600 leading-relaxed">
-                    {{ selectedEvidence.details.frontend.reason }}
-                  </p>
+                <div v-if="selectedEvidence.evidence.frontend.file_path">
+                  <div class="text-xs text-gray-400 mb-1">文件路径</div>
+                  <code class="block rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 font-mono break-all">{{ selectedEvidence.evidence.frontend.file_path }}</code>
                 </div>
-                <div v-if="selectedEvidence.details.frontend.searched_keywords">
-                  <div class="text-xs text-gray-400 mb-1.5">搜索关键词</div>
+                <div v-if="selectedEvidence.evidence.frontend.component_name">
+                  <div class="text-xs text-gray-400 mb-1">组件名</div>
+                  <span class="text-sm text-gray-700">{{ selectedEvidence.evidence.frontend.component_name }}</span>
+                </div>
+                <div v-if="selectedEvidence.evidence.frontend.route_path">
+                  <div class="text-xs text-gray-400 mb-1">路由路径</div>
+                  <code class="text-sm text-gray-600">{{ selectedEvidence.evidence.frontend.route_path }}</code>
+                </div>
+                <div v-if="selectedEvidence.evidence.frontend.missing_reason">
+                  <div class="text-xs text-gray-400 mb-1">缺失原因</div>
+                  <p class="text-sm text-gray-600 leading-relaxed">{{ selectedEvidence.evidence.frontend.missing_reason }}</p>
+                </div>
+                <div v-if="selectedEvidence.evidence.frontend.reason">
+                  <div class="text-xs text-gray-400 mb-1">分析理由</div>
+                  <p class="text-sm text-gray-600 leading-relaxed">{{ selectedEvidence.evidence.frontend.reason }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="selectedEvidence.evidence?.backend" class="rounded-lg border border-gray-200 overflow-hidden">
+              <div class="flex items-center gap-2 bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+                <span>⚙️</span>
+                <span class="text-sm font-medium text-gray-700">后端分析</span>
+                <Tag :color="selectedEvidence.evidence.backend.exists ? 'success' : 'error'" class="ml-auto">
+                  {{ selectedEvidence.evidence.backend.exists ? '已找到' : '未找到' }}
+                </Tag>
+              </div>
+              <div class="p-4 space-y-3">
+                <div v-if="selectedEvidence.evidence.backend.api">
+                  <div class="text-xs text-gray-400 mb-1">API</div>
+                  <code class="text-sm text-gray-600 font-mono">{{ selectedEvidence.evidence.backend.api }}</code>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.handler">
+                  <div class="text-xs text-gray-400 mb-1">处理器</div>
+                  <span class="text-sm text-gray-700">{{ selectedEvidence.evidence.backend.handler }}</span>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.file_path">
+                  <div class="text-xs text-gray-400 mb-1">文件路径</div>
+                  <code class="block rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 font-mono break-all">{{ selectedEvidence.evidence.backend.file_path }}</code>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.service_name">
+                  <div class="text-xs text-gray-400 mb-1">服务名称</div>
+                  <span class="text-sm text-gray-700">{{ selectedEvidence.evidence.backend.service_name }}</span>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.line">
+                  <div class="text-xs text-gray-400 mb-1">行号</div>
+                  <span class="text-sm text-gray-700">{{ selectedEvidence.evidence.backend.line }}</span>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.method">
+                  <div class="text-xs text-gray-400 mb-1">HTTP 方法</div>
+                  <Tag color="blue">{{ selectedEvidence.evidence.backend.method }}</Tag>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.reason">
+                  <div class="text-xs text-gray-400 mb-1">分析理由</div>
+                  <p class="text-sm text-gray-600 leading-relaxed">{{ selectedEvidence.evidence.backend.reason }}</p>
+                </div>
+                <div v-if="selectedEvidence.evidence.backend.code_snippet">
+                  <div class="text-xs text-gray-400 mb-1">代码片段</div>
+                  <pre class="rounded bg-gray-900 p-3 text-xs text-green-400 font-mono overflow-x-auto leading-relaxed whitespace-pre-wrap">{{ selectedEvidence.evidence.backend.code_snippet }}</pre>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="selectedEvidence.business_context" class="rounded-lg border border-gray-200 p-4">
+              <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">🏢 业务上下文</div>
+              <div class="space-y-3 text-sm">
+                <div v-if="selectedEvidence.business_context.service_responsibility">
+                  <div class="text-xs text-gray-400 mb-1">服务职责</div>
+                  <p class="text-gray-700 leading-relaxed">{{ selectedEvidence.business_context.service_responsibility }}</p>
+                </div>
+                <div v-if="selectedEvidence.business_context.data_flow">
+                  <div class="text-xs text-gray-400 mb-1">数据流</div>
+                  <p class="text-gray-700 leading-relaxed">{{ selectedEvidence.business_context.data_flow }}</p>
+                </div>
+                <div v-if="selectedEvidence.business_context.related_modules?.length">
+                  <div class="text-xs text-gray-400 mb-1">相关模块</div>
                   <div class="flex flex-wrap gap-1.5">
-                    <span
-                      v-for="kw in selectedEvidence.details.frontend
-                        .searched_keywords"
-                      :key="kw"
-                      class="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-600 font-mono"
-                      >{{ kw }}</span
-                    >
+                    <Tag v-for="m in selectedEvidence.business_context.related_modules" :key="m">{{ m }}</Tag>
                   </div>
                 </div>
-                <div v-if="selectedEvidence.details.frontend.searched_paths">
-                  <div class="text-xs text-gray-400 mb-1.5">搜索路径</div>
+                <div v-if="selectedEvidence.business_context.note">
+                  <div class="text-xs text-gray-400 mb-1">备注</div>
+                  <p class="text-gray-700 leading-relaxed">{{ selectedEvidence.business_context.note }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="selectedEvidence.searched_info" class="rounded-lg border border-gray-200 p-4">
+              <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">🔍 搜索信息</div>
+              <div class="space-y-3 text-sm">
+                <div v-if="selectedEvidence.searched_info.frontend_keywords?.length">
+                  <div class="text-xs text-gray-400 mb-1">前端关键词</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="kw in selectedEvidence.searched_info.frontend_keywords" :key="kw" class="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-600 font-mono">{{ kw }}</span>
+                  </div>
+                </div>
+                <div v-if="selectedEvidence.searched_info.frontend_paths?.length">
+                  <div class="text-xs text-gray-400 mb-1">前端搜索路径</div>
                   <div class="space-y-1">
-                    <div
-                      v-for="p in selectedEvidence.details.frontend
-                        .searched_paths"
-                      :key="p"
-                      class="rounded bg-gray-100 px-2.5 py-1.5 text-xs text-gray-500 font-mono leading-relaxed"
-                    >
-                      {{ p }}
-                    </div>
+                    <div v-for="p in selectedEvidence.searched_info.frontend_paths" :key="p" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500 font-mono">{{ p }}</div>
+                  </div>
+                </div>
+                <div v-if="selectedEvidence.searched_info.backend_keywords?.length">
+                  <div class="text-xs text-gray-400 mb-1">后端关键词</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="kw in selectedEvidence.searched_info.backend_keywords" :key="kw" class="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-600 font-mono">{{ kw }}</span>
+                  </div>
+                </div>
+                <div v-if="selectedEvidence.searched_info.backend_paths?.length">
+                  <div class="text-xs text-gray-400 mb-1">后端搜索路径</div>
+                  <div class="space-y-1">
+                    <div v-for="p in selectedEvidence.searched_info.backend_paths" :key="p" class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500 font-mono">{{ p }}</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Backend analysis -->
-            <div
-              v-if="selectedEvidence.details?.backend"
-              class="rounded-lg border border-gray-200 overflow-hidden"
-            >
-              <div
-                class="flex items-center gap-2 bg-gray-50 px-4 py-2.5 border-b border-gray-200"
-              >
-                <span>⚙️</span>
-                <span class="text-sm font-medium text-gray-700">后端分析</span>
-                <Tag
-                  :color="
-                    selectedEvidence.details.backend.exists
-                      ? 'success'
-                      : 'error'
-                  "
-                  class="ml-auto"
-                  >{{
-                    selectedEvidence.details.backend.exists
-                      ? '已找到'
-                      : '未找到'
-                  }}</Tag
-                >
-              </div>
-              <div class="p-4 space-y-3">
-                <div>
-                  <div class="text-xs text-gray-400 mb-1">分析理由</div>
-                  <p class="text-sm text-gray-600 leading-relaxed">
-                    {{ selectedEvidence.details.backend.reason }}
-                  </p>
-                </div>
-                <div v-if="selectedEvidence.details.backend.searched_keywords">
-                  <div class="text-xs text-gray-400 mb-1.5">搜索关键词</div>
-                  <div class="flex flex-wrap gap-1.5">
-                    <span
-                      v-for="kw in selectedEvidence.details.backend
-                        .searched_keywords"
-                      :key="kw"
-                      class="inline-flex items-center rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-600 font-mono"
-                      >{{ kw }}</span
-                    >
-                  </div>
-                </div>
-                <div v-if="selectedEvidence.details.backend.searched_paths">
-                  <div class="text-xs text-gray-400 mb-1.5">搜索路径</div>
-                  <div class="space-y-1">
-                    <div
-                      v-for="p in selectedEvidence.details.backend
-                        .searched_paths"
-                      :key="p"
-                      class="rounded bg-gray-100 px-2.5 py-1.5 text-xs text-gray-500 font-mono leading-relaxed"
-                    >
-                      {{ p }}
-                    </div>
-                  </div>
+            <div v-if="selectedEvidence.confidence !== undefined" class="rounded-lg border border-gray-200 p-4">
+              <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">🎯 置信度</div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold" :class="selectedEvidence.confidence >= 0.8 ? 'text-green-600' : selectedEvidence.confidence >= 0.5 ? 'text-yellow-600' : 'text-red-600'">{{ (selectedEvidence.confidence * 100).toFixed(0) }}%</span>
+                <div class="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+                  <div class="h-full rounded-full transition-all" :class="selectedEvidence.confidence >= 0.8 ? 'bg-green-500' : selectedEvidence.confidence >= 0.5 ? 'bg-yellow-500' : 'bg-red-500'" :style="{ width: `${selectedEvidence.confidence * 100}%` }"></div>
                 </div>
               </div>
+            </div>
+
+            <div v-if="selectedEvidence.recommendation" class="rounded-lg border border-gray-200 p-4">
+              <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">💡 建议</div>
+              <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ selectedEvidence.recommendation }}</p>
             </div>
           </div>
         </div>
