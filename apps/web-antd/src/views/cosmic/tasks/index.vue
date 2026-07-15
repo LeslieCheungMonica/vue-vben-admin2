@@ -9,6 +9,7 @@ import {
   Card,
   Form,
   Input,
+  InputNumber,
   message,
   Modal,
   Select,
@@ -36,6 +37,11 @@ const createForm = ref({
   code_resource_id: 0,
   cosmic_resource_id: 0,
   task_name: '',
+  sheet_index: 0,
+  col_level1: 0,
+  col_level2: 0,
+  col_level3: 0,
+  col_func: 0,
 });
 
 const editModalVisible = ref(false);
@@ -45,11 +51,21 @@ const editForm = ref<{
   task_name: string;
   code_resource_id: number;
   cosmic_resource_id: number;
+  sheet_spec: number;
+  col_one: number;
+  col_two: number;
+  col_three: number;
+  col_moudle: number;
 }>({
   task_id: '',
   task_name: '',
   code_resource_id: 0,
   cosmic_resource_id: 0,
+  sheet_spec: 0,
+  col_one: 0,
+  col_two: 0,
+  col_three: 0,
+  col_moudle: 0,
 });
 
 const statusColorMap: Record<string, string> = {
@@ -85,6 +101,11 @@ async function openCreateModal() {
     code_resource_id: 0,
     cosmic_resource_id: 0,
     task_name: '',
+    sheet_index: 0,
+    col_level1: 0,
+    col_level2: 0,
+    col_level3: 0,
+    col_func: 0,
   };
   try {
     const [codeRes, cosmicRes] = await Promise.all([
@@ -150,12 +171,17 @@ function showDetail(record: CosmicApi.TaskItem) {
   router.push(`/cosmic/task/detail/${record.task_id}`);
 }
 
-async function openEditModal(record: CosmicApi.TaskItem) {
+async function openEditModal(record: any) {
   editForm.value = {
     task_id: record.task_id,
     task_name: record.task_name,
     code_resource_id: record.code_resource_id,
     cosmic_resource_id: record.cosmic_resource_id,
+    sheet_spec: record.sheet_spec ?? 0,
+    col_one: record.col_one ?? 0,
+    col_two: record.col_two ?? 0,
+    col_three: record.col_three ?? 0,
+    col_moudle: record.col_moudle ?? 0,
   };
   try {
     const [codeRes, cosmicRes] = await Promise.all([
@@ -377,6 +403,31 @@ onMounted(() => {
             placeholder="例如: SDC COSMIC 评估"
           />
         </Form.Item>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50/60 p-4">
+          <div class="mb-3 flex items-center gap-2 text-xs font-semibold text-gray-500">
+            <span class="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-[10px] text-blue-600">📊</span>
+            <span>Excel 列配置</span>
+            <span class="text-gray-300 font-normal">（可选，从 0 开始）</span>
+          </div>
+          <div class="grid grid-cols-5 gap-3">
+            <Form.Item label="Sheet 页序号" class="!mb-0">
+              <InputNumber v-model:value="createForm.sheet_index" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="一级模块列号" class="!mb-0">
+              <InputNumber v-model:value="createForm.col_level1" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="二级模块列号" class="!mb-0">
+              <InputNumber v-model:value="createForm.col_level2" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="三级模块列号" class="!mb-0">
+              <InputNumber v-model:value="createForm.col_level3" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="功能过程列号" class="!mb-0">
+              <InputNumber v-model:value="createForm.col_func" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+          </div>
+        </div>
       </Form>
     </Modal>
 
@@ -420,6 +471,31 @@ onMounted(() => {
             placeholder="例如: SDC COSMIC 评估"
           />
         </Form.Item>
+
+        <div class="rounded-lg border border-gray-200 bg-gray-50/60 p-4">
+          <div class="mb-3 flex items-center gap-2 text-xs font-semibold text-gray-500">
+            <span class="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-[10px] text-blue-600">📊</span>
+            <span>Excel 列配置</span>
+            <span class="text-gray-300 font-normal">（可选，从 0 开始）</span>
+          </div>
+          <div class="grid grid-cols-5 gap-3">
+            <Form.Item label="Sheet 页序号" class="!mb-0">
+              <InputNumber v-model:value="editForm.sheet_spec" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="一级模块列号" class="!mb-0">
+              <InputNumber v-model:value="editForm.col_one" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="二级模块列号" class="!mb-0">
+              <InputNumber v-model:value="editForm.col_two" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="三级模块列号" class="!mb-0">
+              <InputNumber v-model:value="editForm.col_three" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+            <Form.Item label="功能过程列号" class="!mb-0">
+              <InputNumber v-model:value="editForm.col_moudle" :min="0" class="!w-full" size="small" />
+            </Form.Item>
+          </div>
+        </div>
       </Form>
     </Modal>
   </Page>

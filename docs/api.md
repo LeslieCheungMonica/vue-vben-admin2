@@ -831,7 +831,7 @@ curl -X POST http://127.0.0.1:7654/wape/image_to_base64 \
 | `code_resource_id` | int | 是 | 待分析的代码资源 ID（关联 wape_resource 表） |
 | `cosmic_resource_id` | int | 是 | COSMIC Excel 资源 ID（关联 cosmic_resource 表） |
 | `task_name` | string | 是 | 任务名称 |
-| `sheet_spec` | string | 否 | 指定 Sheet，支持数字索引（如 `"0"`）或 Sheet 名称（如 `"功能点拆分表"`），默认自动匹配 |
+| `sheet_spec` | string | 否 | 指定 Sheet，支持数字索引（如 `"0"`）默认自动匹配 |
 | `col_one` | int | 否 | 一级模块列号（0-based），默认 `2`（C 列） |
 | `col_two` | int | 否 | 二级模块列号（0-based），默认 `3`（D 列） |
 | `col_three` | int | 否 | 三级模块列号（0-based），默认 `4`（E 列） |

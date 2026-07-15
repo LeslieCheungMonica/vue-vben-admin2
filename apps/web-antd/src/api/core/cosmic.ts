@@ -157,6 +157,11 @@ export async function createCosmicTaskApi(params: {
   code_resource_id: number;
   cosmic_resource_id: number;
   task_name: string;
+  sheet_index?: number;
+  col_level1?: number;
+  col_level2?: number;
+  col_level3?: number;
+  col_func?: number;
 }) {
   const { data } = await baseRequestClient.post<
     ApiResponse<CosmicApi.TaskCreateResult>
@@ -190,6 +195,11 @@ export async function updateCosmicTaskApi(params: {
   task_name?: string;
   code_resource_id?: number;
   cosmic_resource_id?: number;
+  sheet_spec?: number;
+  col_one?: number;
+  col_two?: number;
+  col_three?: number;
+  col_moudle?: number;
 }) {
   const { data } = await baseRequestClient.post<
     ApiResponse<CosmicApi.TaskCreateResult>
