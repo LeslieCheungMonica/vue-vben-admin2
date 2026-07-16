@@ -34,8 +34,18 @@ interface AntTreeNode {
   children?: AntTreeNode[];
   isLeaf: boolean;
   evidence?: CosmicApi.Evidence;
-  status: 'exists' | 'not-exists' | 'pending' | 'module';
+  status: 'exists' | 'not-exists' | 'partial' | 'pending' | 'module';
   inputPath?: string;
+}
+
+function resolveExistsStatus(val: unknown): AntTreeNode['status'] {
+  if (val === true || val === 'true') return 'exists';
+  if (val === 'partial') return 'partial';
+  return 'not-exists';
+}
+
+function normalizeExists(val: unknown): boolean {
+  return val === true || val === 'true';
 }
 
 const route = useRoute();
@@ -53,16 +63,25 @@ function toAntTree(node: CosmicApi.TaskDetailNode, path: string): AntTreeNode {
   const currentPath = path ? `${path}-${node.name}` : node.name;
   const isLeaf = !node.children || node.children.length === 0;
   let status: AntTreeNode['status'] = 'pending';
+  let evidence: CosmicApi.Evidence | undefined;
   if (node.evidence) {
-    status = node.evidence.exists ? 'exists' : 'not-exists';
+    evidence = {
+      ...node.evidence,
+      exists: normalizeExists(node.evidence.exists),
+    };
+    if (evidence.evidence?.frontend?.exists !== undefined)
+      evidence.evidence.frontend.exists = normalizeExists(evidence.evidence.frontend.exists);
+    if (evidence.evidence?.backend?.exists !== undefined)
+      evidence.evidence.backend.exists = normalizeExists(evidence.evidence.backend.exists);
+    status = resolveExistsStatus(node.evidence.exists);
   }
   return {
     key: currentPath,
     title: node.name,
     isLeaf,
     status,
-    evidence: node.evidence,
-    inputPath: node.evidence?.input_path,
+    evidence,
+    inputPath: evidence?.input_path,
     children: node.children
       ? node.children.map((c) => toAntTree(c, currentPath))
       : undefined,
@@ -127,7 +146,15 @@ function handleSelect(keys: string[], info: any) {
   selectedKeys.value = keys;
   const node = info.node as AntTreeNode;
   if (node.isLeaf && node.evidence) {
-    selectedEvidence.value = { ...node.evidence, input_path: node.inputPath || node.evidence.input_path };
+    const evidence = { ...node.evidence, input_path: node.inputPath || node.evidence.input_path };
+    const rawExists = evidence.exists;
+    evidence.exists = normalizeExists(evidence.exists);
+    if (evidence.evidence?.frontend?.exists !== undefined)
+      evidence.evidence.frontend.exists = normalizeExists(evidence.evidence.frontend.exists);
+    if (evidence.evidence?.backend?.exists !== undefined)
+      evidence.evidence.backend.exists = normalizeExists(evidence.evidence.backend.exists);
+    (evidence as any)._displayStatus = resolveExistsStatus(rawExists);
+    selectedEvidence.value = evidence;
   } else if (!node.isLeaf) {
     const key = node.key;
     if (expandedKeys.value.includes(key)) {
@@ -145,14 +172,20 @@ function countLeafNodes(node: CosmicApi.TaskDetailNode): number {
 
 function countExists(node: CosmicApi.TaskDetailNode): number {
   if (!node.children || node.children.length === 0)
-    return node.evidence?.exists ? 1 : 0;
+    return resolveExistsStatus(node.evidence?.exists) === 'exists' ? 1 : 0;
   return node.children.reduce((sum, c) => sum + countExists(c), 0);
 }
 
 function countNotExists(node: CosmicApi.TaskDetailNode): number {
   if (!node.children || node.children.length === 0)
-    return node.evidence && !node.evidence.exists ? 1 : 0;
+    return node.evidence && resolveExistsStatus(node.evidence.exists) === 'not-exists' ? 1 : 0;
   return node.children.reduce((sum, c) => sum + countNotExists(c), 0);
+}
+
+function countPartial(node: CosmicApi.TaskDetailNode): number {
+  if (!node.children || node.children.length === 0)
+    return resolveExistsStatus(node.evidence?.exists) === 'partial' ? 1 : 0;
+  return node.children.reduce((sum, c) => sum + countPartial(c), 0);
 }
 
 function countPending(node: CosmicApi.TaskDetailNode): number {
@@ -354,10 +387,13 @@ onUnmounted(() => {
           <Tag v-if="treeData" color="green"
             >{{ countExists(treeData) }} 已实现</Tag
           >
+          <Tag v-if="treeData" color="orange"
+            >{{ countPartial(treeData) }} 部分实现</Tag
+          >
           <Tag v-if="treeData" color="red"
             >{{ countNotExists(treeData) }} 未实现</Tag
           >
-          <Tag v-if="treeData" color="orange"
+          <Tag v-if="treeData" color="default"
             >{{ countPending(treeData) }} 待判定</Tag
           >
         </div>
@@ -396,6 +432,10 @@ onUnmounted(() => {
                   class="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-green-500 ring-1 ring-green-200"
                 />
                 <span
+                  v-else-if="status === 'partial'"
+                  class="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-yellow-500 ring-1 ring-yellow-200"
+                />
+                <span
                   v-else-if="status === 'not-exists'"
                   class="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-red-400 ring-1 ring-red-200"
                 />
@@ -413,11 +453,25 @@ onUnmounted(() => {
                   >{{ title }}</span
                 >
                 <Tag
-                  v-if="isLeaf && evidence"
-                  :color="evidence.exists ? 'success' : 'error'"
+                  v-if="isLeaf && evidence && status === 'exists'"
+                  color="success"
                   class="shrink-0 !text-xs !px-1.5"
                 >
-                  {{ evidence.exists ? '已实现' : '未实现' }}
+                  已实现
+                </Tag>
+                <Tag
+                  v-else-if="isLeaf && evidence && status === 'partial'"
+                  color="warning"
+                  class="shrink-0 !text-xs !px-1.5"
+                >
+                  部分实现
+                </Tag>
+                <Tag
+                  v-else-if="isLeaf && evidence && status === 'not-exists'"
+                  color="error"
+                  class="shrink-0 !text-xs !px-1.5"
+                >
+                  未实现
                 </Tag>
                 <Tag
                   v-else-if="isLeaf && !evidence"
@@ -457,30 +511,42 @@ onUnmounted(() => {
           >
             <div
               class="rounded-lg border p-4"
-              :class="
-                selectedEvidence.exists
-                  ? 'border-green-200 bg-green-50/40'
-                  : 'border-red-200 bg-red-50/40'
-              "
+              :class="{
+                'border-green-200 bg-green-50/40': selectedEvidence._displayStatus === 'exists',
+                'border-yellow-200 bg-yellow-50/40': selectedEvidence._displayStatus === 'partial',
+                'border-red-200 bg-red-50/40': selectedEvidence._displayStatus === 'not-exists',
+              }"
             >
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                   <span class="text-lg">{{
-                    selectedEvidence.exists ? '✅' : '❌'
+                    selectedEvidence._displayStatus === 'exists' ? '✅' : selectedEvidence._displayStatus === 'partial' ? '🟡' : '❌'
                   }}</span>
                   <span
                     class="text-sm font-semibold"
-                    :class="
-                      selectedEvidence.exists
-                        ? 'text-green-700'
-                        : 'text-red-700'
-                    "
+                    :class="{
+                      'text-green-700': selectedEvidence._displayStatus === 'exists',
+                      'text-yellow-700': selectedEvidence._displayStatus === 'partial',
+                      'text-red-700': selectedEvidence._displayStatus === 'not-exists',
+                    }"
                   >
-                    {{ selectedEvidence.exists ? '功能已实现' : '功能未实现' }}
+                    {{
+                      selectedEvidence._displayStatus === 'exists'
+                        ? '功能已实现'
+                        : selectedEvidence._displayStatus === 'partial'
+                          ? '功能部分实现'
+                          : '功能未实现'
+                    }}
                   </span>
                 </div>
-                <Tag :color="selectedEvidence.exists ? 'success' : 'error'">{{
-                  selectedEvidence.exists ? '是' : '否'
+                <Tag
+                  :color="selectedEvidence._displayStatus === 'exists' ? 'success' : selectedEvidence._displayStatus === 'partial' ? 'warning' : 'error'"
+                >{{
+                  selectedEvidence._displayStatus === 'exists'
+                    ? '是'
+                    : selectedEvidence._displayStatus === 'partial'
+                      ? '部分'
+                      : '否'
                 }}</Tag>
               </div>
               <div class="space-y-2 text-sm">
