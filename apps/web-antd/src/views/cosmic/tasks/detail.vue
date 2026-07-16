@@ -396,7 +396,7 @@ onUnmounted(() => {
             >{{ countPending(treeData) }} 待判定</Tag
           >
         </div>
-        <div class="flex-1 overflow-auto p-4" style="min-height: 500px">
+        <div class="flex-1 overflow-auto p-4" style="min-height: 500px; max-height: calc(100vh - 270px);"> 
           <div
             v-if="loading"
             class="flex items-center justify-center py-20 text-gray-400"
