@@ -147,13 +147,12 @@ function handleSelect(keys: string[], info: any) {
   const node = info.node as AntTreeNode;
   if (node.isLeaf && node.evidence) {
     const evidence = { ...node.evidence, input_path: node.inputPath || node.evidence.input_path };
-    const rawExists = evidence.exists;
     evidence.exists = normalizeExists(evidence.exists);
     if (evidence.evidence?.frontend?.exists !== undefined)
       evidence.evidence.frontend.exists = normalizeExists(evidence.evidence.frontend.exists);
     if (evidence.evidence?.backend?.exists !== undefined)
       evidence.evidence.backend.exists = normalizeExists(evidence.evidence.backend.exists);
-    (evidence as any)._displayStatus = resolveExistsStatus(rawExists);
+    (evidence as any)._displayStatus = node.status;
     selectedEvidence.value = evidence;
   } else if (!node.isLeaf) {
     const key = node.key;
