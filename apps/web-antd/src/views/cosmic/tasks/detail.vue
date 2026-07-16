@@ -36,6 +36,11 @@ interface AntTreeNode {
   evidence?: CosmicApi.Evidence;
   status: 'exists' | 'not-exists' | 'partial' | 'pending' | 'module';
   inputPath?: string;
+  totalStats?: number;
+  existsStats?: number;
+  partialStats?: number;
+  notExistsStats?: number;
+  pendingStats?: number;
 }
 
 function resolveExistsStatus(val: unknown): AntTreeNode['status'] {
@@ -46,6 +51,32 @@ function resolveExistsStatus(val: unknown): AntTreeNode['status'] {
 
 function normalizeExists(val: unknown): boolean {
   return val === true || val === 'true';
+}
+
+function computeNodeStats(node: CosmicApi.TaskDetailNode): { total: number; exists: number; partial: number; notExists: number; pending: number } {
+  if (!node.children || node.children.length === 0) {
+    const s = node.evidence ? resolveExistsStatus(node.evidence.exists) : 'pending';
+    return {
+      total: 1,
+      exists: s === 'exists' ? 1 : 0,
+      partial: s === 'partial' ? 1 : 0,
+      notExists: s === 'not-exists' ? 1 : 0,
+      pending: !node.evidence ? 1 : 0,
+    };
+  }
+  return node.children.reduce(
+    (acc, c) => {
+      const s = computeNodeStats(c);
+      return {
+        total: acc.total + s.total,
+        exists: acc.exists + s.exists,
+        partial: acc.partial + s.partial,
+        notExists: acc.notExists + s.notExists,
+        pending: acc.pending + s.pending,
+      };
+    },
+    { total: 0, exists: 0, partial: 0, notExists: 0, pending: 0 },
+  );
 }
 
 const route = useRoute();
@@ -75,6 +106,13 @@ function toAntTree(node: CosmicApi.TaskDetailNode, path: string): AntTreeNode {
       evidence.evidence.backend.exists = normalizeExists(evidence.evidence.backend.exists);
     status = resolveExistsStatus(node.evidence.exists);
   }
+  const children = node.children
+    ? node.children.map((c) => toAntTree(c, currentPath))
+    : undefined;
+  let stats: ReturnType<typeof computeNodeStats> | undefined;
+  if (!isLeaf) {
+    stats = computeNodeStats(node);
+  }
   return {
     key: currentPath,
     title: node.name,
@@ -82,9 +120,12 @@ function toAntTree(node: CosmicApi.TaskDetailNode, path: string): AntTreeNode {
     status,
     evidence,
     inputPath: evidence?.input_path,
-    children: node.children
-      ? node.children.map((c) => toAntTree(c, currentPath))
-      : undefined,
+    children,
+    totalStats: stats?.total,
+    existsStats: stats?.exists,
+    partialStats: stats?.partial,
+    notExistsStats: stats?.notExists,
+    pendingStats: stats?.pending,
   };
 }
 
@@ -421,7 +462,7 @@ onUnmounted(() => {
             @select="handleSelect"
           >
             <template
-              #title="{ key: treeKey, title, isLeaf, status, evidence }"
+              #title="{ key: treeKey, title, isLeaf, status, evidence, totalStats, existsStats, partialStats, notExistsStats, pendingStats }"
             >
               <div class="flex items-center gap-2 py-0.5">
                 <span v-if="!isLeaf" class="text-base shrink-0">📂</span>
@@ -451,6 +492,13 @@ onUnmounted(() => {
                   :class="{ 'font-medium': !isLeaf }"
                   >{{ title }}</span
                 >
+                <template v-if="!isLeaf && totalStats !== undefined">
+                  <Tag color="blue" class="shrink-0 !text-[10px] !px-1.5">📊 {{ totalStats }}</Tag>
+                  <Tag color="green" class="shrink-0 !text-[10px] !px-1.5">✅ {{ existsStats }}</Tag>
+                  <Tag color="orange" class="shrink-0 !text-[10px] !px-1.5">🟡 {{ partialStats }}</Tag>
+                  <Tag color="red" class="shrink-0 !text-[10px] !px-1.5">🔴 {{ notExistsStats }}</Tag>
+                  <Tag color="default" class="shrink-0 !text-[10px] !px-1.5">⏳ {{ pendingStats }}</Tag>
+                </template>
                 <Tag
                   v-if="isLeaf && evidence && status === 'exists'"
                   color="success"
