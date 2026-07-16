@@ -493,11 +493,11 @@ onUnmounted(() => {
                   >{{ title }}</span
                 >
                 <template v-if="!isLeaf && totalStats !== undefined">
-                  <Tag color="blue" class="shrink-0 !text-[10px] !px-1.5">📊 {{ totalStats }}</Tag>
-                  <Tag color="green" class="shrink-0 !text-[10px] !px-1.5">✅ {{ existsStats }}</Tag>
-                  <Tag color="orange" class="shrink-0 !text-[10px] !px-1.5">🟡 {{ partialStats }}</Tag>
-                  <Tag color="red" class="shrink-0 !text-[10px] !px-1.5">🔴 {{ notExistsStats }}</Tag>
-                  <Tag color="default" class="shrink-0 !text-[10px] !px-1.5">⏳ {{ pendingStats }}</Tag>
+                  <Tag color="blue" class="shrink-0 !text-[10px] !px-1.5 !w-16 text-center">📊 {{ totalStats }}</Tag>
+                  <Tag color="green" class="shrink-0 !text-[10px] !px-1.5 !w-16 text-center">✅ {{ existsStats }}</Tag>
+                  <Tag color="orange" class="shrink-0 !text-[10px] !px-1.5 !w-16 text-center">🟡 {{ partialStats }}</Tag>
+                  <Tag color="red" class="shrink-0 !text-[10px] !px-1.5 !w-16 text-center">🔴 {{ notExistsStats }}</Tag>
+                  <Tag color="default" class="shrink-0 !text-[10px] !px-1.5 !w-16 text-center">⏳ {{ pendingStats }}</Tag>
                 </template>
                 <Tag
                   v-if="isLeaf && evidence && status === 'exists'"
