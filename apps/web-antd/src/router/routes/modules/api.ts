@@ -11,6 +11,7 @@ const routes: RouteRecordRaw[] = [
     },
     name: 'ApiEndpoint',
     path: '/api',
+    redirect: '/api/index',
     children: [
       {
         name: 'ApiEndpointHome',
@@ -33,7 +34,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'ApiEndpointTaskDetail',
         path: 'task/detail/:taskId',
-        component: () => import('#/views/api/tasks/index.vue'),
+        component: () => import('#/views/api/tasks/detail.vue'),
         meta: {
           hideInMenu: true,
           title: 'API 任务详情',

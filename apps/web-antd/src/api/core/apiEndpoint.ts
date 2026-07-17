@@ -44,6 +44,7 @@ export namespace ApiEndpointApi {
     resource_path: string;
     task_status: string;
     created_at: string;
+    csv_content?: string;
     deliverables?: Record<string, unknown>;
     message?: string;
   }

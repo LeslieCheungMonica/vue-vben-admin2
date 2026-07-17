@@ -12,7 +12,6 @@ import {
   message,
   Modal,
   Select,
-  Space,
   Table,
   Tag,
   Tooltip,
@@ -41,7 +40,6 @@ const createForm = ref({
   task_name: '',
   resource_id: 0,
   main_domain: '',
-  resource_path: '',
 });
 
 const editModalVisible = ref(false);
@@ -53,38 +51,26 @@ const editForm = ref({
   resource_path: '',
 });
 
-const statusColorMap: Record<string, string> = {
-  'wait-to-start': 'default',
-  processing: 'processing',
-  completed: 'success',
-  failed: 'error',
-  stopped: 'warning',
-};
-
-const statusLabelMap: Record<string, string> = {
-  'wait-to-start': '等待启动',
-  processing: '处理中',
-  completed: '已完成',
-  failed: '失败',
-  stopped: '已停止',
+const statusConfig: Record<string, { color: string; icon: string; label: string }> = {
+  'wait-to-start': { color: 'default', icon: '⏸️', label: '待运行' },
+  running: { color: 'processing', icon: '🔄', label: '运行中' },
+  processing: { color: 'processing', icon: '🔄', label: '运行中' },
+  completed: { color: 'success', icon: '✅', label: '运行完成' },
+  finish: { color: 'success', icon: '✅', label: '运行完成' },
+  failed: { color: 'error', icon: '❌', label: '失败' },
+  stopped: { color: 'warning', icon: '⏹️', label: '已停止' },
 };
 
 const columns = [
-  { title: '任务ID', dataIndex: 'task_id', key: 'task_id', width: 260 },
-  { title: '任务名称', dataIndex: 'task_name', key: 'task_name' },
-  { title: '主域名', dataIndex: 'main_domain', key: 'main_domain' },
-  { title: '资源路径', dataIndex: 'resource_path', key: 'resource_path' },
-{
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-    },
-  { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
+  { title: '任务ID', dataIndex: 'task_id', key: 'task_id', width: 220 },
+  { title: '任务名称', dataIndex: 'task_name', key: 'task_name', width: 200, ellipsis: true },
+  { title: '主域名', dataIndex: 'main_domain', key: 'main_domain', width: 160, ellipsis: true },
+  { title: '状态', dataIndex: 'status', key: 'status', width: 110 },
+  { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 170 },
   {
     title: '操作',
     key: 'action',
-    width: 300,
+    width: 280,
   },
 ];
 
@@ -114,17 +100,20 @@ async function handleCreate() {
     message.warning('请输入任务名称');
     return;
   }
+  if (!createForm.value.resource_id) {
+    message.warning('请选择资源');
+    return;
+  }
   createLoading.value = true;
   try {
     await createApiEndpointTaskApi({
       task_name: createForm.value.task_name,
       resource_id: createForm.value.resource_id,
       main_domain: createForm.value.main_domain || undefined,
-      resource_path: createForm.value.resource_path || undefined,
     });
     message.success('任务创建成功');
     createModalVisible.value = false;
-    createForm.value = { task_name: '', resource_id: 0, main_domain: '', resource_path: '' };
+    createForm.value = { task_name: '', resource_id: 0, main_domain: '' };
     await fetchTasks();
   } catch {
     message.error('创建任务失败');
@@ -213,44 +202,59 @@ onMounted(() => {
 
 <template>
   <Page title="API 任务管理" description="管理 API 端点扫描任务">
-    <Card>
-      <div class="mb-4 flex items-center justify-between">
-        <span class="text-lg font-medium">API 端点任务列表</span>
-        <Button type="primary" @click="createModalVisible = true">新建任务</Button>
-      </div>
-      <Table
-        :columns="columns"
-        :data-source="tasks"
-        :loading="loading"
-        row-key="task_id"
-        :pagination="{ pageSize: 10 }"
-      >
-        <template #bodyCell="{ column, record }: { column: any; record: ApiEndpointApi.TaskItem }">
-          <template v-if="column.key === 'status'">
-            <Tag :color="statusColorMap[record.status] || 'default'">{{ statusLabelMap[record.status] || record.status }}</Tag>
+    <div class="api-task-page">
+      <!-- Task Table Card -->
+      <Card class="task-table-card" :body-style="{ padding: '0' }">
+        <div class="task-table-header">
+          <span class="task-table-title">📋 API 端点任务列表</span>
+          <Button type="primary" shape="round" @click="createModalVisible = true">
+            <template #icon><span>＋</span></template>
+            新建任务
+          </Button>
+        </div>
+        <Table
+          :columns="columns"
+          :data-source="tasks"
+          :loading="loading"
+          row-key="task_id"
+          :pagination="{ pageSize: 10, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }"
+          class="api-task-table"
+        >
+          <template #bodyCell="{ column, record }: { column: any; record: ApiEndpointApi.TaskItem }">
+            <template v-if="column.key === 'status'">
+              <Tag :color="statusConfig[record.status]?.color || 'default'">
+                {{ statusConfig[record.status]?.icon || '' }} {{ statusConfig[record.status]?.label || record.status }}
+              </Tag>
+            </template>
+            <template v-if="column.key === 'action'">
+              <div class="action-btns">
+                <Tooltip v-if="record.status === 'wait-to-start'" title="启动任务">
+                  <Button size="small" type="primary" class="action-btn" @click="handleStart(record.task_id)">启动</Button>
+                </Tooltip>
+                <Tooltip v-if="record.status === 'processing' || record.status === 'running'" title="停止任务">
+                  <Button size="small" danger class="action-btn" @click="handleStop(record.task_id)">停止</Button>
+                </Tooltip>
+                <Tooltip v-if="record.status === 'stopped'" title="继续任务">
+                  <Button size="small" type="primary" class="action-btn" @click="handleStart(record.task_id)">继续</Button>
+                </Tooltip>
+                <Tooltip v-if="record.status === 'finish' || record.status === 'completed'" title="重新启动">
+                  <Button size="small" type="primary" class="action-btn" @click="handleStart(record.task_id)">启动</Button>
+                </Tooltip>
+                <Tooltip title="查看详情">
+                  <Button size="small" class="action-btn" @click="handleViewDetail(record.task_id)">详情</Button>
+                </Tooltip>
+                <Tooltip title="编辑任务">
+                  <Button size="small" class="action-btn" @click="handleEdit(record)">编辑</Button>
+                </Tooltip>
+                <Tooltip title="删除任务">
+                  <Button size="small" class="action-btn" @click="handleDelete(record.task_id)">删除</Button>
+                </Tooltip>
+              </div>
+            </template>
           </template>
-          <template v-if="column.key === 'action'">
-            <Space>
-              <Tooltip title="查看详情">
-                <Button size="small" type="link" @click="handleViewDetail(record.task_id)">详情</Button>
-              </Tooltip>
-              <Tooltip title="编辑任务">
-                <Button size="small" type="link" @click="handleEdit(record)">编辑</Button>
-              </Tooltip>
-              <Tooltip v-if="record.status === 'wait-to-start'" title="启动任务">
-                <Button size="small" type="link" @click="handleStart(record.task_id)">启动</Button>
-              </Tooltip>
-              <Tooltip v-if="record.status === 'processing'" title="停止任务">
-                <Button size="small" type="link" danger @click="handleStop(record.task_id)">停止</Button>
-              </Tooltip>
-              <Tooltip title="删除任务">
-                <Button size="small" type="link" danger @click="handleDelete(record.task_id)">删除</Button>
-              </Tooltip>
-            </Space>
-          </template>
-        </template>
-      </Table>
-    </Card>
+        </Table>
+      </Card>
+    </div>
 
     <!-- Create Modal -->
     <Modal
@@ -258,6 +262,7 @@ onMounted(() => {
       title="新建 API 端点任务"
       :confirm-loading="createLoading"
       @ok="handleCreate"
+      class="api-task-modal"
     >
       <Form layout="vertical">
         <Form.Item label="任务名称" required>
@@ -269,9 +274,6 @@ onMounted(() => {
         <Form.Item label="主域名">
           <Input v-model:value="createForm.main_domain" placeholder="例如: example.com" />
         </Form.Item>
-        <Form.Item label="资源路径">
-          <Input v-model:value="createForm.resource_path" placeholder="例如: /codes/project1" />
-        </Form.Item>
       </Form>
     </Modal>
 
@@ -281,6 +283,7 @@ onMounted(() => {
       title="编辑任务"
       :confirm-loading="editLoading"
       @ok="handleUpdate"
+      class="api-task-modal"
     >
       <Form layout="vertical">
         <Form.Item label="任务名称">
@@ -296,3 +299,67 @@ onMounted(() => {
     </Modal>
   </Page>
 </template>
+
+<style scoped>
+.api-task-page {
+  min-height: 400px;
+}
+
+.task-table-card {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.task-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.task-table-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.api-task-table :deep(.ant-table-thead > tr > th) {
+  background: #fafafa;
+  font-weight: 600;
+  color: #555;
+  font-size: 13px;
+  padding: 12px 16px;
+}
+.api-task-table :deep(.ant-table-tbody > tr > td) {
+  padding: 12px 16px;
+  transition: background 0.2s;
+}
+.api-task-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: #f0f9ff;
+}
+.api-task-table :deep(.ant-table-row) {
+  transition: all 0.2s;
+}
+
+.action-btns {
+  display: flex;
+  gap: 2px;
+  flex-wrap: nowrap;
+}
+.action-btn {
+  font-size: 12px;
+  padding: 0 6px;
+  border-radius: 4px;
+  transition: none;
+}
+.action-btn:hover {
+  opacity: 1;
+}
+.api-task-page .action-btn:where(.ant-btn-primary):hover {
+  background: #1677ff !important;
+  border-color: #1677ff !important;
+}
+.api-task-page .action-btn:where(.ant-btn-dangerous):hover {
+  background: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+}
+</style>
