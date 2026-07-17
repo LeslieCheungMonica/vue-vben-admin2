@@ -17,5 +17,10 @@
     "title": "Cosmic 工作台",
     "docs": "文档管理",
     "tasks": "任务管理"
+  },
+  "api": {
+    "title": "API 端点工作台",
+    "home": "端点概览",
+    "tasks": "任务管理"
   }
 }

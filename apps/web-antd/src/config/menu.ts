@@ -14,6 +14,7 @@ const defaultConfig: MenuConfig = {
     },
   },
   Cosmic: true,
+  ApiEndpoint: true,
   SensitiveDetection: {
     visible: true,
     children: {
