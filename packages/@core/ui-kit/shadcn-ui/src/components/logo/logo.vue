@@ -84,7 +84,7 @@ const logoSrc = computed(() => {
         <slot name="text">
           <span class="text-foreground truncate font-semibold text-nowrap">
             <!-- {{ text }} -->
-              AI敏感信息泄露防控
+              AI漏扫渗透
           </span>
         </slot>
       </template>
