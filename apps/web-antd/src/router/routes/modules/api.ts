@@ -11,17 +11,8 @@ const routes: RouteRecordRaw[] = [
     },
     name: 'ApiEndpoint',
     path: '/api',
-    redirect: '/api/index',
+    redirect: '/api/tasks',
     children: [
-      {
-        name: 'ApiEndpointHome',
-        path: '/api/index',
-        component: () => import('#/views/api/index.vue'),
-        meta: {
-          icon: 'lucide:home',
-          title: $t('page.api.home'),
-        },
-      },
       {
         name: 'ApiEndpointTasks',
         path: '/api/tasks',

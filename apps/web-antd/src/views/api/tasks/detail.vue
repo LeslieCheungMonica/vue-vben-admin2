@@ -277,13 +277,13 @@ onUnmounted(() => {
         :style="leftPanelStyle"
       >
         <!-- Task Info Header -->
-        <div class="border-b bg-gradient-to-r from-blue-50 to-white px-5 py-4">
-          <div class="flex items-center gap-3 mb-3">
+        <div class="border-b bg-gradient-to-r from-blue-50 to-white px-5 py-3">
+          <div class="flex items-center gap-3 mb-2">
             <span class="text-xl">📋</span>
             <span class="text-base font-semibold text-gray-800">任务信息</span>
             <Tag :color="statusColorMap[detail.task_status] || 'default'">{{ statusLabelMap[detail.task_status] || detail.task_status }}</Tag>
           </div>
-          <div class="grid grid-cols-3 gap-x-6 gap-y-2 text-sm">
+          <div class="grid grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div class="flex items-center gap-2">
               <span class="text-gray-400 shrink-0">🆔</span>
               <code class="text-gray-700 font-mono text-xs">{{ detail.task_id }}</code>
@@ -309,21 +309,23 @@ onUnmounted(() => {
 
         <!-- CSV Data -->
         <div class="flex-1 overflow-auto p-4" style="min-height: 400px; max-height: calc(100vh - 300px);">
-          <div v-if="csvData" class="rounded-lg border overflow-hidden">
-            <div class="flex items-center gap-2 bg-gray-50 px-4 py-2.5 border-b">
-              <span class="text-base">📊</span>
-              <span class="text-sm font-medium text-gray-700">CSV 数据</span>
-              <Tag class="ml-auto" color="blue">{{ csvData.rows.length }} 条</Tag>
+          <div v-if="csvData" class="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <div class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-3">
+              <span class="text-lg">📊</span>
+              <span class="text-sm font-semibold text-white">CSV 数据</span>
+              <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-0.5 text-xs text-white/90">{{ csvData.rows.length }} 条记录</span>
             </div>
-            <Table
-              :data-source="csvData.rows.map((row, i) => ({ _key: i, ...Object.fromEntries(csvData.headers.map((h, j) => [h, row[j] || ''])) }))"
-              :columns="csvData.headers.map((h) => ({ title: h, dataIndex: h, key: h, ellipsis: true }))"
-              :pagination="{ pageSize: 15, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }"
-              row-key="_key"
-              size="small"
-              :scroll="{ x: 'max-content' }"
-              class="api-detail-table"
-            />
+            <div class="p-1">
+              <Table
+                :data-source="csvData.rows.map((row, i) => ({ _key: i, ...Object.fromEntries(csvData.headers.map((h, j) => [h, row[j] || ''])) }))"
+                :columns="csvData.headers.map((h, i) => ({ title: h, dataIndex: h, key: h, ellipsis: true, width: i === 0 ? 200 : undefined }))"
+                :pagination="{ pageSize: 12, showSizeChanger: true, showTotal: (t: number) => `共 ${t} 条` }"
+                row-key="_key"
+                size="middle"
+                :scroll="{ x: 'max-content' }"
+                class="api-csv-table"
+              />
+            </div>
           </div>
           <div v-else class="flex items-center justify-center py-16 text-gray-400">
             <div class="text-center">
@@ -423,18 +425,27 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.api-detail-table :deep(.ant-table-thead > tr > th) {
-  background: #fafafa;
-  font-weight: 600;
-  color: #555;
-  font-size: 12px;
-  padding: 8px 12px;
+.api-csv-table :deep(.ant-table-thead > tr > th) {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-bottom: 2px solid #e2e8f0;
 }
-.api-detail-table :deep(.ant-table-tbody > tr > td) {
-  padding: 8px 12px;
-  font-size: 12px;
+.api-csv-table :deep(.ant-table-tbody > tr > td) {
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
 }
-.api-detail-table :deep(.ant-table-tbody > tr:hover > td) {
-  background: #f0f9ff;
+.api-csv-table :deep(.ant-table-tbody > tr:nth-child(even) > td) {
+  background: #f8fafc;
+}
+.api-csv-table :deep(.ant-table-tbody > tr:hover > td) {
+  background: #eff6ff !important;
+}
+.api-csv-table :deep(.ant-table-pagination) {
+  margin: 12px 14px !important;
 }
 </style>
