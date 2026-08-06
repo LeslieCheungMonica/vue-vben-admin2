@@ -16,12 +16,15 @@ import {
   Upload,
 } from 'ant-design-vue';
 
+import JSZip from 'jszip';
+
 import {
   deleteResourceApi,
   getResourceListApi,
   uploadResourceApi,
 } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
+import { buildGraphFromDirectory, shouldIgnorePath } from '../workspace/graph-builder';
 
 const UseModal = Modal.useModal();
 const [modalApi, contextHolder] = UseModal;
@@ -99,8 +102,36 @@ async function handleUpload() {
       formData.append('description', uploadForm.value.description);
     }
 
+    message.info('正在解析代码图谱...');
+    let graphJson = '';
+    try {
+      const zip = await JSZip.loadAsync(uploadForm.value.file);
+      const entries: { path: string; content: string }[] = [];
+      const filePromises: Promise<void>[] = [];
+      zip.forEach((relPath, zipEntry) => {
+        if (zipEntry.dir) return;
+        const path = `${uploadForm.value.code}/${relPath}`;
+        if (shouldIgnorePath(path)) return;
+        filePromises.push(
+          zipEntry.async('string').then((content) => {
+            entries.push({ path, content });
+          }).catch(() => {}),
+        );
+      });
+      await Promise.all(filePromises);
+      if (entries.length > 0) {
+        const graphData = buildGraphFromDirectory(entries);
+        graphJson = JSON.stringify(graphData);
+      }
+    } catch { /* graph parsing is optional */ }
+
+    if (graphJson) {
+      formData.append('biz_arch_graph', graphJson);
+    }
+
     await uploadResourceApi(formData);
     message.success('上传成功');
+
     uploadModalVisible.value = false;
     uploadForm.value = { code: '', version: '', description: '', file: null };
     await fetchList();
