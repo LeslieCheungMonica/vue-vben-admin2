@@ -79,7 +79,7 @@ catalog:
   '@vue/shared': ^3.5.32
   '@vue/test-utils': ^2.4.6
   '@vueuse/core': ^14.2.1
-  '@vueuse/integrations': ^14.2.1
+  '@vueuse/integrations': ^14.3.0
   '@vueuse/motion': ^3.0.3
   ant-design-vue: ^4.2.6
   antdv-next: ^1.1.9
