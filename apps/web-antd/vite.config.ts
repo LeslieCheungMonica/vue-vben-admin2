@@ -24,6 +24,12 @@ export default defineConfig(async () => {
                   proxyReq.setHeader('accept-encoding', 'identity');
                 }
               });
+              proxy.on('proxyRes', (proxyRes, req) => {
+                if (req.url?.includes('event_stream')) {
+                  proxyRes.headers['x-accel-buffering'] = 'no';
+                  proxyRes.headers['cache-control'] = 'no-cache';
+                }
+              });
             },
           },
           '/api/cosmic': {

@@ -4,9 +4,9 @@ import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, Table, Tag } from 'ant-design-vue';
+import { Button, Card, message, Table, Tag } from 'ant-design-vue';
 
-import { getResourceListApi } from '#/api/core/resource';
+import { bizSurveyCreateApi, getResourceListApi } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
 
 const router = useRouter();
@@ -35,9 +35,22 @@ async function fetchGroups() {
   }
 }
 
-function startSurvey(group: { system_name: string; resources: ResourceApi.ResourceItem[] }) {
-  const maxId = Math.max(...group.resources.map((r) => r.id));
-  router.push(`/dashboard/task/biz-survey/${maxId}`);
+async function startSurvey(group: { system_name: string; resources: ResourceApi.ResourceItem[] }) {
+  const maxResource = group.resources.reduce((a, b) => (a.id > b.id ? a : b));
+  const systemName = group.system_name;
+  const systemId = `sys_${systemName.replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_')}`;
+  const resourcePath = `${maxResource.code}/${maxResource.version}`;
+  try {
+    await bizSurveyCreateApi({
+      system_id: systemId,
+      system_name: systemName,
+      resource_id: maxResource.id,
+      resource_path: resourcePath,
+    });
+    router.push(`/dashboard/task/biz-survey/${maxResource.id}?system_id=${systemId}`);
+  } catch {
+    message.error('创建业务测绘失败');
+  }
 }
 
 onMounted(() => {

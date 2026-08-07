@@ -1,218 +1,196 @@
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onUnmounted, ref, shallowRef, triggerRef } from 'vue';
 
-interface Part {
+import { webServerSendMsgApi, webServerStartApi, webServerStatusApi } from '#/api/core/resource';
+
+interface PartState {
   id: string;
-  messageID?: string;
-  sessionID?: string;
-  type: string;
-  text?: string;
-  delta?: string;
-  state?: { status: string; input?: any; output?: string; title?: string };
-  tool?: string;
-  callID?: string;
+  sessionId: string;
+  type: 'text' | 'reasoning' | 'tool' | 'step';
+  text: string;
+  toolName?: string;
+  updatedAt: number;
 }
 
 interface MessageData {
   id: string;
   role: 'user' | 'assistant';
-  parts: Part[];
+  parts: { id: string; type: string; text?: string }[];
   time: { created?: string };
-  modelID?: string;
-  providerID?: string;
-  finish?: string;
 }
 
-const serverUrl = ref('http://127.0.0.1:4096');
+const props = defineProps<{ systemId?: string }>();
 const connected = ref(false);
-const sessionId = ref('');
 const messages = ref<MessageData[]>([]);
 const inputText = ref('');
 const sending = ref(false);
 
-let abortController: AbortController | null = null;
+let statusTimer: ReturnType<typeof setInterval> | null = null;
 let eventSource: EventSource | null = null;
+let flushTimer: ReturnType<typeof setInterval> | null = null;
 
-const pendingParts = ref<Record<string, Part>>({});
+const FLUSH_INTERVAL = 150;
+const displayItems = shallowRef<PartState[]>([]);
+const partsMap = new Map<string, PartState>();
+const dirtyParts = new Set<string>();
 
-async function checkHealth() {
-  try {
-    const resp = await fetch(`${serverUrl.value}/global/health`, { signal: AbortSignal.timeout(5000) });
-    connected.value = resp.ok;
-  } catch {
-    connected.value = false;
-  }
-}
-
-function connectSSE() {
-  if (eventSource) { eventSource.close(); eventSource = null; }
-  try {
-    eventSource = new EventSource(`${serverUrl.value}/global/event`);
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        const payload = data.payload;
-        if (!payload) return;
-        handleEvent(payload.type, payload.properties);
-      } catch { /* ignore parse errors */ }
-    };
-    eventSource.onerror = () => {
-      connected.value = false;
-    };
-  } catch { /* ignore */ }
-}
-
-function handleEvent(type: string, props: any) {
-  if (type !== 'server.heartbeat') {
-    console.log('[SSE]', type, props);
-  }
-  switch (type) {
-    case 'server.connected':
-      connected.value = true;
-      break;
-    case 'server.heartbeat':
-      break;
-    case 'session.status': {
-      const status = props.status?.type;
-      if (status === 'busy') sending.value = true;
-      else if (status === 'idle') sending.value = false;
-      break;
-    }
-    case 'message.updated': {
-      const info = props.info;
-      if (!info) break;
-      const idx = messages.value.findIndex((m) => m.id === info.id);
-      if (idx >= 0) {
-        messages.value[idx] = { ...messages.value[idx], ...info };
+const mergedDisplayItems = computed(() => {
+  const result: (PartState | { type: 'merged-reasoning'; texts: string[] })[] = [];
+  let current: { type: 'merged-reasoning'; texts: string[] } | null = null;
+  for (const item of displayItems.value) {
+    if (item.type === 'reasoning') {
+      if (!item.text.trim()) continue;
+      if (current) {
+        current.texts.push(item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n'));
       } else {
-        messages.value.push(info);
+        current = { type: 'merged-reasoning', texts: [item.text.replace(/<\/?thinking>/g, '').replace(/\n{3,}/g, '\n\n')] };
+        result.push(current);
       }
-      break;
-    }
-    case 'message.part.updated': {
-      const part = props.part as Part;
-      if (!part) break;
-      updatePart(part);
-      break;
-    }
-    case 'message.part.delta': {
-      const { messageID, partID, field, delta } = props;
-      if (!messageID || !partID || field !== 'text' || !delta) break;
-      const key = `${messageID}:${partID}`;
-      const existing = pendingParts.value[key];
-      if (existing) {
-        existing.text = (existing.text || '') + delta;
-      } else {
-        pendingParts.value[key] = { id: partID, type: 'text', text: delta };
-      }
-      pendingParts.value = { ...pendingParts.value };
-      break;
-    }
-    case 'message.created': {
-      const msg = props.info as MessageData;
-      if (msg) {
-        messages.value.push(msg);
-      }
-      break;
-    }
-    case 'message.part.removed': {
-      const { partID } = props;
-      if (!partID) break;
-      for (const key of Object.keys(pendingParts.value)) {
-        if (key.endsWith(`:${partID}`)) delete pendingParts.value[key];
-      }
-      pendingParts.value = { ...pendingParts.value };
-      for (const msg of messages.value) {
-        msg.parts = msg.parts.filter((p) => p.id !== partID);
-      }
-      break;
+    } else {
+      current = null;
+      result.push(item);
     }
   }
+  return result;
+});
+
+function getAssistantText(): string {
+  return displayItems.value
+    .filter((p) => p.type === 'text')
+    .map((p) => p.text || '')
+    .join('');
 }
 
-function updatePart(part: Part) {
-  const key = `${part.messageID || ''}:${part.id}`;
-  delete pendingParts.value[key];
-  pendingParts.value = { ...pendingParts.value };
-  for (const msg of messages.value) {
-    if (msg.id === part.messageID) {
-      const idx = msg.parts.findIndex((p) => p.id === part.id);
-      if (idx >= 0) msg.parts[idx] = part;
-      else msg.parts.push(part);
-      return;
-    }
-  }
+function getReasoningText(): string {
+  return displayItems.value
+    .filter((p) => p.type === 'reasoning')
+    .map((p) => p.text || '')
+    .join('\n');
 }
 
 function getDisplayText(msg: MessageData): string {
-  const parts = msg.parts || [];
-  const texts = parts.map((p) => {
-    if (p.type === 'text') return p.text || '';
-    if (p.type === 'reasoning') return '';
-    return '';
-  }).filter(Boolean);
-  return texts.join('\n');
+  return (msg.parts || []).filter((p) => p.type === 'text').map((p) => p.text || '').join('\n');
 }
 
-function getReasoningText(msg: MessageData): string {
-  const parts = msg.parts || [];
-  return parts.filter((p) => p.type === 'reasoning').map((p) => p.text || '').join('\n');
-}
-
-function getPendingText(): string {
-  let result = '';
-  for (const part of Object.values(pendingParts.value)) {
-    if (part.type === 'text' && part.text) result += part.text;
-  }
-  return result;
-}
-
-function getPendingReasoning(): string {
-  let result = '';
-  for (const part of Object.values(pendingParts.value)) {
-    if (part.type === 'reasoning' && part.text) result += part.text;
-  }
-  return result;
-}
-
-function getToolCalls(msg: MessageData): { tool: string; title: string; status: string }[] {
-  return (msg.parts || []).filter((p) => p.type === 'tool').map((p) => ({
-    tool: p.tool || '',
-    title: p.state?.title || p.tool || '',
-    status: p.state?.status || 'pending',
-  }));
-}
-
-async function createSession() {
+async function checkStatus() {
+  if (!props.systemId || connected.value) return;
   try {
-    const resp = await fetch(`${serverUrl.value}/session`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: '业务测绘对话' }),
-    });
-    if (!resp.ok) return;
-    const data = await resp.json();
-    sessionId.value = data.id;
-  } catch {
-    connected.value = false;
+    const res = await webServerStatusApi(props.systemId);
+    const data = res as any;
+    if (data?.message && data.message !== '服务已断开') {
+      connected.value = true;
+      if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+      connectEventStream();
+    }
+  } catch { /* not ready yet */ }
+}
+
+async function connect() {
+  if (props.systemId) {
+    try {
+      await webServerStartApi(props.systemId);
+      connected.value = true;
+      connectEventStream();
+    } catch { /* ignore */ }
   }
 }
 
-async function loadMessages() {
-  if (!sessionId.value) return;
-  try {
-    const resp = await fetch(`${serverUrl.value}/session/${sessionId.value}/message`);
-    if (!resp.ok) return;
-    const data = await resp.json();
-    messages.value = data || [];
-  } catch { /* ignore */ }
+function getOrCreatePart(id: string, sessionId: string, type: PartState['type']) {
+  let part = partsMap.get(id);
+  if (!part) {
+    part = { id, sessionId, type, text: '', updatedAt: Date.now() };
+    partsMap.set(id, part);
+  }
+  return part;
+}
+
+function processEvent(data: any) {
+  const type: string = data.type;
+  const propsData = data.properties || {};
+
+  if (type === 'message.part.delta' && propsData.field === 'text') {
+    const partId = propsData.partID;
+    if (!partId) return;
+    const part = getOrCreatePart(partId, propsData.sessionID, 'text');
+    part.text += propsData.delta || '';
+    part.updatedAt = Date.now();
+    dirtyParts.add(partId);
+    return;
+  }
+
+  if (type === 'message.part.updated') {
+    const partData = propsData.part || {};
+    const partId = partData.id || propsData.partID;
+    if (!partId) return;
+    const partType: string = partData.type || 'text';
+    const part = getOrCreatePart(partId, propsData.sessionID, partType as PartState['type']);
+    if (partType === 'reasoning') {
+      part.type = 'reasoning';
+      part.text = partData.text || part.text;
+    } else if (partType === 'text') {
+      part.type = 'text';
+      part.text = partData.text || part.text;
+    } else if (partType === 'tool') {
+      part.type = 'tool';
+      part.toolName = partData.tool;
+      part.text = partData.state?.title || partData.tool || '';
+    }
+    part.updatedAt = Date.now();
+    dirtyParts.add(partId);
+    return;
+  }
+
+  if (type === 'session.status') {
+    if (propsData.status?.type === 'idle') {
+      sending.value = false;
+    }
+    return;
+  }
+}
+
+function flushBuffer() {
+  if (dirtyParts.size === 0) return;
+  for (const id of dirtyParts) {
+    const part = partsMap.get(id);
+    if (!part) continue;
+    const existingIdx = displayItems.value.findIndex((d) => d.id === id);
+    if (existingIdx >= 0) {
+      displayItems.value[existingIdx] = { ...part };
+    } else {
+      displayItems.value.push({ ...part });
+    }
+  }
+  dirtyParts.clear();
+  triggerRef(displayItems);
+}
+
+function connectEventStream() {
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  partsMap.clear();
+  dirtyParts.clear();
+  displayItems.value = [];
+
+  flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL);
+
+  const url = `/api/wape/event_stream/web_${props.systemId}`;
+  eventSource = new EventSource(url);
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      processEvent(data);
+    } catch { /* ignore */ }
+  };
 }
 
 async function sendMessage() {
   const text = inputText.value.trim();
-  if (!text || !sessionId.value) return;
+  if (!text || !connected.value) return;
   inputText.value = '';
   sending.value = true;
+
+  partsMap.clear();
+  dirtyParts.clear();
+  displayItems.value = [];
 
   messages.value.push({
     id: `user-${Date.now()}`,
@@ -222,52 +200,20 @@ async function sendMessage() {
   });
   await nextTick();
 
-  abortController = new AbortController();
-  try {
-    const resp = await fetch(`${serverUrl.value}/session/${sessionId.value}/message`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parts: [{ type: 'text', text }] }),
-      signal: abortController.signal,
-    });
-    if (resp.ok) {
-      const msg = await resp.json();
-      const info = msg.info || msg;
-      if (info && info.id) {
-        const idx = messages.value.findIndex((m) => m.id === info.id);
-        if (idx >= 0) messages.value[idx] = info;
-        else messages.value.push(info);
-      }
-    }
-  } catch {
-    /* ignore */
-  } finally {
-    abortController = null;
-  }
+  // 不等待返回值，直接触发消息发送，事件从 /wape/event_stream 流式获取
+  webServerSendMsgApi(props.systemId || '', text).catch(() => {});
 }
 
 function stopSending() {
-  if (!sessionId.value) return;
-  abortController?.abort();
-  fetch(`${serverUrl.value}/session/${sessionId.value}/abort`, { method: 'POST' }).catch(() => {});
+  sending.value = false;
 }
 
-async function connect() {
-  pendingParts.value = {};
-  messages.value = [];
-  sessionId.value = '';
-  await checkHealth();
-  if (connected.value) {
-    connectSSE();
-    await createSession();
-    if (sessionId.value) {
-      await loadMessages();
-    }
-  }
-}
+statusTimer = setInterval(checkStatus, 3000);
+checkStatus();
 
 onUnmounted(() => {
-  abortController?.abort();
+  if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+  if (flushTimer) { clearInterval(flushTimer); flushTimer = null; }
   if (eventSource) { eventSource.close(); eventSource = null; }
 });
 </script>
@@ -296,7 +242,7 @@ onUnmounted(() => {
       <div v-if="!connected" class="flex h-full items-center justify-center">
         <div class="text-center">
           <p class="text-sm text-gray-500">未连接到 CodeChat 服务器</p>
-          <p class="mt-1 text-xs text-gray-600">点击「连接」按钮</p>
+          <p class="mt-1 text-xs text-gray-600">等待服务启动...</p>
         </div>
       </div>
       <template v-for="msg in messages" :key="msg.id">
@@ -305,33 +251,19 @@ onUnmounted(() => {
             <div class="whitespace-pre-wrap break-words">{{ getDisplayText(msg) }}</div>
           </div>
         </div>
-        <div v-else class="space-y-2">
-          <div v-if="getReasoningText(msg)" class="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-300/70">
+      </template>
+      <div v-if="sending || getAssistantText() || getReasoningText()" class="flex justify-start">
+        <div class="max-w-[85%] space-y-2">
+          <div
+            v-if="getReasoningText()"
+            class="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-300/70"
+          >
             <div class="mb-1 text-xs text-amber-400/50">思考</div>
-            <div class="whitespace-pre-wrap break-words">{{ getReasoningText(msg) }}</div>
+            <div class="whitespace-pre-wrap break-words">{{ getReasoningText() }}</div>
           </div>
           <div class="rounded-lg bg-gray-800/50 px-3 py-2 text-sm text-gray-200">
-            <div class="whitespace-pre-wrap break-words">{{ getDisplayText(msg) }}</div>
+            <div class="whitespace-pre-wrap break-words">{{ getAssistantText() || '...' }}</div>
           </div>
-          <div v-if="getToolCalls(msg).length > 0" class="space-y-1">
-            <div
-              v-for="tc in getToolCalls(msg)"
-              :key="tc.tool"
-              class="flex items-center gap-2 rounded bg-gray-800/30 px-2 py-1 text-xs text-gray-400"
-            >
-              <span class="size-2 rounded-full" :class="tc.status === 'completed' ? 'bg-green-500' : tc.status === 'running' ? 'bg-yellow-500' : 'bg-gray-500'" />
-              {{ tc.title }}
-            </div>
-          </div>
-        </div>
-      </template>
-      <div v-if="sending" class="space-y-2">
-        <div v-if="getPendingReasoning()" class="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-300/70">
-          <div class="mb-1 text-xs text-amber-400/50">思考</div>
-          <div class="whitespace-pre-wrap break-words">{{ getPendingReasoning() }}</div>
-        </div>
-        <div class="rounded-lg bg-gray-800/50 px-3 py-2 text-sm text-gray-200">
-          <div class="whitespace-pre-wrap break-words">{{ getPendingText() || '...' }}</div>
         </div>
       </div>
     </div>
@@ -342,7 +274,7 @@ onUnmounted(() => {
           v-model="inputText"
           class="flex-1 resize-none rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-200 outline-none placeholder:text-gray-500 focus:border-fuchsia-500/50"
           placeholder="输入消息..."
-          :disabled="!connected || !sessionId"
+          :disabled="!connected"
           rows="2"
           @keydown.enter.prevent="!sending && sendMessage()"
         />
@@ -356,7 +288,7 @@ onUnmounted(() => {
         <button
           v-else
           class="rounded-lg bg-fuchsia-600/20 px-3 py-2 text-sm text-fuchsia-400 hover:bg-fuchsia-600/30 disabled:opacity-30"
-          :disabled="!connected || !sessionId || !inputText.trim()"
+          :disabled="!connected || !inputText.trim()"
           @click="sendMessage"
         >
           发送

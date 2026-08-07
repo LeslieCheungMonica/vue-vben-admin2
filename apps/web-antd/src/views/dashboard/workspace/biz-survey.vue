@@ -36,6 +36,7 @@ const nodeCount = ref(0);
 const edgeCount = ref(0);
 const layoutProgress = ref(0);
 const showChat = ref(false);
+const systemId = ref(taskId);
 
 const NODE_COLORS: Record<string, string> = {
   Project: '#a78bfa', Package: '#c4b5fd', Module: '#8b5cf6',
@@ -632,7 +633,7 @@ onUnmounted(() => {
           :class="showChat ? 'w-[400px]' : 'w-0'"
         >
           <div class="h-full w-[400px] overflow-hidden">
-            <AIChatPanel v-if="showChat" />
+            <AIChatPanel v-if="showChat" :system-id="systemId" />
           </div>
         </div>
         <button

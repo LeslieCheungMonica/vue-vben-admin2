@@ -140,3 +140,29 @@ export async function deleteResourceApi(id: number) {
   >('/wape/resource_delete', { id });
   return data;
 }
+
+export async function bizSurveyCreateApi(params: {
+  system_id: string;
+  system_name?: string;
+  resource_id: number;
+  resource_path?: string;
+  session_id?: string;
+}) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/biz_survey_create', params);
+  return data;
+}
+
+export async function webServerStartApi(web_id: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_start', { web_id });
+  return data;
+}
+
+export async function webServerSendMsgApi(web_id: string, text: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_send_msg', { web_id, text });
+  return data;
+}
+
+export async function webServerStatusApi(web_id: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_status', { web_id });
+  return data;
+}
