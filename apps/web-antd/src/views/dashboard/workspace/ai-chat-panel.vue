@@ -51,6 +51,14 @@ const MAX_HISTORY = 100;
 let statusTimer: ReturnType<typeof setInterval> | null = null;
 let eventSource: EventSource | null = null;
 let currentAssistantId = '';
+let isComposing = false;
+
+function handleEnter(e: KeyboardEvent) {
+  if (isComposing || e.isComposing) return;
+  if (sending.value) return;
+  e.preventDefault();
+  sendMessage();
+}
 
 function trimHistory() {
   if (messages.value.length > MAX_HISTORY) {
@@ -324,7 +332,9 @@ onUnmounted(() => {
           placeholder="输入消息..."
           :disabled="!connected"
           rows="2"
-          @keydown.enter.prevent="!sending && sendMessage()"
+          @compositionstart="isComposing = true"
+          @compositionend="isComposing = false"
+          @keydown.enter="handleEnter"
         />
         <button
           v-if="sending"
