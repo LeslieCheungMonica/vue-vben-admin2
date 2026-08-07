@@ -12,6 +12,7 @@ export namespace ResourceApi {
     version: string;
     description: string;
     extracted_path: string;
+    system_name?: string;
     agent_name?: string;
     agent_type?: string;
     target_system?: string;

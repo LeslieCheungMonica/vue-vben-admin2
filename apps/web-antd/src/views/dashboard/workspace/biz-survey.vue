@@ -5,7 +5,6 @@ import { useRoute } from 'vue-router';
 import { Page } from '@vben/common-ui';
 
 import { getResourceListApi } from '#/api/core/resource';
-import { getTaskListApi } from '#/api/core/task';
 
 import Sigma from 'sigma';
 import Graph from 'graphology';
@@ -465,7 +464,7 @@ function runLayout() {
   }, duration);
 }
 
-const MAX_NODES = 20000;
+const MAX_NODES = 5000;
 
 function sampleGraph(data: { nodes: any[]; relationships: any[] }) {
   if (data.nodes.length <= MAX_NODES) return data;
@@ -512,28 +511,20 @@ function focusNode() {
 }
 
 onMounted(async () => {
-  if (!taskId) {
-    errorMsg.value = '缺少任务 ID';
+  const resourceId = Number(taskId);
+  if (!resourceId) {
+    errorMsg.value = '缺少资源 ID';
     return;
   }
-  loadMessage.value = '正在获取任务信息...';
+  loadMessage.value = '正在获取资源信息...';
   try {
-    const taskRes = await getTaskListApi(taskId);
-    const task = taskRes.items?.find((t: any) => t.task_id === taskId);
-    if (!task) {
-      errorMsg.value = '未找到任务信息';
-      return;
-    }
-    const resourceId = task.resource_id;
-    resourceInfo.value = `任务: ${task.task_name} | 资源 ID: ${resourceId}`;
-    loadMessage.value = '正在获取资源信息...';
     const resRes = await getResourceListApi();
     const resource = resRes.items?.find((r: any) => r.id === resourceId);
     if (!resource) {
       errorMsg.value = '未找到关联的资源信息';
       return;
     }
-    resourceInfo.value += ` | 资源: ${resource.code}:${resource.version}`;
+    resourceInfo.value = `资源: ${resource.code}:${resource.version}`;
 
     const rawGraph = resource.biz_arch_graph;
     if (!rawGraph) {

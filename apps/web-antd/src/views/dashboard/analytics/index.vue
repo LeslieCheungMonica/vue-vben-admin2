@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue';
 import { Page } from '@vben/common-ui';
 
 import {
+  AutoComplete,
   Button,
   Card,
   Form,
@@ -40,14 +41,23 @@ const uploadForm = ref({
   code: '',
   version: '',
   description: '',
+  target_system: '',
   file: null as File | null,
 });
+
+const systemNameOptions = ref<{ value: string; label: string }[]>([]);
 
 async function fetchList() {
   loading.value = true;
   try {
     const res = await getResourceListApi(filterCode.value, filterVersion.value);
     resources.value = res.items ?? [];
+    const names = new Set<string>();
+    resources.value.forEach((r) => {
+      const name = (r as any).system_name || r.target_system;
+      if (name) names.add(name);
+    });
+    systemNameOptions.value = [...names].map((n) => ({ value: n, label: n }));
   } catch {
     message.error('获取资源列表失败');
   } finally {
@@ -101,6 +111,9 @@ async function handleUpload() {
     if (uploadForm.value.description) {
       formData.append('description', uploadForm.value.description);
     }
+    if (uploadForm.value.target_system) {
+      formData.append('system_name', uploadForm.value.target_system);
+    }
 
     message.info('正在解析代码图谱...');
     let graphJson = '';
@@ -133,7 +146,7 @@ async function handleUpload() {
     message.success('上传成功');
 
     uploadModalVisible.value = false;
-    uploadForm.value = { code: '', version: '', description: '', file: null };
+    uploadForm.value = { code: '', version: '', description: '', target_system: '', file: null };
     await fetchList();
   } catch {
     message.error('上传失败');
@@ -146,6 +159,7 @@ const columns = [
   { dataIndex: 'id', key: 'id', title: 'ID', width: 80 },
   { dataIndex: 'code', key: 'code', title: '资源标识', width: 150 },
   { dataIndex: 'version', key: 'version', title: '版本号', width: 120 },
+  { dataIndex: 'system_name', key: 'system_name', title: '系统名称', width: 120 },
   { dataIndex: 'description', key: 'description', title: '描述' },
   {
     dataIndex: 'extracted_path',
@@ -257,6 +271,14 @@ onMounted(() => {
             v-model:value="uploadForm.description"
             placeholder="资源描述（可选）"
             :rows="3"
+          />
+        </Form.Item>
+        <Form.Item label="系统名称">
+          <AutoComplete
+            v-model:value="uploadForm.target_system"
+            :options="systemNameOptions"
+            placeholder="选择或输入系统名称"
+            allow-clear
           />
         </Form.Item>
       </Form>

@@ -449,14 +449,6 @@ onMounted(() => {
               >
                 复扫任务
               </Button>
-              <Button
-                size="small"
-                @click="
-                  router.push(`/dashboard/task/biz-survey/${record.task_id}`)
-                "
-              >
-                业务测绘
-              </Button>
               <Button size="small" @click="showDetail(record)">详情</Button>
               <Button size="small" @click="handleDownload(record)">下载</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
