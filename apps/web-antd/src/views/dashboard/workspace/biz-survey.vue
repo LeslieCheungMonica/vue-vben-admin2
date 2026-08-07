@@ -6,6 +6,8 @@ import { Page } from '@vben/common-ui';
 
 import { getResourceListApi } from '#/api/core/resource';
 
+import AIChatPanel from './ai-chat-panel.vue';
+
 import Sigma from 'sigma';
 import Graph from 'graphology';
 import FA2Layout from 'graphology-layout-forceatlas2/worker';
@@ -33,6 +35,7 @@ const containerRef = ref<HTMLDivElement | null>(null);
 const nodeCount = ref(0);
 const edgeCount = ref(0);
 const layoutProgress = ref(0);
+const showChat = ref(false);
 
 const NODE_COLORS: Record<string, string> = {
   Project: '#a78bfa', Package: '#c4b5fd', Module: '#8b5cf6',
@@ -592,36 +595,56 @@ onUnmounted(() => {
     </template>
 
     <template v-else-if="phase === 'graph'">
-      <div class="relative h-[calc(100vh-180px)] w-full rounded-lg overflow-hidden border border-gray-700 bg-[#070a12]">
-        <div ref="containerRef" class="sigma-container h-full w-full" />
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 shadow-sm backdrop-blur-sm">
-          <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="放大" @click="zoomIn">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-          </button>
-          <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="缩小" @click="zoomOut">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
-          </button>
-          <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="重置视图" @click="resetZoom">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>
-          </button>
-          <button v-if="selectedNodeId" class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="聚焦选中节点" @click="focusNode">
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-          </button>
-          <div class="w-px h-4 bg-gray-700" />
-          <span class="text-xs text-gray-400 whitespace-nowrap">{{ nodeCount }} 节点 · {{ edgeCount }} 边</span>
-          <template v-if="layoutProgress > 0 && layoutProgress < 100">
+      <div class="relative flex h-[calc(100vh-180px)] gap-0">
+        <div class="relative flex-1 min-w-0 rounded-lg border border-gray-700 bg-[#070a12] overflow-hidden">
+          <div ref="containerRef" class="sigma-container h-full w-full" />
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 shadow-sm backdrop-blur-sm">
+            <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="放大" @click="zoomIn">
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            </button>
+            <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="缩小" @click="zoomOut">
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
+            </button>
+            <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="重置视图" @click="resetZoom">
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>
+            </button>
+            <button v-if="selectedNodeId" class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="聚焦选中节点" @click="focusNode">
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+            </button>
             <div class="w-px h-4 bg-gray-700" />
-            <div class="flex items-center gap-2">
-              <div class="h-1.5 w-20 overflow-hidden rounded-full bg-gray-700">
-                <div
-                  class="h-full rounded-full bg-fuchsia-500 transition-all duration-300"
-                  :style="{ width: layoutProgress + '%' }"
-                />
+            <span class="text-xs text-gray-400 whitespace-nowrap">{{ nodeCount }} 节点 · {{ edgeCount }} 边</span>
+            <template v-if="layoutProgress > 0 && layoutProgress < 100">
+              <div class="w-px h-4 bg-gray-700" />
+              <div class="flex items-center gap-2">
+                <div class="h-1.5 w-20 overflow-hidden rounded-full bg-gray-700">
+                  <div
+                    class="h-full rounded-full bg-fuchsia-500 transition-all duration-300"
+                    :style="{ width: layoutProgress + '%' }"
+                  />
+                </div>
+                <span class="text-xs text-gray-400">布局 {{ layoutProgress }}%</span>
               </div>
-              <span class="text-xs text-gray-400">布局 {{ layoutProgress }}%</span>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
+        <div
+          class="relative flex-shrink-0 border-l border-gray-700 bg-[#0c0f16] transition-all duration-200"
+          :class="showChat ? 'w-[400px]' : 'w-0'"
+        >
+          <div class="h-full w-[400px] overflow-hidden">
+            <AIChatPanel v-if="showChat" />
+          </div>
+        </div>
+        <button
+          class="absolute top-1/2 z-10 -translate-y-1/2 rounded-l bg-gray-800 p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+          :class="showChat ? 'right-[400px]' : 'right-0'"
+          @click="showChat = !showChat"
+        >
+          <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path v-if="showChat" stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            <path v-else stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </template>
   </Page>
