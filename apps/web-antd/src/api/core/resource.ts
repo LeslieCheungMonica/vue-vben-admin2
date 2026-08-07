@@ -162,6 +162,11 @@ export async function webServerSendMsgApi(web_id: string, text: string) {
   return data;
 }
 
+export async function webServerSendMsgAsyncApi(web_id: string, text: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_send_msg_async', { web_id, text });
+  return data;
+}
+
 export async function webServerStatusApi(web_id: string) {
   const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_status', { web_id });
   return data;

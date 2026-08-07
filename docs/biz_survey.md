@@ -142,7 +142,43 @@
 
 **POST** `/wape/web_server_send_msg`
 
-**POST** `/wape/web_server_send_msg`
+### 请求体
+
+```json
+{
+  "web_id": "sys-001",
+  "text": "请分析这个系统的业务逻辑"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| web_id | string | 是 | 系统 ID，用于查找 biz_survey 记录和 server |
+| text | string | 是 | 要发送的消息文本 |
+
+### 逻辑
+
+1. 通过 `web_id` (system_id) 查询 `biz_survey` 表，获取 `session_id`
+2. 通过 `get_opencode_url("web_{web_id}")` 获取服务端地址
+3. 如果 `session_id` 为空，自动创建新 session 并更新到 `biz_survey` 表
+4. 调用 `client.send_message(session_id, {"parts": [{"type": "text", "text": text}]})` 发送消息
+
+### 响应
+
+```json
+{
+  "status": "completed",
+  "web_id": "sys-001",
+  "result": { "...": "OpenCode 返回的响应内容" },
+  "message": "消息发送成功"
+}
+```
+
+---
+
+## 6. 异步发送消息
+
+**POST** `/wape/web_server_send_msg_async`
 
 ### 请求体
 
@@ -163,7 +199,7 @@
 1. 通过 `web_id` (system_id) 查询 `biz_survey` 表，获取 `session_id`
 2. 通过 `get_opencode_url("web_{web_id}")` 获取服务端地址
 3. 如果 `session_id` 为空，自动创建新 session 并更新到 `biz_survey` 表
-4. 调用 `client.send_message(session_id, {"text": text})` 发送消息
+4. 调用 `client.send_message_async(session_id, {"parts": [{"type": "text", "text": text}]})` 异步发送，不等待响应
 
 ### 响应
 
@@ -171,8 +207,7 @@
 {
   "status": "completed",
   "web_id": "sys-001",
-  "result": { "...": "OpenCode 返回的响应内容" },
-  "message": "消息发送成功"
+  "message": "消息已异步发送"
 }
 ```
 
