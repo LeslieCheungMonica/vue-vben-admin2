@@ -37,6 +37,30 @@ const edgeCount = ref(0);
 const layoutProgress = ref(0);
 const showChat = ref(false);
 const systemId = ref(taskId);
+const chatWidth = ref(400);
+const dragging = ref(false);
+
+function startResize(e: MouseEvent) {
+  e.preventDefault();
+  dragging.value = true;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  const startX = e.clientX;
+  const startWidth = chatWidth.value;
+  const onMove = (ev: MouseEvent) => {
+    const delta = startX - ev.clientX;
+    chatWidth.value = Math.min(800, Math.max(280, startWidth + delta));
+  };
+  const onUp = () => {
+    dragging.value = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
 
 const NODE_COLORS: Record<string, string> = {
   Project: '#a78bfa', Package: '#c4b5fd', Module: '#8b5cf6',
@@ -629,16 +653,24 @@ onUnmounted(() => {
           </div>
         </div>
         <div
-          class="relative flex-shrink-0 border-l border-gray-700 bg-[#0c0f16] transition-all duration-200"
-          :class="showChat ? 'w-[400px]' : 'w-0'"
+          class="w-1 cursor-col-resize flex-shrink-0 bg-gray-800 hover:bg-blue-500/60 transition-colors"
+          :class="showChat ? '' : 'hidden'"
+          @mousedown="startResize"
+          title="拖动调整宽度"
+        />
+        <div
+          class="relative flex-shrink-0 bg-[#0c0f16] transition-[width] duration-200"
+          :class="showChat ? '' : 'w-0'"
+          :style="showChat ? { width: chatWidth + 'px' } : {}"
         >
-          <div class="h-full w-[400px] overflow-hidden">
+          <div class="h-full overflow-hidden" :style="{ width: chatWidth + 'px' }">
             <AIChatPanel v-if="showChat" :system-id="systemId" />
           </div>
         </div>
         <button
           class="absolute top-1/2 z-10 -translate-y-1/2 rounded-l bg-gray-800 p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-          :class="showChat ? 'right-[400px]' : 'right-0'"
+          :class="showChat ? '' : 'right-0'"
+          :style="showChat ? { right: (chatWidth + 4) + 'px' } : {}"
           @click="showChat = !showChat"
         >
           <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
