@@ -7,6 +7,7 @@ import { Page } from '@vben/common-ui';
 import { getResourceListApi } from '#/api/core/resource';
 
 import AIChatPanel from './ai-chat-panel.vue';
+import Biz3dMap from './biz-3d-map.vue';
 
 import Sigma from 'sigma';
 import Graph from 'graphology';
@@ -29,16 +30,19 @@ let sigmaInstance: any = null;
 let sigmaGraph: any = null;
 let layoutInstance: any = null;
 let layoutTimeout: ReturnType<typeof setTimeout> | null = null;
+let layoutProgressInterval: ReturnType<typeof setInterval> | null = null;
 let selectedNodeId: string | null = null;
+let layoutDone = false;
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const nodeCount = ref(0);
 const edgeCount = ref(0);
 const layoutProgress = ref(0);
-const showChat = ref(false);
+const showChat = ref(true);
 const systemId = ref(taskId);
 const chatWidth = ref(400);
 const dragging = ref(false);
+const leftTab = ref('code');
 
 function startResize(e: MouseEvent) {
   e.preventDefault();
@@ -92,6 +96,23 @@ const COMMUNITY_COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e',
   '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef',
   '#ec4899', '#f43f5e', '#14b8a6', '#84cc16',
+];
+
+const LEGEND_ITEMS = [
+  { label: '项目', type: 'Project', color: '#a78bfa' },
+  { label: '包', type: 'Package', color: '#c4b5fd' },
+  { label: '模块', type: 'Module', color: '#8b5cf6' },
+  { label: '目录', type: 'Folder', color: '#818cf8' },
+  { label: '文件', type: 'File', color: '#38bdf8' },
+  { label: '类', type: 'Class', color: '#fbbf24' },
+  { label: '函数', type: 'Function', color: '#34d399' },
+  { label: '方法', type: 'Method', color: '#2dd4bf' },
+  { label: '接口', type: 'Interface', color: '#f472b6' },
+  { label: '枚举', type: 'Enum', color: '#fb923c' },
+  { label: '类型', type: 'Type', color: '#a5b4fc' },
+  { label: '进程', type: 'Process', color: '#fb7185' },
+  { label: '路由', type: 'Route', color: '#fb7185' },
+  { label: '工具', type: 'Tool', color: '#a78bfa' },
 ];
 
 function getCommunityColor(index: number): string {
@@ -465,6 +486,7 @@ function runLayout() {
   if (layoutInstance) { layoutInstance.kill(); layoutInstance = null; }
   if (layoutTimeout) { clearTimeout(layoutTimeout); layoutTimeout = null; }
 
+  layoutDone = false;
   const inferredSettings = forceAtlas2.inferSettings(sigmaGraph);
   const customSettings = getFA2Settings(sigmaGraph.order);
   const settings = { ...inferredSettings, ...customSettings };
@@ -475,14 +497,17 @@ function runLayout() {
 
   const duration = getLayoutDuration(sigmaGraph.order);
   layoutProgress.value = 0;
-  const progressInterval = setInterval(() => {
+  if (layoutProgressInterval) { clearInterval(layoutProgressInterval); }
+  layoutProgressInterval = setInterval(() => {
     const elapsed = duration - (layoutTimeout ? duration : 0);
     layoutProgress.value = Math.min(95, Math.round((elapsed / duration) * 100));
   }, 500);
 
   layoutTimeout = setTimeout(() => {
-    clearInterval(progressInterval);
+    clearInterval(layoutProgressInterval!);
+    layoutProgressInterval = null;
     layoutProgress.value = 100;
+    layoutDone = true;
     if (layoutInstance) {
       layoutInstance.stop();
       layoutInstance = null;
@@ -591,8 +616,24 @@ watch(containerRef, (val) => {
   }
 });
 
+watch(leftTab, (val) => {
+  if (val !== 'code') {
+    if (layoutTimeout) { clearTimeout(layoutTimeout); layoutTimeout = null; }
+    if (layoutProgressInterval) {
+      clearInterval(layoutProgressInterval);
+      layoutProgressInterval = null;
+    }
+    if (layoutInstance) { layoutInstance.kill(); layoutInstance = null; }
+    return;
+  }
+  if (sigmaInstance && sigmaGraph && phase.value === 'graph' && !layoutDone) {
+    requestAnimationFrame(() => runLayout());
+  }
+});
+
 onUnmounted(() => {
   if (layoutTimeout) clearTimeout(layoutTimeout);
+  if (layoutProgressInterval) clearInterval(layoutProgressInterval);
   if (layoutInstance) { layoutInstance.kill(); layoutInstance = null; }
   if (sigmaInstance) { sigmaInstance.kill(); sigmaInstance = null; }
   sigmaGraph = null;
@@ -622,8 +663,49 @@ onUnmounted(() => {
     <template v-else-if="phase === 'graph'">
       <div class="relative flex h-[calc(100vh-180px)] gap-0">
         <div class="relative flex-1 min-w-0 rounded-lg border border-gray-700 bg-[#070a12] overflow-hidden">
-          <div ref="containerRef" class="sigma-container h-full w-full" />
-          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 shadow-sm backdrop-blur-sm">
+          <div class="absolute top-0 left-0 bottom-0 z-20 flex w-16 flex-col items-center gap-1 bg-[#070a12]/95 px-1 py-2 backdrop-blur-sm">
+            <button
+              class="w-full rounded px-1 py-2 text-center text-xs font-medium leading-tight transition-colors"
+              :class="leftTab === 'code' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:text-gray-200'"
+              @click="leftTab = 'code'"
+            >
+              代码<br />地图
+            </button>
+            <button
+              class="w-full rounded px-1 py-2 text-center text-xs font-medium leading-tight transition-colors"
+              :class="leftTab === 'biz3d' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:text-gray-200'"
+              @click="leftTab = 'biz3d'"
+            >
+              业务<br />3D地图
+            </button>
+          </div>
+          <template v-if="leftTab === 'code'">
+          <div ref="containerRef" class="sigma-container absolute inset-y-0" style="left: 64px; right: 0" />
+          <div
+            class="absolute right-3 top-14 z-10 rounded-lg border border-gray-700/60 bg-[#0a0d14]/90 p-3 shadow-sm backdrop-blur-sm"
+          >
+            <div class="mb-2 text-xs font-medium text-gray-300">节点类型</div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+              <div
+                v-for="item in LEGEND_ITEMS"
+                :key="item.type"
+                class="flex items-center gap-1.5"
+              >
+                <span
+                  class="size-2.5 rounded-full"
+                  :style="{ backgroundColor: item.color }"
+                />
+                <span class="text-[11px] text-gray-400">{{ item.label }}</span>
+              </div>
+            </div>
+          </div>
+          <div
+            class="absolute bottom-3 right-3 z-10 rounded-md border border-gray-700/60 bg-[#0a0d14]/90 px-2.5 py-1 text-[11px] text-gray-400 shadow-sm backdrop-blur-sm"
+          >
+            <span class="text-blue-400">{{ nodeCount }}</span> 节点 ·
+            <span class="text-fuchsia-400">{{ edgeCount }}</span> 边
+          </div>
+          <div class="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 shadow-sm backdrop-blur-sm" style="margin-left: 32px">
             <button class="rounded p-1 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="放大" @click="zoomIn">
               <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
             </button>
@@ -651,6 +733,12 @@ onUnmounted(() => {
               </div>
             </template>
           </div>
+          </template>
+          <template v-else>
+            <div class="absolute inset-y-0" style="left: 64px; right: 0">
+              <Biz3dMap :web-id="taskId" />
+            </div>
+          </template>
         </div>
         <div
           class="w-1 cursor-col-resize flex-shrink-0 bg-gray-800 hover:bg-blue-500/60 transition-colors"

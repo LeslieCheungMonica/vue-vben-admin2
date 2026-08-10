@@ -171,3 +171,22 @@ export async function webServerStatusApi(web_id: string) {
   const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_status', { web_id });
   return data;
 }
+
+export async function webServerCreateSessionApi(web_id: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_create_session', { web_id });
+  return data;
+}
+
+export interface Modules3dResult {
+  status: string;
+  modules: any[];
+  message: string;
+}
+
+export async function moudles3dApi(web_id: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<Modules3dResult>>(
+    '/wape/moudles_3d',
+    { web_id },
+  );
+  return data;
+}

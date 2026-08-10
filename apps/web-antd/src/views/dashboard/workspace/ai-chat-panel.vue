@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 
-import { webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi } from '#/api/core/resource';
+import { webServerCreateSessionApi, webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi } from '#/api/core/resource';
 
 const md = new MarkdownIt({
   highlight: function (str: string, lang: string) {
@@ -236,6 +236,16 @@ function stopSending() {
   sending.value = false;
 }
 
+async function newSession() {
+  if (!props.systemId) return;
+  try {
+    await webServerCreateSessionApi(props.systemId);
+    messages.value = [];
+    currentAssistantId = '';
+    sending.value = false;
+  } catch { /* ignore */ }
+}
+
 statusTimer = setInterval(checkStatus, 3000);
 checkStatus();
 
@@ -261,6 +271,12 @@ onUnmounted(() => {
           @click="connect"
         >
           连接
+        </button>
+        <button
+          class="rounded px-2 py-1 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
+          @click="newSession"
+        >
+          新建会话
         </button>
       </div>
     </div>
