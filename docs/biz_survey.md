@@ -1319,6 +1319,106 @@
 | aborted | boolean | 是否成功终止会话 |
 | message | string | 提示信息 |
 
+---
+
+## 11. 更新业务测绘记录
+
+**POST** `/wape/biz_survery_update`
+
+### 请求体
+
+```json
+{
+  "system_name": "订单系统",
+  "resource_id": 2
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| system_name | string | 是 | 系统名称，用于定位要更新的 biz_survey 记录 |
+| resource_id | int | 是 | 新的资源 ID，通过此 ID 查询 `wape_resource` 表自动获取新的 `resource_path` |
+
+### 逻辑
+
+1. 通过 `system_name` 查询 `biz_survey` 表，定位最近的记录
+2. 通过 `resource_id` 查询 `wape_resource` 表获取新的 `resource_path`
+3. 更新该记录的 `resource_id` 和 `resource_path` 字段及 `updated_at`
+
+### 响应
+
+```json
+{
+  "status": "completed",
+  "system_name": "订单系统",
+  "resource_id": 2,
+  "resource_path": "path/to/resource",
+  "message": "业务测绘更新成功"
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| status | string | 状态，恒为 `completed` |
+| system_name | string | 系统名称 |
+| resource_id | int | 更新后的资源 ID |
+| resource_path | string | 更新后的资源路径 |
+| message | string | 提示信息 |
+
+---
+
+## 12. 测绘列表
+
+**POST** `/wape/biz_survey_list`
+
+无请求体。
+
+### 逻辑
+
+查询 `biz_survey` 表，按 `id` 降序返回所有记录，排除 `system_id` 字段。
+
+### 响应
+
+```json
+{
+  "status": "completed",
+  "records": [
+    {
+      "id": 1,
+      "system_name": "订单系统",
+      "resource_id": 1,
+      "resource_path": "path/to/resource",
+      "session_id": "sess-xxx",
+      "session_his": "sess-xxx",
+      "created_at": "2026-08-10 12:00:00",
+      "updated_at": "2026-08-10 12:00:00"
+    }
+  ],
+  "message": "测绘列表查询成功"
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| status | string | 状态，恒为 `completed` |
+| records | array | 测绘记录数组（不含 system_id） |
+| message | string | 提示信息 |
+
+`records` 中每项字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | int | 自增主键 |
+| system_name | string | 系统名称 |
+| resource_id | int | 关联资源 ID |
+| resource_path | string | 资源路径 |
+| session_id | string | 当前 OpenCode session ID |
+| session_his | string | 历史 session ID |
+| created_at | string | 创建时间 |
+| updated_at | string | 更新时间 |
+
+---
+
 
 ## 数据库表结构
 

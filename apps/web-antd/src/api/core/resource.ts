@@ -182,6 +182,30 @@ export async function sessionAbortApi(web_id: string) {
   return data;
 }
 
+export interface BizSurveyRecord {
+  id: number;
+  system_name: string;
+  resource_id: number;
+  resource_path: string;
+  session_id?: string;
+  session_his?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BizSurveyListResult {
+  status: string;
+  records: BizSurveyRecord[];
+  message: string;
+}
+
+export async function bizSurveyListApi() {
+  const { data } = await baseRequestClient.post<ApiResponse<BizSurveyListResult>>(
+    '/wape/biz_survey_list',
+  );
+  return data;
+}
+
 export interface Modules3dResult {
   status: string;
   modules: any[];
