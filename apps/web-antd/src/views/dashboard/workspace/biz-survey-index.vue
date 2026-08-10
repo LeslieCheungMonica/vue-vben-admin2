@@ -6,7 +6,7 @@ import { Page } from '@vben/common-ui';
 
 import { Button, Card, message, Table, Tag } from 'ant-design-vue';
 
-import { bizSurveyCreateApi, bizSurveyListApi, getResourceListApi } from '#/api/core/resource';
+import { bizSurveyCreateApi, bizSurveyListApi, bizSurveyUpdateApi, getResourceListApi } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
 
 const router = useRouter();
@@ -79,6 +79,17 @@ async function startSurvey(group: any) {
   }
 }
 
+async function updateResource(group: any) {
+  const maxResource = group.resources.reduce((a: any, b: any) => (a.id > b.id ? a : b));
+  try {
+    await bizSurveyUpdateApi(group.system_name, maxResource.id);
+    message.success('资源更新成功');
+    fetchGroups();
+  } catch {
+    message.error('资源更新失败');
+  }
+}
+
 onMounted(() => {
   fetchGroups();
 });
@@ -92,7 +103,7 @@ onMounted(() => {
           { dataIndex: 'system_name', key: 'system_name', title: '系统名称' },
           { key: 'resource_path', title: '资源路径' },
           { dataIndex: 'resource_count', key: 'resource_count', title: '资源数量', width: 120 },
-          { key: 'action', title: '操作', width: 120 },
+          { key: 'action', title: '操作', width: 200 },
         ]"
         :data-source="groups"
         :loading="loading"
@@ -110,6 +121,9 @@ onMounted(() => {
           <template v-if="column.key === 'action'">
             <Button type="primary" size="small" @click="startSurvey(record)">
               开始测绘
+            </Button>
+            <Button size="small" class="ml-2" @click="updateResource(record)">
+              更新资源
             </Button>
           </template>
         </template>

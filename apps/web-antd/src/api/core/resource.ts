@@ -206,6 +206,22 @@ export async function bizSurveyListApi() {
   return data;
 }
 
+export interface BizSurveyUpdateResult {
+  status: string;
+  system_name: string;
+  resource_id: number;
+  resource_path: string;
+  message: string;
+}
+
+export async function bizSurveyUpdateApi(system_name: string, resource_id: number) {
+  const { data } = await baseRequestClient.post<ApiResponse<BizSurveyUpdateResult>>(
+    '/wape/biz_survery_update',
+    { system_name, resource_id },
+  );
+  return data;
+}
+
 export interface Modules3dResult {
   status: string;
   modules: any[];
