@@ -1276,6 +1276,50 @@
 
 ---
 
+
+---
+
+## 10. 终止会话
+
+**POST** `/wape/session_abort`
+
+### 请求体
+
+```json
+{
+  "web_id": "sys-001"
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| web_id | string | 是 | 系统 ID，用于查找 biz_survey 记录和 server |
+
+### 逻辑
+
+1. 通过 `web_id` (resource_id) 查询 `biz_survey` 表，获取当前 `session_id`
+2. 通过 `get_opencode_url("web_{web_id}")` 获取服务端地址
+3. 调用 `client.abort_session(session_id)` 中止正在运行的会话
+
+### 响应
+
+```json
+{
+  "status": "completed",
+  "web_id": "sys-001",
+  "aborted": true,
+  "message": "会话已终止"
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| status | string | 状态，恒为 `completed` |
+| web_id | string | 系统 ID |
+| aborted | boolean | 是否成功终止会话 |
+| message | string | 提示信息 |
+
+
 ## 数据库表结构
 
 ### biz_survey
