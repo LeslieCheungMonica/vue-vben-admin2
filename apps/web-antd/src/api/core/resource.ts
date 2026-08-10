@@ -177,6 +177,11 @@ export async function webServerCreateSessionApi(web_id: string) {
   return data;
 }
 
+export async function sessionAbortApi(web_id: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/session_abort', { web_id });
+  return data;
+}
+
 export interface Modules3dResult {
   status: string;
   modules: any[];

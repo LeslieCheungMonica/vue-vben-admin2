@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 
-import { webServerCreateSessionApi, webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi } from '#/api/core/resource';
+import { sessionAbortApi, webServerCreateSessionApi, webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi } from '#/api/core/resource';
 
 const md = new MarkdownIt({
   highlight: function (str: string, lang: string) {
@@ -234,6 +234,9 @@ async function sendMessage() {
 
 function stopSending() {
   sending.value = false;
+  if (props.systemId) {
+    sessionAbortApi(props.systemId).catch(() => {});
+  }
 }
 
 async function newSession() {
