@@ -98,7 +98,7 @@ const statusLabelMap: Record<string, string> = {
 
 const statusColorMap: Record<string, string> = {
   running: 'bg-green-500',
-  wait: 'bg-gray-300',
+  wait: 'bg-gray-300 dark:bg-gray-600',
   finish: 'bg-blue-500',
 };
 
@@ -705,50 +705,50 @@ onUnmounted(() => {
         style="min-height: 500px; height: 100%"
       >
         <!-- Left: Agent List -->
-        <div class="flex w-[239px] flex-shrink-0 flex-col overflow-hidden rounded border border-gray-200 bg-white p-3">
-          <div class="mb-2 text-sm font-semibold text-gray-700">智能体列表</div>
+        <div class="flex w-[239px] flex-shrink-0 flex-col overflow-hidden rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-3">
+          <div class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">智能体列表</div>
           <div class="mb-3 flex gap-2 text-xs">
-            <span class="rounded bg-blue-100 px-2 py-0.5 text-blue-700">运行中 {{ agentStats.running }}</span>
-            <span class="rounded bg-gray-100 px-2 py-0.5 text-gray-600">待运行 {{ agentStats.waiting }}</span>
-            <span class="rounded bg-green-100 px-2 py-0.5 text-green-700">已完成 {{ agentStats.finish }}</span>
+            <span class="rounded bg-blue-100 dark:bg-blue-500/20 px-2 py-0.5 text-blue-700 dark:text-blue-300">运行中 {{ agentStats.running }}</span>
+            <span class="rounded bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-gray-600 dark:text-gray-300">待运行 {{ agentStats.waiting }}</span>
+            <span class="rounded bg-green-100 dark:bg-green-500/20 px-2 py-0.5 text-green-700 dark:text-green-300">已完成 {{ agentStats.finish }}</span>
           </div>
           <div class="flex flex-col gap-1.5 flex-1 overflow-y-auto">
             <div
               v-for="agent in agents"
               :key="agent.stage"
               class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors"
-              :class="activeStep === agent.stage ? 'border-blue-300 bg-blue-50' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'"
+              :class="activeStep === agent.stage ? 'border-blue-300 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-500/10' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-100 dark:hover:bg-gray-800'"
               @click="handleAgentClick(agent)"
             >
               <span class="text-base">{{ agent.icon }}</span>
               <div class="flex flex-1 flex-col min-w-0">
-                <span class="truncate font-medium text-gray-700">{{ agent.name }}</span>
+                <span class="truncate font-medium text-gray-700 dark:text-gray-200">{{ agent.name }}</span>
                 <span class="text-[10px]" :class="statusLabelMap[agent.status] ? 'text-gray-400' : 'text-gray-400'">{{ statusLabelMap[agent.status] || agent.status }}</span>
               </div>
-              <span class="inline-block h-2 w-2 rounded-full" :class="statusColorMap[agent.status] || 'bg-gray-300'" />
+              <span class="inline-block h-2 w-2 rounded-full" :class="statusColorMap[agent.status] || 'bg-gray-300 dark:bg-gray-600'" />
             </div>
           </div>
         </div>
 
         <!-- Center: Three-layer layout -->
         <div
-          class="flex flex-col overflow-hidden rounded border p-4"
+          class="flex flex-col overflow-hidden rounded border border-gray-200 dark:border-gray-700 p-4"
           :style="centerPanelStyle"
         >
           <div style="width: 100%" class="flex h-full flex-col gap-3">
             <!-- Top: Agent Detail -->
-            <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
+            <div class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-3">
               <span class="text-2xl">{{ getStepIcon(activeStep) }}</span>
               <div class="flex flex-1 flex-col">
-                <span class="text-sm font-semibold text-gray-700">{{ getStepTitle(activeStep) }}</span>
-                <div class="flex items-center gap-3 text-xs text-gray-500">
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ getStepTitle(activeStep) }}</span>
+                <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                   <span class="flex items-center gap-1">
                     <span class="inline-block h-1.5 w-1.5 rounded-full" :class="statusColorMap[activeAgent?.status || 'wait']" />
                     {{ statusLabelMap[activeAgent?.status || 'wait'] || activeAgent?.status }}
                   </span>
                   <template v-if="activeAgent?.status === 'running'">
                     <span>运行时长</span>
-                    <span class="font-mono text-blue-600 font-medium">{{ formattedElapsed }}</span>
+                    <span class="font-mono text-blue-600 dark:text-blue-400 font-medium">{{ formattedElapsed }}</span>
                   </template>
                   <span v-else>运行时长 {{ activeStageDuration || '-' }}</span>
                 </div>
@@ -756,7 +756,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Middle: Agent Execution Flow Graph -->
-            <div style="minHeight: 310px; maxHeight:310px;flex-grow: 0;" class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-400 overflow-hidden">
+            <div style="minHeight: 310px; maxHeight:310px;flex-grow: 0;" class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-[#0d1117] text-sm text-gray-400 overflow-hidden">
               <ThoughtChainFlow
                 :chain-data="chainData"
                 title="智能体协同作业"
@@ -766,16 +766,16 @@ onUnmounted(() => {
             </div>
 
             <!-- Bottom: Real-time Knowledge Retrieval -->
-            <div style="flex-grow: 1;" class="flex h-40 flex-col rounded-lg border border-gray-200 bg-white">
-              <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">实时工具与知识检索</div>
+            <div style="flex-grow: 1;" class="flex h-40 flex-col rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22]">
+              <div class="border-b border-gray-100 dark:border-gray-800 px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">实时工具与知识检索</div>
               <div class="flex-1 overflow-y-auto px-3 py-1">
                 <div v-if="knowledgeHits.length === 0" class="flex h-full items-center justify-center text-xs text-gray-400">暂无检索记录</div>
-                <div v-for="(hit, idx) in knowledgeHits" :key="idx" class="border-b border-gray-50 py-1.5 last:border-0">
+                <div v-for="(hit, idx) in knowledgeHits" :key="idx" class="border-b border-gray-50 dark:border-gray-800 py-1.5 last:border-0">
                   <div class="flex items-start gap-1.5 text-xs">
                     <span class="shrink-0 font-mono text-gray-400">{{ hit.time }}</span>
-                    <span v-if="hit.tool === 'kb'" class="shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] text-green-600">知识库</span>
-                    <span v-else class="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-600">{{ hit.tool }}</span>
-                    <span class="text-gray-600 break-all">{{ hit.input }}</span>
+                    <span v-if="hit.tool === 'kb'" class="shrink-0 rounded bg-green-100 dark:bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-600 dark:text-green-300">知识库</span>
+                    <span v-else class="shrink-0 rounded bg-blue-100 dark:bg-blue-500/20 px-1.5 py-0.5 text-[10px] text-blue-600 dark:text-blue-400">{{ hit.tool }}</span>
+                    <span class="text-gray-600 dark:text-gray-300 break-all">{{ hit.input }}</span>
                   </div>
                   <div v-if="hit.output" class="mt-0.5 truncate pl-[72px] text-[11px] text-gray-400">{{ hit.output }}</div>
                 </div>
@@ -786,7 +786,7 @@ onUnmounted(() => {
 
         <div class="relative flex flex-col" :style="{ width: '0' }">
           <div
-            class="absolute -left-3 top-8 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-xs text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:text-blue-500 hover:shadow-md"
+            class="absolute -left-3 top-8 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] text-xs text-gray-400 shadow-sm transition-all hover:border-blue-300 dark:border-blue-500/50 hover:text-blue-500 hover:shadow-md"
             :title="rightCollapsed ? '展开推理过程' : '收起推理过程'"
             @click="toggleRight"
           >
@@ -795,15 +795,15 @@ onUnmounted(() => {
         </div>
 
         <div
-          class="flex flex-col rounded border transition-all duration-300 overflow-hidden"
+          class="flex flex-col rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0f1218] transition-all duration-300 overflow-hidden"
           :style="rightPanelStyle"
         >
-          <div class="flex items-center gap-2 border-b bg-gray-50 px-4 py-3 text-sm font-medium">
+          <div class="flex items-center gap-2 border-b bg-gray-50 dark:bg-[#161b22] px-4 py-3 text-sm font-medium">
             <span class="text-xs">🤖 推理过程</span>
             <span class="inline-block h-2 w-2 rounded-full" :style="{ backgroundColor: eventStreamConnected ? '#52c41a' : '#d9d9d9' }"></span>
             <span class="text-xs text-gray-400">{{ eventStreamConnected ? '已连接' : '未连接' }}</span>
             <div class="ml-auto">
-              <button class="rounded px-2 py-0.5 text-xs text-blue-600 hover:bg-blue-200/50 transition-colors" @click="loadHistoryMessages(1)">查看历史</button>
+              <button class="rounded px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-200/50 dark:hover:bg-blue-500/20 transition-colors" @click="loadHistoryMessages(1)">查看历史</button>
             </div>
           </div>
           <div ref="eventStreamContainer" class="flex-1 overflow-y-auto p-4" style="min-height: 400px; max-height: 100%">
@@ -815,35 +815,35 @@ onUnmounted(() => {
             </template>
             <div class="space-y-3">
               <div v-for="item in mergedDisplayItems" :key="item.type === 'merged-reasoning' ? item.ids[0] : item.id" class="animate-fade-in">
-                <div v-if="item.type === 'merged-reasoning'" class="rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+                <div v-if="item.type === 'merged-reasoning'" class="rounded-lg border border-blue-100 dark:border-blue-500/40 bg-blue-50/60 dark:bg-blue-500/10 p-3">
                   <div class="mb-1.5 flex items-center gap-1.5 text-xs text-blue-400">
                     <span>💭</span><span>推理中</span>
                     <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400"></span>
                   </div>
-                  <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2">
+                  <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200 space-y-2">
                     <template v-for="(text, tIdx) in item.texts" :key="tIdx">
-                      <div v-if="text.trim()" class="text-gray-700">{{ text }}</div>
+                      <div v-if="text.trim()" class="text-gray-700 dark:text-gray-200">{{ text }}</div>
                     </template>
                     <span class="inline-block h-3.5 w-0.5 animate-pulse bg-blue-300 align-text-bottom"></span>
                   </div>
                 </div>
-                <div v-if="item.type === 'tool'" class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                <div v-if="item.type === 'tool'" class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-3 shadow-sm">
                   <div class="mb-1.5 flex items-center gap-2">
                     <span class="text-base">{{ toolStatusIcon[item.toolStatus || ''] || '🔧' }}</span>
-                    <span class="text-xs font-medium text-gray-500">{{ item.toolName || '工具调用' }}</span>
+                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ item.toolName || '工具调用' }}</span>
                     <Tag v-if="item.toolStatus" :color="item.toolStatus === 'completed' ? 'success' : item.toolStatus === 'running' ? 'processing' : 'default'" class="!text-xs !px-1.5 !py-0">{{ item.toolStatus }}</Tag>
                   </div>
-                  <div v-if="item.toolInput && !item.hideContent" class="mb-1 rounded bg-gray-100 p-2 text-xs text-gray-600 font-mono">{{ item.toolInput }}</div>
-                  <div v-if="item.toolInput && item.hideContent" class="mb-1 truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono" :title="item.toolInput">{{ item.toolInput.slice(0, 80) }}...</div>
-                  <div v-if="item.toolOutput && !item.hideContent" class="rounded bg-green-50 p-2 text-xs text-green-700 font-mono whitespace-pre-wrap">{{ item.toolOutput }}</div>
-                  <div v-if="item.toolOutput && item.hideContent" class="truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono" :title="item.toolOutput">{{ item.toolOutput.slice(0, 80) }}...</div>
+                  <div v-if="item.toolInput && !item.hideContent" class="mb-1 rounded bg-gray-100 dark:bg-gray-800 p-2 text-xs text-gray-600 dark:text-gray-300 font-mono">{{ item.toolInput }}</div>
+                  <div v-if="item.toolInput && item.hideContent" class="mb-1 truncate rounded bg-gray-50 dark:bg-gray-800/70 p-2 text-xs text-gray-400 font-mono" :title="item.toolInput">{{ item.toolInput.slice(0, 80) }}...</div>
+                  <div v-if="item.toolOutput && !item.hideContent" class="rounded bg-green-50 dark:bg-green-500/10 p-2 text-xs text-green-700 dark:text-green-300 font-mono whitespace-pre-wrap">{{ item.toolOutput }}</div>
+                  <div v-if="item.toolOutput && item.hideContent" class="truncate rounded bg-gray-50 dark:bg-gray-800/70 p-2 text-xs text-gray-400 font-mono" :title="item.toolOutput">{{ item.toolOutput.slice(0, 80) }}...</div>
                 </div>
                 <div v-if="item.type === 'step'" class="flex items-center gap-2 text-xs text-gray-400">
                   <span v-if="item.stepType === 'start'" class="text-blue-400">┌─</span>
                   <span v-else-if="item.stepType === 'finish'" class="text-green-400">└─</span>
                   <span>{{ item.text }}</span>
                 </div>
-                <div v-if="item.type === 'message'" class="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-xs text-gray-500">{{ item.text }}</div>
+                <div v-if="item.type === 'message'" class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 p-2.5 text-xs text-gray-500 dark:text-gray-400">{{ item.text }}</div>
               </div>
             </div>
           </div>
@@ -859,12 +859,12 @@ onUnmounted(() => {
       <div v-else-if="historySessions.length === 0" class="flex items-center justify-center py-16 text-sm text-gray-400">暂无历史消息</div>
       <div v-else>
         <div class="mb-3 flex flex-wrap gap-2">
-          <button v-for="tag in historyFilterTags" :key="tag.key" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="historyFilter === tag.key ? 'bg-blue-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" @click="historyFilter = tag.key">{{ tag.label }}</button>
+          <button v-for="tag in historyFilterTags" :key="tag.key" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="historyFilter === tag.key ? 'bg-blue-500 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'" @click="historyFilter = tag.key">{{ tag.label }}</button>
         </div>
         <div class="space-y-3">
-          <div v-for="(msg, idx) in filteredHistorySessions" :key="idx" class="rounded border border-gray-200 bg-white">
-            <div class="flex items-center justify-between border-b border-gray-100 px-3 py-2 text-xs text-gray-500">
-              <span class="font-medium text-gray-700">{{ getMsgType(msg) }}</span>
+          <div v-for="(msg, idx) in filteredHistorySessions" :key="idx" class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22]">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="font-medium text-gray-700 dark:text-gray-200">{{ getMsgType(msg) }}</span>
               <span>{{ formatTime(msg.time_created) }}</span>
             </div>
             <div class="px-3 py-2"><ExpandableMsg :content="getMsgContent(msg)" /></div>

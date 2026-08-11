@@ -78,6 +78,7 @@ const TOOL_INFO: Record<string, { icon: string; label: string }> = {
   apply_patch: { icon: '📝', label: '应用补丁' },
   task: { icon: '🤖', label: '子任务' },
   question: { icon: '❓', label: '问题' },
+  todowrite: { icon: '📝', label: '任务列表' },
 };
 
 function getToolInfo(tool: string) {
@@ -125,6 +126,7 @@ async function connect() {
     try {
       await webServerStartApi(props.systemId);
       connected.value = true;
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       connectEventStream();
     } catch { /* ignore */ }
   }
@@ -145,8 +147,20 @@ function connectEventStream() {
 function processEvent(data: any) {
   const type: string = data.type;
   const propsData = data.properties || {};
-  const idx = messages.value.findIndex((m) => m.id === currentAssistantId);
-  if (idx < 0) return;
+  let idx = messages.value.findIndex((m) => m.id === currentAssistantId);
+  if (idx < 0) {
+    if (type === 'session.status') {
+      if (propsData.status?.type === 'idle') sending.value = false;
+      return;
+    }
+    if (type !== 'message.part.delta' && type !== 'message.part.updated') {
+      return;
+    }
+    currentAssistantId = `assistant-${Date.now()}`;
+    messages.value.push({ id: currentAssistantId, role: 'assistant', parts: [] });
+    idx = messages.value.length - 1;
+    sending.value = true;
+  }
 
   if (type === 'message.part.delta' && propsData.field === 'text') {
     const partId = propsData.partID;
@@ -193,6 +207,30 @@ function processEvent(data: any) {
         status: partData.state?.status,
         title: partData.state?.title || partData.tool,
       };
+      if (partData.tool === 'question' || partData.tool === 'todowrite') {
+        const state = partData.state || {};
+        const input = state.input;
+        let content = '';
+        if (typeof input === 'string') {
+          content = input;
+        } else if (input && typeof input === 'object') {
+          const q = input.question ?? input.text;
+          if (typeof q === 'string' && q) {
+            content = q;
+          } else {
+            const keys = Object.keys(input);
+            if (keys.length > 0) content = JSON.stringify(input, null, 2);
+          }
+        }
+        if (!content && typeof state.raw === 'string' && state.raw) content = state.raw;
+        if (!content && typeof state.title === 'string' && state.title !== partData.tool) {
+          content = state.title;
+        }
+        if (!content && typeof partData.text === 'string') {
+          content = partData.text;
+        }
+        toolPart.text = content || existing?.text || '';
+      }
       updateAssistant({
         parts: existing ? parts.map((p) => (p.id === partId ? toolPart : p)) : [...parts, toolPart],
       });
@@ -321,15 +359,23 @@ onUnmounted(() => {
           </div>
           <div v-for="tool in getMsgTools(msg)" :key="tool.id" class="mb-1">
             <div
-              class="flex items-center gap-2 rounded-md border border-gray-700/60 bg-[#141821] px-2.5 py-1.5"
+              class="rounded-md border border-gray-700/60 bg-[#141821] px-2.5 py-1.5"
             >
-              <span class="text-sm">{{ getToolInfo(tool.tool || '').icon }}</span>
-              <span class="flex-1 truncate text-xs" :class="tool.status === 'pending' || tool.status === 'running' ? 'animate-pulse text-gray-400' : 'text-gray-300'">
-                {{ tool.title || getToolInfo(tool.tool || '').label }}
-              </span>
-              <span v-if="tool.status === 'pending' || tool.status === 'running'" class="text-xs text-blue-400">运行中…</span>
-              <span v-else-if="tool.status === 'completed'" class="text-xs text-green-500">✓</span>
-              <span v-else-if="tool.status === 'error'" class="text-xs text-red-500">✗</span>
+              <div class="flex items-center gap-2">
+                <span class="text-sm">{{ getToolInfo(tool.tool || '').icon }}</span>
+                <span class="flex-1 truncate text-xs" :class="tool.status === 'pending' || tool.status === 'running' ? 'animate-pulse text-gray-400' : 'text-gray-300'">
+                  {{ tool.title || getToolInfo(tool.tool || '').label }}
+                </span>
+                <span v-if="tool.status === 'pending' || tool.status === 'running'" class="text-xs text-blue-400">运行中…</span>
+                <span v-else-if="tool.status === 'completed'" class="text-xs text-green-500">✓</span>
+                <span v-else-if="tool.status === 'error'" class="text-xs text-red-500">✗</span>
+              </div>
+              <div
+                v-if="(tool.tool === 'question' || tool.tool === 'todowrite') && tool.text"
+                class="mt-1.5 whitespace-pre-wrap break-words rounded bg-black/20 px-2 py-1.5 text-xs leading-relaxed text-gray-300"
+              >
+                {{ tool.text }}
+              </div>
             </div>
           </div>
           <div

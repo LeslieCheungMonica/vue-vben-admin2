@@ -11,7 +11,7 @@ const isLong = props.content.split('\n').length > MAX_LINES || props.content.len
 <template>
   <div>
     <div
-      class="whitespace-pre-wrap break-words text-xs text-gray-700 leading-5 transition-all duration-200"
+      class="whitespace-pre-wrap break-words text-xs text-gray-700 dark:text-gray-200 leading-5 transition-all duration-200"
       :class="expanded ? '' : 'line-clamp-6'"
     >
       {{ content }}

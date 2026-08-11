@@ -279,992 +279,205 @@
 
 ```json
 {
-  "status": "completed",
-  "modules": [
+    "status": "completed",
+    "modules": [
         {
-        "generated_at": "2026-08-10T10:19:58+0800",
-        "modules": [
-            {
-                "name": "entmembermgr",
-                "path": "src/com/ai/apaas/custmgr/svc/entmembermgr",
-                "purpose": "企业成员管理（集团成员新增/删除/变更/批量导入/审批中心/二次短信确认/资料修改表/同步）",
-                "primary_files": [
-                    "AddEnterpriseMemberSVC.java",
-                    "BatchAddEntMemberSVC.java",
-                    "UpdateEnterpriseMemberSVC.java",
-                    "DeleteEnterpriseSVC.java",
-                    "AddEntMemberApprovalCentreSVC.java",
-                    "DirectOperateEntMemberSVC.java",
-                    "CallbackEntMemberSVC.java",
-                    "SmsOperEntMemberSVC.java",
-                    "AddEntMemberEditInfoSVC.java",
-                    "syncAllUtil/syncAllUtil.java"
-                ],
-                "functions": [
-                    {
-                        "name": "AddEnterpriseMemberSVC.doService",
-                        "file": "AddEnterpriseMemberSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEnterpriseMemberSVC.genOrderHisInfo",
-                        "file": "AddEnterpriseMemberSVC.java",
-                        "params": "ServiceRequest,String,DataContainer,String,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEnterpriseMemberSVC.qryANCenter",
-                        "file": "AddEnterpriseMemberSVC.java",
-                        "params": "String",
-                        "returns": "String",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "BatchAddEntMemberSVC.doService",
-                        "file": "BatchAddEntMemberSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberApprovalCentreSVC.doService",
-                        "file": "AddEntMemberApprovalCentreSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberApprovalCentreSVC.callApprovalCentre",
-                        "file": "AddEntMemberApprovalCentreSVC.java",
-                        "params": "String",
-                        "returns": "TreeListPart",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberApprovalCentreSVC.buildGroupBusiExt",
-                        "file": "AddEntMemberApprovalCentreSVC.java",
-                        "params": "",
-                        "returns": "TreePart",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberApprovalCentreSVC.addApprove",
-                        "file": "AddEntMemberApprovalCentreSVC.java",
-                        "params": "",
-                        "returns": "String",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberApprovalCentreSVC.checkApprove",
-                        "file": "AddEntMemberApprovalCentreSVC.java",
-                        "params": "",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.doService",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.addEntMember",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.delEntMember",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.chEntMember",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.batAddEntMember",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.batDelEntMember",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.sendAddTwoConfirmSMS",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.sendDelTwoConfirmSMS",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.sendChTwoConfirmSMS",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.setRequest",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "TreePart",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DirectOperateEntMemberSVC.changeDealState",
-                        "file": "DirectOperateEntMemberSVC.java",
-                        "params": "String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "CallbackEntMemberSVC.doService",
-                        "file": "CallbackEntMemberSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "SmsOperEntMemberSVC.doService",
-                        "file": "SmsOperEntMemberSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "SmsOperEntMemberSVC.batAddEnterpriseMember",
-                        "file": "SmsOperEntMemberSVC.java",
-                        "params": "TreePart,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "SmsOperEntMemberSVC.batDelEnterpriseMember",
-                        "file": "SmsOperEntMemberSVC.java",
-                        "params": "TreePart,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "SmsOperEntMemberSVC.delEnterpriseMember",
-                        "file": "SmsOperEntMemberSVC.java",
-                        "params": "TreePart",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "UpdateEnterpriseMemberSVC.doService",
-                        "file": "UpdateEnterpriseMemberSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DeleteEnterpriseSVC.doService",
-                        "file": "DeleteEnterpriseSVC.java",
-                        "params": "ServiceRequest",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DeleteEnterpriseSVC.queryValidEntKeyman",
-                        "file": "DeleteEnterpriseSVC.java",
-                        "params": "String,String",
-                        "returns": "boolean",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DeleteEnterpriseSVC.validOffer",
-                        "file": "DeleteEnterpriseSVC.java",
-                        "params": "",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "DeleteEnterpriseSVC.checkOfferIdBySubsId",
-                        "file": "DeleteEnterpriseSVC.java",
-                        "params": "String",
-                        "returns": "Boolean",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberEditInfoSVC.addEntMemberEditInfo",
-                        "file": "AddEntMemberEditInfoSVC.java",
-                        "params": "",
-                        "returns": "String",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "AddEntMemberEditInfoSVC.StringSubsection",
-                        "file": "AddEntMemberEditInfoSVC.java",
-                        "params": "String,int",
-                        "returns": "List<String>",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "syncAllUtil.syncAllGroup",
-                        "file": "syncAllUtil/syncAllUtil.java",
-                        "params": "ServiceRequest,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "syncAllUtil.syncAllGroup",
-                        "file": "syncAllUtil/syncAllUtil.java",
-                        "params": "DataContainer,String,String,boolean",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "syncAllUtil.checkBeforeAllGroupSyn",
-                        "file": "syncAllUtil/syncAllUtil.java",
-                        "params": "ServiceRequest",
-                        "returns": "String",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "syncAllUtil.insertToBboss",
-                        "file": "syncAllUtil/syncAllUtil.java",
-                        "params": "Map<String,String>",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "syncAllUtil.updateEnterpriseSynstate",
-                        "file": "syncAllUtil/syncAllUtil.java",
-                        "params": "DataContainer,String,String",
-                        "returns": "void",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "syncAllUtil.setEcSerialNumber",
-                        "file": "syncAllUtil/syncAllUtil.java",
-                        "params": "DataContainer",
-                        "returns": "DataContainer",
-                        "confidence": "confirmed"
-                    }
-                ],
-                "entities": [
-                    {
-                        "name": "CB_ENTERPRISE_MEMBER",
-                        "fields": [
-                            {
-                                "name": "GROUP_MEB_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "PARTY_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "ACCESS_NUM",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "CUST_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "SUBSCRIBER_INS_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "MEMBER_CUST_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "USECUST_ID",
-                                "type": "long",
-                                "required": false
-                            },
-                            {
-                                "name": "MEMBER_CUST_NAME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "JOIN_TYPE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "JOIN_DATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "JOIN_OP_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "JOIN_ORG_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "DATA_STATUS",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "VALID_DATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "EXPIRE_DATE",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DONE_DATE",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "MGMT_DISTRICT",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "MGMT_COUNTY",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "REGION_ID",
-                                "type": "string",
-                                "required": true
-                            }
-                        ],
-                        "confidence": "inferred"
-                    },
-                    {
-                        "name": "CB_ENTERPRISE_MEMBER_REL",
-                        "fields": [
-                            {
-                                "name": "GROUP_MEB_REL_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "GROUP_MEB_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "PARTY_ID",
-                                "type": "long",
-                                "required": false
-                            },
-                            {
-                                "name": "MEMBER_KIND",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "MEMBER_BELONG",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "JOIN_TYPE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "JOIN_DATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "VALID_DATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "DATA_STATUS",
-                                "type": "string",
-                                "required": true
-                            }
-                        ],
-                        "confidence": "inferred"
-                    },
-                    {
-                        "name": "CB_ENTMEMBER_EDIT",
-                        "fields": [
-                            {
-                                "name": "APPLAY_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "SMS_PORT_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "IMPORT_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "GROUP_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "GROUP_NAME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "ACCESS_NUM",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_STATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "DEAL_OP_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_ORG_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_DESC",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_DATE",
-                                "type": "date",
-                                "required": false
-                            },
-                            {
-                                "name": "CONFIRM_DATE",
-                                "type": "date",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_OPTION",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "FILE_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "FILE_NAME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "BAT_FILE_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "BAT_FILE_NAME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "SUCC_FILE_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "SUCC_FILE_NAME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "APPLAY_DATE",
-                                "type": "date",
-                                "required": true
-                            },
-                            {
-                                "name": "APPLAY_OP_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "APPLAY_ORG_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "OPER_TYPE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "APPLAY_DETIAL1",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "APPLAY_DETIAL2",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "APPLAY_DETIAL3",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR1",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR2",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR3",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR4",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR5",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR6",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR7",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR8",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR9",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR10",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "CHANNEL_TYPE",
-                                "type": "string",
-                                "required": false
-                            }
-                        ],
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "CB_ENTERPRISE_KEYMAN",
-                        "fields": [
-                            {
-                                "name": "FAMILY_PHONE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "ORGA_ENTERPRISE_ID",
-                                "type": "long",
-                                "required": true
-                            },
-                            {
-                                "name": "KEYMAN_TYPE",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "KEYMAN_NAME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "KEYMAN_DUTY",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "KEYMAN_GENDER",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DOCUMENT_TYPE",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DOCUMENT_NR",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "COMPANY_PHONE",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "CONT_PHONE2",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "EXPIRE_DATE",
-                                "type": "date",
-                                "required": false
-                            },
-                            {
-                                "name": "DATA_STATUS",
-                                "type": "string",
-                                "required": true
-                            }
-                        ],
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "CB_IMPORT_DATA",
-                        "fields": [
-                            {
-                                "name": "IMPORT_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "RSRV_STR1",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR2",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "RSRV_STR3",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_STATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "DEAL_OP_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_TIME",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_ORG_ID",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DEAL_DESC",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "GROUP_MEN_TAG",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "TO_GROUPMEN_TAG",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "SERIAL_NUMBER",
-                                "type": "string",
-                                "required": true
-                            }
-                        ],
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "CB_IMPORT_BAT",
-                        "fields": [
-                            {
-                                "name": "IMPORT_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "DEAL_STATE",
-                                "type": "string",
-                                "required": true
-                            }
-                        ],
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "CB_ENT_TOBBOSS",
-                        "fields": [
-                            {
-                                "name": "TOBBOSS_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "ORGA_ENTERPRISE_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "GROUP_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "EC_USER_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "CUST_NAME",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "CUST_MANAGER_ID",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "ACTION",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "EC_SERIAL_NUMBER",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "FSYNC_STATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "STATE",
-                                "type": "string",
-                                "required": true
-                            },
-                            {
-                                "name": "DATA_LIST1",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "DATA_LIST2",
-                                "type": "string",
-                                "required": false
-                            },
-                            {
-                                "name": "CUST_LIST1",
-                                "type": "string",
-                                "required": false
-                            }
-                        ],
-                        "confidence": "confirmed"
-                    }
-                ],
-                "business_rules": [
-                    {
-                        "description": "同一集团虚拟用户判断：qryANCenter(accessNum)==0 且成员客户≠集团客户时禁止新增成员",
-                        "location": "AddEnterpriseMemberSVC.doService L145 / UpdateEnterpriseMemberSVC L122",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "成员加入集团不足30天(仅A~C级集团)且无ENT_MEB_DEL权限禁止删除",
-                        "location": "DeleteEnterpriseSVC L91-95",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "成员在集团担任有效关键人(EXPIRE_DATE>SYSDATE且DATA_STATUS=1)禁止删除",
-                        "location": "DeleteEnterpriseSVC L87-90 / queryValidEntKeyman",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "车友助理业务(offer 1000012572/1000012573)合约期内禁止退订集团",
-                        "location": "DeleteEnterpriseSVC.checkOfferIdBySubsId L345",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "有盖章证明材料(FILE_ID非空)则无需二次确认；否则发送二次确认短信,状态置C等待确认",
-                        "location": "DirectOperateEntMemberSVC add/del/chEntMember",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "CRMFlowCode 1/2/3无二次确认,4/5/6有二次确认(COND_KEY T1)",
-                        "location": "AddEntMemberApprovalCentreSVC.callApprovalCentre L104-124",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "关键人类型中账务联系人(角色8)为必填(开关ENT_KEYMAN_TYPE_TAG,默认Y),新增/变更时校验",
-                        "location": "syncAllUtil.syncAllGroup L395-397",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "证件类型为军队代码(9)时一级行业类别必须在国防(U)大类下",
-                        "location": "syncAllUtil.syncAllGroup L297-317",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "集团同步仅限云南省内(集团客户归属省代码=871)",
-                        "location": "syncAllUtil.checkBeforeAllGroupSyn",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "AB类/AB类以下集团成员操作(新增/变更/注销)仅允许看管客户经理操作",
-                        "location": "CheckChangeEntMemberByABGroupSVC / AddGrpMember.queryGroupInfo",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "集团成员变更集团信息时,若有指定活动生效(checkBeforeChgEntMemActive)禁止变更集团",
-                        "location": "CheckBeforeChgEntMemActiveSVC / UpdateEnterpriseMemberSVC L105",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "申请处理状态机:W等待审批/R不通过/C等待二次确认/S非二次成功/F非二次失败/O二次成功/N二次失败/U用户拒绝;仅W状态可受理",
-                        "location": "DirectOperateEntMemberSVC L76-79 / CallbackEntMemberSVC",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "修改成员采用删旧增新:老记录置EXPIRE/DATA_STATUS=0,新增新记录",
-                        "location": "UpdateEnterpriseMemberSVC L148-155",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "description": "成员申请详情按4000字节分段,超3段(12000字符)报错",
-                        "location": "AddEntMemberEditInfoSVC.StringSubsection L77-80",
-                        "confidence": "confirmed"
-                    }
-                ],
-                "dependencies": [
-                    "com.ai.apaas.core.party.service.interfaces.IEnterpriseOperateSV",
-                    "com.ai.apaas.core.party.service.interfaces.IEnterpriseQuerySV",
-                    "com.ai.apaas.core.party.service.interfaces.IPartyQuerySV",
-                    "com.ai.apaas.core.customer.service.interfaces.ICustomerQuerySV",
-                    "com.ai.apaas.core.product.service.interfaces.ISubScriberInstQuerySV",
-                    "com.ai.apaas.local.party.service.interfaces.ICbEnterpriseOperateSV",
-                    "com.ai.apaas.local.party.common.PartyLocalConstant",
-                    "com.ai.apaas.local.party.service.interfaces.ICsBenefitPrjQuerySV",
-                    "com.ai.apaas.local.party.service.interfaces.ICsBenefitPrjOperateSV",
-                    "com.ai.apaas.local.party.service.interfaces.ICbCmsImportBatQuerySV",
-                    "com.ai.apaas.local.party.service.interfaces.ICbCmsImportBatOperateSV",
-                    "com.ai.apaas.local.secframe.service.interfaces.IOrgStaffLQuerySV",
-                    "com.ai.apaas.local.param.service.interfaces.IBsParaDetailQuerySV",
-                    "com.ai.apaas.local.sync.bo.BoSyncCustGroupmemberBean",
-                    "com.ai.apaas.custmgr.svc.insvc.OcCall",
-                    "com.ai.apaas.busiframe.xcaller.CsfCaller",
-                    "com.ai.ipaas.busiframe.util.ExecuteSqlUtil",
-                    "com.ai.apaas.busiframe.rocketmq.util.TransactionUtils",
-                    "com.ai.apaas.common.rocketmq.RMQMessageInfo",
-                    "OrderCentre.enterprise.IUmSubScriberSV.querySubscriberByAccessNum",
-                    "OrderCentre.enterprise.IOutEcMemberQuerySV.queryIfDeleteCustRelation",
-                    "OrderCentre.person.offer.ISubscriberOfferSV.queryOfferInsByAccessNum",
-                    "AP.approval.flowInstance",
-                    "CustomerCentre.common.IBatImportQuerySV.batchImportDealNew",
-                    "CustomerCentre.custmgr.ICCOutOperateSV.sendSingleSms",
-                    "CustomerCentre.custmgr.ICCIBOSSOutOperateSV.ecBbossSync"
-                ],
-                "algorithms": [
-                    {
-                        "name": "成员申请详情分段算法(StringSubsection)",
-                        "desc": "按字符双字节计数(中文字符记2字节)将长字符串按4000字节分段为最多3段,存入APPLAY_DETIAL1..3",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "CRMFlowCode→审批条件表达式映射",
-                        "desc": "1-6映射COND_KEY T0/T1,决定流程走向与是否二次确认",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "批量同步分批算法",
-                        "desc": "每10条为一组同步集团成员(OcCall.syncCustGroupMember)",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "信用/客户级别→BBOSS编码映射",
-                        "desc": "A1→01,A2→02,B1→03,B2→04,C→05,D→06",
-                        "confidence": "confirmed"
-                    },
-                    {
-                        "name": "删旧增新式成员变更",
-                        "desc": "修改成员时置旧记录过期并新增记录,同步时按MODIFY_TAG区分",
-                        "confidence": "confirmed"
-                    }
-                ],
-                "complexity": "high"
-            }
-        ]
-    }
-  ],
-  "message": "模块数据加载成功"
+            "generated_at": "2026-08-10T10:19:58+0800",
+            "modules": [
+                {
+                    "name": "entmembermgr",
+                    "path": "src/com/ai/apaas/custmgr/svc/entmembermgr",
+                    "purpose": "企业成员管理（集团成员新增/删除/变更/批量导入/审批中心/二次短信确认/资料修改表/同步）",
+                    "primary_files": [
+                        "AddEnterpriseMemberSVC.java",
+                        "BatchAddEntMemberSVC.java",
+                        "UpdateEnterpriseMemberSVC.java",
+                        "DeleteEnterpriseSVC.java",
+                        "AddEntMemberApprovalCentreSVC.java",
+                        "DirectOperateEntMemberSVC.java",
+                        "CallbackEntMemberSVC.java",
+                        "SmsOperEntMemberSVC.java",
+                        "AddEntMemberEditInfoSVC.java",
+                        "syncAllUtil/syncAllUtil.java"
+                    ],
+                    "functions": [
+                        {
+                            "name": "AddEnterpriseMemberSVC.doService",
+                            "file": "AddEnterpriseMemberSVC.java",
+                            "params": "ServiceRequest",
+                            "returns": "void",
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "AddEnterpriseMemberSVC.genOrderHisInfo",
+                            "file": "AddEnterpriseMemberSVC.java",
+                            "params": "ServiceRequest,String,DataContainer,String,String,String",
+                            "returns": "void",
+                            "confidence": "confirmed"
+                        }
+                    ],
+                    "core_functions": [
+                        {
+                            "function": "syncAllUtil.syncAllGroup",
+                            "function_desc": "全网集团注册同步(BBOSS)、多级条件(客户经理校验/ACTION新增修改/信用等级与行业类别映射/关键人遍历、DataList超长分",
+                            "core_function_reason": "全网集团注册同步(BBOSS)、多级条件(客户经理校验/ACTION新增修改/信用等级与行业类别映射/关键人遍历、DataList超长分段keyMan1/2)、含2层嵌套循环(关键人for+行业类别for)、外部服务调用(CsfCaller queryEntInfoByBBOSS/IBOSSCaller/DBUtil SQL)、圈复杂度极高(147KB工具类)",
+                            "file_path": "/Users/liyanhui/work/code-review-agent-datas/code-review-agent/codes/crm-customer5/v5/CRM-yunnan-CustomerCentre-07/src/com/ai/apaas/custmgr/svc/entmembermgr/syncAllUtil/syncAllUtil.java",
+                            "frontend_file_path": []
+                        },
+                        {
+                            "function": "OperationEntMemberApprovalCentreTQSVC.doService",
+                            "function_desc": "特权变更流程中心审批发起、多方法分发",
+                            "core_function_reason": "特权变更流程中心审批发起、多方法分发(callApprovalCentre ADD/DEL/BatCH)、含2层嵌套条件(OPER_TYPE+流程条件COND_KEY 1-6)、外部服务调用(CsfCaller AP.approval.flowInstance/BusiFrame.ftpmgr/IEntMemberEditSV)、圈复杂度高",
+                            "file_path": "/Users/liyanhui/work/code-review-agent-datas/code-review-agent/codes/crm-customer5/v5/CRM-yunnan-CustomerCentre-07/src/com/ai/apaas/custmgr/svc/entmembermgr/OperationEntMemberApprovalCentreTQSVC.java",
+                            "frontend_file_path": [
+                                "html/customer/cs/entmembermgr/addmember/ChGrpMemberTQ.page",
+                                "html/customer/cs/entmembermgr/addmember/EnterpriseMemberTQ.page"
+                            ]
+                        }
+                    ],
+                    "entities": [
+                        {
+                            "name": "CB_ENTERPRISE_MEMBER",
+                            "fields": [
+                                {
+                                    "name": "GROUP_MEB_ID",
+                                    "type": "long",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "inferred"
+                        },
+                        {
+                            "name": "CB_ENTERPRISE_MEMBER_REL",
+                            "fields": [
+                                {
+                                    "name": "GROUP_MEB_REL_ID",
+                                    "type": "long",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "inferred"
+                        },
+                        {
+                            "name": "CB_ENTMEMBER_EDIT",
+                            "fields": [
+                                {
+                                    "name": "APPLAY_ID",
+                                    "type": "string",
+                                    "required": true
+                                },
+                                {
+                                    "name": "SMS_PORT_ID",
+                                    "type": "string",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "CB_ENTERPRISE_KEYMAN",
+                            "fields": [
+                                {
+                                    "name": "FAMILY_PHONE",
+                                    "type": "string",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "CB_IMPORT_DATA",
+                            "fields": [
+                                {
+                                    "name": "IMPORT_ID",
+                                    "type": "string",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "CB_IMPORT_BAT",
+                            "fields": [
+                                {
+                                    "name": "IMPORT_ID",
+                                    "type": "string",
+                                    "required": true
+                                },
+                                {
+                                    "name": "DEAL_STATE",
+                                    "type": "string",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "CB_ENT_TOBBOSS",
+                            "fields": [
+                                {
+                                    "name": "TOBBOSS_ID",
+                                    "type": "string",
+                                    "required": true
+                                },
+                                {
+                                    "name": "ORGA_ENTERPRISE_ID",
+                                    "type": "string",
+                                    "required": true
+                                }
+                            ],
+                            "confidence": "confirmed"
+                        }
+                    ],
+                    "business_rules": [
+                        {
+                            "description": "同一集团虚拟用户判断：qryANCenter(accessNum)==0 且成员客户≠集团客户时禁止新增成员",
+                            "location": "AddEnterpriseMemberSVC.doService L145 / UpdateEnterpriseMemberSVC L122",
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "description": "成员申请详情按4000字节分段,超3段(12000字符)报错",
+                            "location": "AddEntMemberEditInfoSVC.StringSubsection L77-80",
+                            "confidence": "confirmed"
+                        }
+                    ],
+                    "dependencies": [
+                        "CustomerCentre.custmgr.ICCOutOperateSV.sendSingleSms",
+                        "CustomerCentre.custmgr.ICCIBOSSOutOperateSV.ecBbossSync"
+                    ],
+                    "algorithms": [
+                        {
+                            "name": "成员申请详情分段算法(StringSubsection)",
+                            "desc": "按字符双字节计数(中文字符记2字节)将长字符串按4000字节分段为最多3段,存入APPLAY_DETIAL1..3",
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "CRMFlowCode→审批条件表达式映射",
+                            "desc": "1-6映射COND_KEY T0/T1,决定流程走向与是否二次确认",
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "批量同步分批算法",
+                            "desc": "每10条为一组同步集团成员(OcCall.syncCustGroupMember)",
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "信用/客户级别→BBOSS编码映射",
+                            "desc": "A1→01,A2→02,B1→03,B2→04,C→05,D→06",
+                            "confidence": "confirmed"
+                        },
+                        {
+                            "name": "删旧增新式成员变更",
+                            "desc": "修改成员时置旧记录过期并新增记录,同步时按MODIFY_TAG区分",
+                            "confidence": "confirmed"
+                        }
+                    ],
+                    "complexity": "high"
+                }
+            ]
+        }
+    ],
+    "message": "模块数据加载成功"
 }
 ```
 
