@@ -162,11 +162,11 @@ onMounted(() => {
                   {{ ff.frontend_file_title || f.function || '核心功能' }}
                 </div>
                 <div
-                  v-if="f.core_function_reason"
+                  v-if="ff.frontend_file_desc"
                   class="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-gray-300"
                 >
                   <span class="shrink-0 text-gray-500">📝 描述</span>
-                  <span class="min-w-0">{{ f.core_function_reason }}</span>
+                  <span class="min-w-0">{{ ff.frontend_file_desc }}</span>
                 </div>
                 <div
                   v-if="ff.frontend_file_path"

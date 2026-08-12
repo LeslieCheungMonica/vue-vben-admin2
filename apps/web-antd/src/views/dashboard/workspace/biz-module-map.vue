@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { Modal } from 'ant-design-vue';
 
@@ -63,6 +63,27 @@ const visibleModules = computed(() => {
     }
     return true;
   });
+});
+
+const pageSize = 9;
+const page = ref(1);
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(visibleModules.value.length / pageSize)),
+);
+
+const pagedModules = computed(() => {
+  const start = (page.value - 1) * pageSize;
+  return visibleModules.value.slice(start, start + pageSize);
+});
+
+function goPage(p: number) {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+}
+
+watch([search, filter], () => {
+  page.value = 1;
 });
 
 function openDetail(m: ModuleInfo) {
@@ -166,7 +187,7 @@ onMounted(() => {
 
       <div class="grid grid-cols-1 gap-3 xl:grid-cols-2 2xl:grid-cols-3">
         <div
-          v-for="m in visibleModules"
+          v-for="m in pagedModules"
           :key="m.name"
           class="overflow-hidden rounded-lg border border-gray-700 bg-[#161b22]/70"
         >
@@ -206,6 +227,40 @@ onMounted(() => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        v-if="totalPages > 1"
+        class="mt-4 flex items-center justify-center gap-1.5"
+      >
+        <button
+          class="rounded border border-gray-700 bg-[#161b22] px-2.5 py-1 text-xs text-gray-400 transition-colors hover:text-gray-200 disabled:opacity-40"
+          :disabled="page <= 1"
+          @click="goPage(page - 1)"
+        >
+          上一页
+        </button>
+        <template v-for="p in totalPages" :key="p">
+          <button
+            v-if="p === page || p === 1 || p === totalPages || Math.abs(p - page) <= 1"
+            class="rounded border border-gray-700 bg-[#161b22] px-2.5 py-1 text-xs transition-colors"
+            :class="p === page ? 'border-blue-600 bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'"
+            @click="goPage(p)"
+          >
+            {{ p }}
+          </button>
+          <span
+            v-else-if="p === page - 2 || p === page + 2"
+            class="px-1 text-xs text-gray-500"
+          >…</span>
+        </template>
+        <button
+          class="rounded border border-gray-700 bg-[#161b22] px-2.5 py-1 text-xs text-gray-400 transition-colors hover:text-gray-200 disabled:opacity-40"
+          :disabled="page >= totalPages"
+          @click="goPage(page + 1)"
+        >
+          下一页
+        </button>
       </div>
     </template>
   </div>
