@@ -278,207 +278,1076 @@
 ### 响应
 
 ```json
-{
-    "status": "completed",
+[
+  {
+    "generated_at": "2026-08-11T09:55:49Z",
     "modules": [
-        {
-            "generated_at": "2026-08-10T10:19:58+0800",
-            "modules": [
-                {
-                    "name": "entmembermgr",
-                    "path": "src/com/ai/apaas/custmgr/svc/entmembermgr",
-                    "purpose": "企业成员管理（集团成员新增/删除/变更/批量导入/审批中心/二次短信确认/资料修改表/同步）",
-                    "primary_files": [
-                        "AddEnterpriseMemberSVC.java",
-                        "BatchAddEntMemberSVC.java",
-                        "UpdateEnterpriseMemberSVC.java",
-                        "DeleteEnterpriseSVC.java",
-                        "AddEntMemberApprovalCentreSVC.java",
-                        "DirectOperateEntMemberSVC.java",
-                        "CallbackEntMemberSVC.java",
-                        "SmsOperEntMemberSVC.java",
-                        "AddEntMemberEditInfoSVC.java",
-                        "syncAllUtil/syncAllUtil.java"
-                    ],
-                    "functions": [
-                        {
-                            "name": "AddEnterpriseMemberSVC.doService",
-                            "file": "AddEnterpriseMemberSVC.java",
-                            "params": "ServiceRequest",
-                            "returns": "void",
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "AddEnterpriseMemberSVC.genOrderHisInfo",
-                            "file": "AddEnterpriseMemberSVC.java",
-                            "params": "ServiceRequest,String,DataContainer,String,String,String",
-                            "returns": "void",
-                            "confidence": "confirmed"
-                        }
-                    ],
-                    "core_functions": [
-                        {
-                            "function": "syncAllUtil.syncAllGroup",
-                            "function_desc": "全网集团注册同步(BBOSS)、多级条件(客户经理校验/ACTION新增修改/信用等级与行业类别映射/关键人遍历、DataList超长分",
-                            "core_function_reason": "全网集团注册同步(BBOSS)、多级条件(客户经理校验/ACTION新增修改/信用等级与行业类别映射/关键人遍历、DataList超长分段keyMan1/2)、含2层嵌套循环(关键人for+行业类别for)、外部服务调用(CsfCaller queryEntInfoByBBOSS/IBOSSCaller/DBUtil SQL)、圈复杂度极高(147KB工具类)",
-                            "file_path": "/Users/liyanhui/work/code-review-agent-datas/code-review-agent/codes/crm-customer5/v5/CRM-yunnan-CustomerCentre-07/src/com/ai/apaas/custmgr/svc/entmembermgr/syncAllUtil/syncAllUtil.java",
-                            "frontend_file_path": []
-                        },
-                        {
-                            "function": "OperationEntMemberApprovalCentreTQSVC.doService",
-                            "function_desc": "特权变更流程中心审批发起、多方法分发",
-                            "core_function_reason": "特权变更流程中心审批发起、多方法分发(callApprovalCentre ADD/DEL/BatCH)、含2层嵌套条件(OPER_TYPE+流程条件COND_KEY 1-6)、外部服务调用(CsfCaller AP.approval.flowInstance/BusiFrame.ftpmgr/IEntMemberEditSV)、圈复杂度高",
-                            "file_path": "/Users/liyanhui/work/code-review-agent-datas/code-review-agent/codes/crm-customer5/v5/CRM-yunnan-CustomerCentre-07/src/com/ai/apaas/custmgr/svc/entmembermgr/OperationEntMemberApprovalCentreTQSVC.java",
-                            "frontend_file_path": [
-                                "html/customer/cs/entmembermgr/addmember/ChGrpMemberTQ.page",
-                                "html/customer/cs/entmembermgr/addmember/EnterpriseMemberTQ.page"
-                            ]
-                        }
-                    ],
-                    "entities": [
-                        {
-                            "name": "CB_ENTERPRISE_MEMBER",
-                            "fields": [
-                                {
-                                    "name": "GROUP_MEB_ID",
-                                    "type": "long",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "inferred"
-                        },
-                        {
-                            "name": "CB_ENTERPRISE_MEMBER_REL",
-                            "fields": [
-                                {
-                                    "name": "GROUP_MEB_REL_ID",
-                                    "type": "long",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "inferred"
-                        },
-                        {
-                            "name": "CB_ENTMEMBER_EDIT",
-                            "fields": [
-                                {
-                                    "name": "APPLAY_ID",
-                                    "type": "string",
-                                    "required": true
-                                },
-                                {
-                                    "name": "SMS_PORT_ID",
-                                    "type": "string",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "CB_ENTERPRISE_KEYMAN",
-                            "fields": [
-                                {
-                                    "name": "FAMILY_PHONE",
-                                    "type": "string",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "CB_IMPORT_DATA",
-                            "fields": [
-                                {
-                                    "name": "IMPORT_ID",
-                                    "type": "string",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "CB_IMPORT_BAT",
-                            "fields": [
-                                {
-                                    "name": "IMPORT_ID",
-                                    "type": "string",
-                                    "required": true
-                                },
-                                {
-                                    "name": "DEAL_STATE",
-                                    "type": "string",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "CB_ENT_TOBBOSS",
-                            "fields": [
-                                {
-                                    "name": "TOBBOSS_ID",
-                                    "type": "string",
-                                    "required": true
-                                },
-                                {
-                                    "name": "ORGA_ENTERPRISE_ID",
-                                    "type": "string",
-                                    "required": true
-                                }
-                            ],
-                            "confidence": "confirmed"
-                        }
-                    ],
-                    "business_rules": [
-                        {
-                            "description": "同一集团虚拟用户判断：qryANCenter(accessNum)==0 且成员客户≠集团客户时禁止新增成员",
-                            "location": "AddEnterpriseMemberSVC.doService L145 / UpdateEnterpriseMemberSVC L122",
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "description": "成员申请详情按4000字节分段,超3段(12000字符)报错",
-                            "location": "AddEntMemberEditInfoSVC.StringSubsection L77-80",
-                            "confidence": "confirmed"
-                        }
-                    ],
-                    "dependencies": [
-                        "CustomerCentre.custmgr.ICCOutOperateSV.sendSingleSms",
-                        "CustomerCentre.custmgr.ICCIBOSSOutOperateSV.ecBbossSync"
-                    ],
-                    "algorithms": [
-                        {
-                            "name": "成员申请详情分段算法(StringSubsection)",
-                            "desc": "按字符双字节计数(中文字符记2字节)将长字符串按4000字节分段为最多3段,存入APPLAY_DETIAL1..3",
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "CRMFlowCode→审批条件表达式映射",
-                            "desc": "1-6映射COND_KEY T0/T1,决定流程走向与是否二次确认",
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "批量同步分批算法",
-                            "desc": "每10条为一组同步集团成员(OcCall.syncCustGroupMember)",
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "信用/客户级别→BBOSS编码映射",
-                            "desc": "A1→01,A2→02,B1→03,B2→04,C→05,D→06",
-                            "confidence": "confirmed"
-                        },
-                        {
-                            "name": "删旧增新式成员变更",
-                            "desc": "修改成员时置旧记录过期并新增记录,同步时按MODIFY_TAG区分",
-                            "confidence": "confirmed"
-                        }
-                    ],
-                    "complexity": "high"
-                }
+      {
+        "name": "entmgr",
+        "path": "src/com/ai/apaas/custmgr/svc/entmgr/",
+        "purpose": "集团客户全生命周期管理：新增、修改、审核、销户、客户经理调配、批量导入、短信审批与全网(BBOSS)同步",
+        "primary_files": [
+          "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/CancelEnterpriseSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseForAuditPassSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/UpdateSubmitCheckSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEntBaseInfoSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/QueryEnterpriseByParamsSVC.java",
+          "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseKeymanSVC.java",
+          "src/com/ai/apaas/custmgr/service/interfaces/IEntOperateSV.java",
+          "src/com/ai/apaas/custmgr/service/interfaces/IEntQuerySV.java"
+        ],
+        "functions": [
+          {
+            "name": "addEnterprise",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse(DATAS)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "modifyEnterpriseInfoForDispatch",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse(SUCCESSA/FAILA/SUCCESSB/FAILAB)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "addToBboss",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java",
+            "params": [
+              "DataContainer dc"
+            ],
+            "returns": "void(同步全网集团)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "cancelEnterprise",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/CancelEnterpriseSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "updateSubmitCheck",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/UpdateSubmitCheckSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "addEnterpriseForAuditPass",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseForAuditPassSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "modifyEntBaseInfo",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEntBaseInfoSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "modifyEnterpriseKeyman",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseKeymanSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "queryEnterpriseByParams",
+            "file": "src/com/ai/apaas/custmgr/svc/entmgr/QueryEnterpriseByParamsSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse(集团列表)",
+            "confidence": "confirmed"
+          }
+        ],
+        "entities": [
+          {
+            "name": "Enterprise",
+            "fields": [
+              {
+                "name": "GROUP_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "GROUP_NAME",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "ORGA_ENTERPRISE_ID",
+                "type": "long",
+                "required": true
+              },
+              {
+                "name": "GROUP_TYPE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "CLASS_ID",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "GROUP_STATUS",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "CUST_MANAGER_ID",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "BUSI_LICENCE_NO",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "JURISTIC_NAME",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "MP_GROUP_CODE",
+                "type": "String",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "EnterpriseKeyman",
+            "fields": [
+              {
+                "name": "KEYMAN_TYPE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "KEYMAN_NAME",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "KEYMAN_DUTY",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "FAMILY_PHONE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "COMPANY_PHONE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "DOCUMENT_TYPE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "DOCUMENT_NR",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "KEYMAN_GENDER",
+                "type": "String",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "EntDispLog",
+            "fields": [
+              {
+                "name": "OPER_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "GROUP_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "ORGA_ENTERPRISE_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "CUST_MGR_ID_OLD",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "CUST_MGR_ID_NEW",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "DEAL_STATE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "INSERT_TIME",
+                "type": "Date",
+                "required": false
+              },
+              {
+                "name": "UPDATE_TIME",
+                "type": "Date",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "EntIdInfoProv",
+            "fields": [
+              {
+                "name": "LOG_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "UNIT_NAME",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "UNIT_CODE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "UNIT_ADDR",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "UNIT_LEAD",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "CHECK_TYPE_CODE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "SOURCE_TYPE",
+                "type": "String",
+                "required": true
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "EntBase",
+            "fields": [
+              {
+                "name": "BASE_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "GROUP_NAME",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "GROUP_ADDR",
+                "type": "String",
+                "required": false
+              }
+            ],
+            "confidence": "inferred"
+          },
+          {
+            "name": "EnterpriseAdversary",
+            "fields": [
+              {
+                "name": "GROUP_ADVERSARY",
+                "type": "String",
+                "required": false
+              }
+            ],
+            "confidence": "inferred"
+          }
+        ],
+        "business_rules": [
+          {
+            "description": "云南归属省代码校验：PROVINCE_CODE=YUNN 时归一化为 871",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseSVC.java:251",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "集团编码唯一性：生成后循环查询直至不重复",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseSVC.java:727",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "客户证件扫描件不能为空",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/AddEnterpriseSVC.java:668",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "客户级别A1->信用01, A2->02, B1->03, B2->04, C->05, D->06",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java:391",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "企业规模A->1, B->2, C->3, 默认->1",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java:531",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "非云南省内集团不允许发起全网同步",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java:814",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "跨省集团(MP_GROUP_CODE非空)需同步BBOSS",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java:236",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "全网同步失败可静默(开关ALL_GROUP_ERR_SILENTLY)",
+            "location": "src/com/ai/apaas/custmgr/svc/entmgr/ModifyEnterpriseInfoForDispatchSVC.java:673",
+            "confidence": "confirmed"
+          }
+        ],
+        "dependencies": [
+          "IEnterpriseOperateSV",
+          "IEnterpriseQuerySV",
+          "ICbEnterpriseOperateSV",
+          "ICbEnterpriseQuerySV",
+          "IPartyQuerySV",
+          "IBsDistrictQuerySV",
+          "IOrgStaffLQuerySV",
+          "ICustomerQuerySV",
+          "IPartyCustMgrStaffQuerySV",
+          "OrderCentre.person.IOCOutQuerySV",
+          "OrderCentre.person.ICbIllegalCardInfoSV",
+          "BusiFrame.ftpmgr.IFtpMgrSV",
+          "ICCIBOSSOutOperateSV.ecBbossSync",
+          "ICCOutOperateSV.sendSingleSms"
+        ],
+        "algorithms": [
+          "客户级别->信用等级映射",
+          "企业规模编码转换",
+          "BBOSS地市编码换算",
+          "关键人列表>1999字符拆分",
+          "调配日志先插后更"
+        ],
+        "complexity": "high",
+        "core_functions": []
+      }
+    ]
+  },
+  {
+    "generated_at": "2026-08-11T00:00:00Z",
+    "modules": [
+      {
+        "name": "mesop",
+        "path": "src/com/ai/apaas/custmgr/svc/mesop/",
+        "purpose": "营销维系管理：中小微集团管理、拜访任务（签到/测速/反馈/短信/统计）、集团业务受理单（电子合同）、知识库、宽带地址查询",
+        "primary_files": [
+          "src/com/ai/apaas/custmgr/service/interfaces/IMesopOperateSV.java",
+          "src/com/ai/apaas/custmgr/service/interfaces/IMesopQuerySV.java",
+          "src/com/ai/apaas/custmgr/svc/mesop/AddGroupElectPactInfoSVC.java",
+          "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java",
+          "src/com/ai/apaas/custmgr/svc/mesop/QueryUnVisitGroupsMesopSVC.java",
+          "src/com/ai/apaas/custmgr/svc/mesop/QueryEnterpriseSmallBaseSVC.java",
+          "src/com/ai/apaas/custmgr/svc/mesop/AddSmallBusinessEnterpriseSVC.java",
+          "src/com/ai/apaas/custmgr/svc/mesop/ModifyToRealEnterpriseSVC.java"
+        ],
+        "functions": [
+          {
+            "name": "addGroupElectPactInfo",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/AddGroupElectPactInfoSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse (DATAS)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "addVisitTaskSignIn",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse (DATAS)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "queryUnVisitGroupsMesop",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/QueryUnVisitGroupsMesopSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse (GROUP_TABLE LIST+TOTAL)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "queryEnterpriseSmallBase",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/QueryEnterpriseSmallBaseSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse (DATAS LIST+TOTAL)",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "addSmallEnterprise",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/AddSmallEnterpriseSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "modifyToRealEnterprise",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/ModifyToRealEnterpriseSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "addCatolog",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/AddCatologSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "queryStatics",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/QueryStaticsSVC.java",
+            "params": [
+              "ServiceRequest in"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "queryGroupVisitStats",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/QueryGroupVisitStatsSVC.java",
+            "params": [
+              "ServiceRequest in"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          },
+          {
+            "name": "queryWideNetHomeAddr",
+            "file": "src/com/ai/apaas/custmgr/svc/mesop/QueryWideNetHomeAddrSVC.java",
+            "params": [
+              "ServiceRequest request"
+            ],
+            "returns": "ServiceResponse",
+            "confidence": "confirmed"
+          }
+        ],
+        "entities": [
+          {
+            "name": "Cb_Me_Task",
+            "fields": [
+              {
+                "name": "PLAN_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "PLAN_TITLE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "TASK_TYPE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "PLAN_CONTENT",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "END_TIME",
+                "type": "Date",
+                "required": true
+              },
+              {
+                "name": "EXE_TIME",
+                "type": "Date",
+                "required": false
+              },
+              {
+                "name": "RECEIVE_STAFF",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "TASK_STATUS",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "APPENDIX3",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "GROUP_CODE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "APPENDIX1",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "OFFSET_DISTANCE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "VISIT_LONGTITUDE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "VISIT_LATITUDE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "VISIT_TYPE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "DATA_STATUS",
+                "type": "String",
+                "required": true
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "Cb_Me_Task_SignIn",
+            "fields": [
+              {
+                "name": "SIGNIN_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "PLAN_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "LINK_NAME",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "LINK_PHONE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "DESCRIBE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "REMARKS",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "SIGNIN_TIME",
+                "type": "Date",
+                "required": true
+              },
+              {
+                "name": "FILE_ID",
+                "type": "String",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "Cb_Me_Satisfact_Feedback",
+            "fields": [
+              {
+                "name": "PLAN_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "RECEIVE_STAFF",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "RECEIVE_NAME",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "APPENDIX3",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "REMARKS",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "SMS_TIME",
+                "type": "Date",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "Cb_Me_Cust_Location",
+            "fields": [
+              {
+                "name": "GROUP_CODE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "LONGTITUDE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "LATITUDE",
+                "type": "String",
+                "required": true
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "Cm_Group_Elect_Pact",
+            "fields": [
+              {
+                "name": "ELECT_PACT_CODE",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "GROUP_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "GROUP_NAME",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "CREATE_MONTH",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "BUSI_TYPE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "BUSI_TEXT",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "ACCEPT_DATE",
+                "type": "Date",
+                "required": false
+              },
+              {
+                "name": "VALID_DATE",
+                "type": "Date",
+                "required": false
+              },
+              {
+                "name": "EXPIRE_DATE",
+                "type": "Date",
+                "required": false
+              },
+              {
+                "name": "PAY_TYPE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "PAY_MODE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "PAY_CYCLE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "INVOICE_TYPE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "REMIND_SMS",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "PACT_STATUS",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "ESOP_INATCT_ID",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "PRDT_CODE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "RSRV_STR1",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "RSRV_STR8",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "RSRV_STR9",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "RSRV_STR10",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "RSRV_STR11",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "RSRV_STR12",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "MGMT_DISTRICT",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "MGMT_COUNTY",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "CREATE_DATE",
+                "type": "Date",
+                "required": false
+              },
+              {
+                "name": "DONE_DATE",
+                "type": "Date",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          },
+          {
+            "name": "Small_Enterprise_Base",
+            "fields": [
+              {
+                "name": "BASE_ID",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "BASE_GROUP_NAME",
+                "type": "String",
+                "required": true
+              },
+              {
+                "name": "BASE_GROUP_ADDR",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "GROUP_CONTACT",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "CONTACT_NUMBER",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "EMP_NUM_LOCAL",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "SH_NET_INFO",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "SH_OPERATOR",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "FA_OPERATOR",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "FA_NET_INFO",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "COMM_EXPEND_MONTH",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "IS_MULTIPLE_INFO",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "BASE_CALLING_TYPE_CODE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "USER_DEMAND",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "IDEN_NR",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "DECMAKER_PHONE",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "DECMAKER_NAME",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "REMARKS",
+                "type": "String",
+                "required": false
+              },
+              {
+                "name": "CREATE_DATE",
+                "type": "Date",
+                "required": false
+              }
+            ],
+            "confidence": "confirmed"
+          }
+        ],
+        "business_rules": [
+          {
+            "description": "拜访距离大于500米时任务状态置为4（失效）",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java:104",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "满意度短信内容固定为5档评价文本，号码仅保留前11位",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java:167",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "计费生效日期为1则失效日期为次年同月，为2则再加1个月",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddGroupElectPactInfoSVC.java:122",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "电子合同编号=yyyyMMdd+8位随机数",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddGroupElectPactInfoSVC.java:87",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "合同详情按150字符分片存RSRV_STR8~12，超过1000字符提示保存不完全",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddGroupElectPactInfoSVC.java:183",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "未拜访集团判定：当月无task_status=1且END_TIME在本月的拜访任务",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/QueryUnVisitGroupsMesopSVC.java:245",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "第一次拜访时记录集团经纬度（queryCbMeCustLocationById为空则新增）",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java:129",
+            "confidence": "confirmed"
+          },
+          {
+            "description": "无planId时自动新增一条自我拜访任务（VISIT_TYPE=0）",
+            "location": "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java:112",
+            "confidence": "confirmed"
+          }
+        ],
+        "dependencies": [
+          "com.ai.apaas.local.customer.service.interfaces.ICmGroupElectPactOperateSV",
+          "com.ai.apaas.local.party.service.interfaces.ICbMeTaskOperateSV",
+          "com.ai.apaas.local.party.service.interfaces.ICbMeTaskQuerySV",
+          "com.ai.apaas.local.customer.service.interfaces.ICbMeTaskSignInOperateSV",
+          "com.ai.apaas.core.party.service.interfaces.IEnterpriseQuerySV",
+          "com.ai.apaas.local.param.service.interfaces.IBsDistrictQuerySV",
+          "OrderCentre.person.IOCOutOperateSV.getEsopEpaData (CsfCaller)",
+          "CustomerCentre.custmgr.ICCOutOperateSV.sendSingleSms (CsfCaller)",
+          "com.ai.appframe2.bo.DataContainer",
+          "com.ai.ipaas.busiframe.xcaller.CsfCaller"
+        ],
+        "algorithms": [
+          "电子合同编号生成：日期+随机数",
+          "计费有效期推算（+1年/+1年1月）",
+          "拜访距离阈值判定（500m）",
+          "合同详情150字符分片",
+          "GetBusiText业务类型枚举翻译",
+          "当月首末日期计算（getFirstDayOfThisMonth/getMaxDayOfThisMonth）"
+        ],
+        "complexity": "high",
+        "core_functions": [
+          {
+            "function": "doService",
+            "core_function_reason": "新增集团业务受理单核心流程：①调用外部无纸化服务 OrderCentre.person.IOCOutOperateSV.getEsopEpaData（CsfCaller 跨中心调用）；②多分支 if/else if（计费生效日期推算、合同详情按150字符分片6分支）；③多个 for 循环组装合同明细（detailInfo/jsonInfo）；④解析外部返回 ESOP_INATCT_ID 并做失败校验。圈复杂度≥5、包含外部服务调用、≥3层嵌套条件。",
+            "file_path": "src/com/ai/apaas/custmgr/svc/mesop/AddGroupElectPactInfoSVC.java",
+            "frontend_file": [
+              {
+                "frontend_file_path": "html/mesop/group/AddSmallBusinessEnterprise.html",
+                "frontend_file_title": "集团业务受理/电子合同",
+                "frontend_file_desc": "新增中小微企业并受理集团业务（和商务/和对讲等），生成电子合同并联动无纸化系统，与 AddGroupElectPactInfoSVC 对应"
+              },
+              {
+                "frontend_file_path": "html/mesop/group/EnterpriseSale.html",
+                "frontend_file_title": "集团业务销售受理",
+                "frontend_file_desc": "集团业务销售/受理入口，提交集团业务受理单，调用 addGroupElectPactInfo"
+              }
             ]
-        }
-    ],
-    "message": "模块数据加载成功"
-}
+          },
+          {
+            "function": "doService",
+            "core_function_reason": "未拜访集团查询核心流程：①for 循环遍历客户经理名下全部集团（queryEnterpriseByParams4Mesop）；②循环内嵌套执行原生 SQL（ExecuteSqlUtil.getDcs('CP') 查询当月拜访任务）判断是否已拜访；③嵌套条件（groups!=null、GROUP_ID非空、dcs==null||length==0）组装未拜访集团及经纬度；④调用 getFirstDayOfThisMonth/getMaxDayOfThisMonth 计算当月首末日作为 SQL 参数。包含≥2层循环、≥3层嵌套条件、原生SQL执行。",
+            "file_path": "src/com/ai/apaas/custmgr/svc/mesop/QueryUnVisitGroupsMesopSVC.java",
+            "frontend_file": [
+              {
+                "frontend_file_path": "html/mesop/visit/groupVisit.html",
+                "frontend_file_title": "集团拜访（未拜访列表）",
+                "frontend_file_desc": "展示客户经理当月未经拜访的集团列表及位置，调用 queryUnVisitGroupsMesop"
+              }
+            ]
+          },
+          {
+            "function": "doService",
+            "core_function_reason": "集团中小微企业摸底信息查询核心流程：①for 循环遍历查询结果（queryEnterpriseSmallBase）；②循环内大量 if/else if 枚举翻译（运营商1~5、网络覆盖0/1、需求类型1~4、行业类型 StaticUtil）——超过3层嵌套条件；③分页计算（startIndex/endIndex，setNeedCount/setNoPage）；④组装 JSON 列表 + TOTAL。包含≥3层嵌套条件、复杂数据映射转换。",
+            "file_path": "src/com/ai/apaas/custmgr/svc/mesop/QueryEnterpriseSmallBaseSVC.java",
+            "frontend_file": [
+              {
+                "frontend_file_path": "html/mesop/group/SmallBusinessCustomersMana.html",
+                "frontend_file_title": "中小微企业摸底查询",
+                "frontend_file_desc": "查询集团中小微企业摸底信息列表，调用 queryEnterpriseSmallBase"
+              },
+              {
+                "frontend_file_path": "html/mesop/group/SmallBusinessCustomersQry.html",
+                "frontend_file_title": "中小微企业查询",
+                "frontend_file_desc": "中小微企业信息查询入口，对应 queryEnterpriseSmallBase 展示"
+              }
+            ]
+          },
+          {
+            "function": "doService",
+            "core_function_reason": "拜访任务签到核心流程：①外部短信服务调用（for 循环内逐个 CsfCaller.call CustomerCentre.custmgr.ICCOutOperateSV.sendSingleSms 发送满意度调查短信）；②if(planId==null) 新增任务 else 改状态的双分支业务逻辑；③循环处理5个号码字段并嵌套长度校验（≥11截取前11位）；④嵌套查询关键人（queryEnterpriseKeymanByFamilyPhone）填充反馈记录；⑤签到信息与反馈表多表写入。包含外部服务调用、≥2层循环、≥3层嵌套条件。",
+            "file_path": "src/com/ai/apaas/custmgr/svc/mesop/AddVisitTaskSignInSVC.java",
+            "frontend_file": [
+              {
+                "frontend_file_path": "html/mesop/visit/visitManage.html",
+                "frontend_file_title": "拜访任务管理",
+                "frontend_file_desc": "拜访任务列表与签到管理，调用 addVisitTaskSignIn 完成客户经理拜访签到"
+              },
+              {
+                "frontend_file_path": "html/mesop/visit/groupVisit.html",
+                "frontend_file_title": "集团拜访",
+                "frontend_file_desc": "集团拜访签到与满意度调查入口，对应 addVisitTaskSignIn 与短信发送"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
 ```
 
 | 字段 | 类型 | 说明 |

@@ -247,12 +247,6 @@ const filteredList = computed(() => {
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize));
 
-const confidenceBgMap: Record<string, string> = {
-  '高危': 'bg-red-50 border-red-200',
-  '中危': 'bg-yellow-50 border-yellow-200',
-  '低危': 'bg-green-50 border-green-200',
-};
-
 function toggleSelect(id: number) {
   const s = new Set(selectedIds.value);
   if (s.has(id)) s.delete(id); else s.add(id);
@@ -401,9 +395,9 @@ function selectVuln(vuln: VulnDetailItem) {
 
 const exploitStatusBadgeClass = computed(() => {
   const s = selectedVuln.value?.exploit_status || '';
-  if (s.includes('验证受阻') || s.includes('失败')) return 'bg-red-100 border-red-300 text-red-700';
-  if (s.includes('成功利用') || s.includes('成功')) return 'bg-green-100 border-green-300 text-green-700';
-  return 'bg-gray-100 border-gray-300 text-gray-700';
+  if (s.includes('验证受阻') || s.includes('失败')) return 'bg-red-100 dark:bg-red-500/20 border-red-300 dark:border-red-500/40 text-red-700 dark:text-red-300';
+  if (s.includes('成功利用') || s.includes('成功')) return 'bg-green-100 dark:bg-green-500/20 border-green-300 dark:border-green-500/40 text-green-700 dark:text-green-300';
+  return 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200';
 });
 
 const hasExploitData = computed(() => {
@@ -477,10 +471,10 @@ async function handleSaveVulnIds() {
 }
 
 function confidenceClass(confidence: string) {
-  if (confidence === '高危') return 'bg-red-100 text-red-700';
-  if (confidence === '中危') return 'bg-yellow-100 text-yellow-700';
-  if (confidence === '低危') return 'bg-green-100 text-green-700';
-  return 'bg-gray-100 text-gray-600';
+  if (confidence === '高危') return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300';
+  if (confidence === '中危') return 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300';
+  if (confidence === '低危') return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300';
+  return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300';
 }
 
 onMounted(() => {
@@ -493,19 +487,19 @@ onMounted(() => {
     <div class="flex h-[calc(100vh-260px)] gap-5">
       <!-- Left: Vuln List -->
       <div
-        class="flex w-[520px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+        class="flex w-[520px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
       >
         <div
-          class="flex items-center gap-2 border-b border-gray-100 px-4 py-3"
+          class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3"
         >
           <div
-            class="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-sm"
+            class="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 dark:bg-red-500/20 text-sm"
           >
             🛡️
           </div>
-          <span class="text-sm font-semibold text-gray-800">漏洞列表</span>
+          <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">漏洞列表</span>
           <span
-            class="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500"
+            class="ml-auto rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400"
           >
             {{ total }}
           </span>
@@ -525,7 +519,7 @@ onMounted(() => {
             保存
           </Button>
         </div>
-        <div class="flex flex-col gap-2.5 border-b border-gray-100 px-4 py-3">
+        <div class="flex flex-col gap-2.5 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
           <Input
             v-model:value="keyword"
             placeholder="搜索漏洞名称 / ID..."
@@ -579,8 +573,8 @@ onMounted(() => {
             :key="vuln.id"
             class="mx-2 mb-1.5 cursor-pointer rounded-lg border px-3 py-2.5 transition-all hover:opacity-90"
             :class="[
-              confidenceBgMap[vuln.confidence] || 'bg-gray-50 border-gray-200',
-              selectedVuln?.id === vuln.id ? '!bg-blue-100/70' : '',
+              'bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700',
+              selectedVuln?.id === vuln.id ? '!bg-blue-100/70 dark:!bg-blue-500/20' : '',
             ]"
             @click="selectVuln(vuln)"
           >
@@ -597,8 +591,8 @@ onMounted(() => {
                     class="flex-1 text-sm font-medium leading-snug"
                     :class="
                       selectedVuln?.id === vuln.id
-                        ? 'text-blue-700'
-                        : 'text-gray-800'
+                        ? 'text-blue-700 dark:text-blue-300'
+                        : 'text-gray-800 dark:text-gray-100'
                     "
                   >
                     {{ vuln.title }}
@@ -616,14 +610,14 @@ onMounted(() => {
                   <span>{{ vuln.create_time }}</span>
                   <span
                     v-if="vuln.vulnerability_type"
-                    class="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-gray-500"
+                    class="rounded-md bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 font-mono text-gray-500 dark:text-gray-400"
                   >
                     {{ vuln.vulnerability_type }}
                   </span>
                 </div>
                 <div
                   v-if="vuln.notes"
-                  class="mt-1.5 line-clamp-2 text-xs leading-relaxed text-gray-500"
+                  class="mt-1.5 line-clamp-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400"
                 >
                   {{ vuln.notes }}
                 </div>
@@ -633,12 +627,12 @@ onMounted(() => {
         </div>
         <div
           v-if="totalPages > 1"
-          class="flex items-center justify-between border-t border-gray-100 px-3 py-2 text-xs text-gray-500"
+          class="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 px-3 py-2 text-xs text-gray-500 dark:text-gray-400"
         >
           <span>共 {{ total }} 条</span>
           <div class="flex items-center gap-1">
             <button
-              class="rounded px-2 py-1 transition-colors hover:bg-gray-100 disabled:opacity-40"
+              class="rounded px-2 py-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
               :disabled="page <= 1"
               @click="goPage(page - 1)"
             >
@@ -648,7 +642,7 @@ onMounted(() => {
               <button
                 v-if="p === page || p === 1 || p === totalPages || Math.abs(p - page) <= 1"
                 class="rounded px-2 py-1 transition-colors"
-                :class="p === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'"
+                :class="p === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-800'"
                 @click="goPage(p)"
               >
                 {{ p }}
@@ -659,7 +653,7 @@ onMounted(() => {
               >...</span>
             </template>
             <button
-              class="rounded px-2 py-1 transition-colors hover:bg-gray-100 disabled:opacity-40"
+              class="rounded px-2 py-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
               :disabled="page >= totalPages"
               @click="goPage(page + 1)"
             >
@@ -671,11 +665,11 @@ onMounted(() => {
 
       <!-- Middle: Vuln Detail -->
       <div
-        class="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+        class="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
       >
         <template v-if="selectedVuln">
           <div
-            class="flex items-center gap-3 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-5 py-3.5"
+            class="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-gray-50 dark:from-[#1a2029] to-white dark:to-[#161b22] px-5 py-3.5"
           >
             <span
               class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
@@ -687,7 +681,7 @@ onMounted(() => {
               class="font-mono text-xs text-gray-400"
             >{{ selectedVuln.vuln_id }}</span
             >
-            <span class="flex-1 text-sm font-semibold text-gray-800">{{
+            <span class="flex-1 text-sm font-semibold text-gray-800 dark:text-gray-100">{{
               selectedVuln.title
             }}</span>
             <span class="text-xs text-gray-400">{{
@@ -704,7 +698,7 @@ onMounted(() => {
                   <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                     <span>📋</span><span>漏洞详情</span>
                   </div>
-                  <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                  <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-200">
                     {{ selectedVuln.notes }}
                   </div>
                 </div>
@@ -712,7 +706,7 @@ onMounted(() => {
                   <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                     <span>📍</span><span>源端点</span>
                   </div>
-                  <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                  <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 font-mono text-xs text-gray-600 dark:text-gray-300">
                     {{ selectedVuln.source_endpoint }}
                   </div>
                 </div>
@@ -720,7 +714,7 @@ onMounted(() => {
                   <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                     <span>🔗</span><span>漏洞代码位置</span>
                   </div>
-                  <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                  <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 font-mono text-xs text-gray-600 dark:text-gray-300">
                     {{ selectedVuln.vulnerable_code_location }}
                   </div>
                 </div>
@@ -728,7 +722,7 @@ onMounted(() => {
                   <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                     <span>🛡️</span><span>缺失的防御</span>
                   </div>
-                  <div class="rounded-lg bg-orange-50 p-3 text-sm text-orange-800">
+                  <div class="rounded-lg bg-orange-50 dark:bg-orange-500/15 p-3 text-sm text-orange-800 dark:text-orange-300">
                     {{ selectedVuln.missing_defense }}
                   </div>
                 </div>
@@ -736,7 +730,7 @@ onMounted(() => {
                   <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                     <span>🔐</span><span>利用假设</span>
                   </div>
-                  <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                  <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-200">
                     {{ selectedVuln.exploitation_hypothesis }}
                   </div>
                 </div>
@@ -744,7 +738,7 @@ onMounted(() => {
                   <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                     <span>⚡</span><span>建议利用技术</span>
                   </div>
-                  <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                  <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-200">
                     {{ selectedVuln.suggested_exploit_technique }}
                   </div>
                 </div>
@@ -752,12 +746,12 @@ onMounted(() => {
             </div>
 
             <template v-if="hasExploitData">
-              <div class="h-8 bg-white"></div>
+              <div class="h-8 bg-white dark:bg-[#161b22]"></div>
               <div
                 class="flex-1 overflow-y-auto px-5 pb-5 pt-1 text-sm"
               >
                 <div class="mb-4 flex items-center justify-between">
-                  <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     <span>⚔️</span><span>渗透信息</span>
                   </div>
                   <span v-if="selectedVuln.exploit_status" class="rounded-md px-2 py-0.5 text-xs font-medium" :class="exploitStatusBadgeClass">
@@ -769,7 +763,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>🏷️</span><span>利用标题</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-200">
                       {{ selectedVuln.exploit_title }}
                     </div>
                   </div>
@@ -777,7 +771,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>⚠️</span><span>利用严重级别</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-200">
                       {{ selectedVuln.exploit_severity }}
                     </div>
                   </div>
@@ -785,7 +779,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>📋</span><span>利用详情</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4 text-sm leading-relaxed text-gray-700 dark:text-gray-200">
                       {{ selectedVuln.exploit_vuln_detail }}
                     </div>
                   </div>
@@ -793,7 +787,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>📍</span><span>利用位置</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 font-mono text-xs text-gray-600 dark:text-gray-300">
                       {{ selectedVuln.exploit_location }}
                     </div>
                   </div>
@@ -801,7 +795,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>🚧</span><span>利用阻碍</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-200">
                       {{ selectedVuln.exploit_blockers }}
                     </div>
                   </div>
@@ -809,7 +803,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>💥</span><span>利用影响</span>
                     </div>
-                    <div class="rounded-lg bg-orange-50 p-3 text-sm text-orange-800">
+                    <div class="rounded-lg bg-orange-50 dark:bg-orange-500/15 p-3 text-sm text-orange-800 dark:text-orange-300">
                       {{ selectedVuln.exploit_impact }}
                     </div>
                   </div>
@@ -817,7 +811,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>🔐</span><span>利用前提</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-200">
                       {{ selectedVuln.exploit_prerequisites }}
                     </div>
                   </div>
@@ -825,17 +819,17 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>⚡</span><span>利用步骤</span>
                     </div>
-                    <div class="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed">
+                    <div class="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4 text-sm leading-relaxed">
                       <div
                         v-for="(line, idx) in selectedVuln.exploit_steps.split(/(?:\n|;)/)"
                         :key="idx"
                         v-show="line.trim()"
                         class="mb-2 flex items-start gap-2.5 last:mb-0"
                       >
-                        <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-600">
+                        <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20 text-[10px] font-medium text-blue-600 dark:text-blue-400">
                           {{ idx + 1 }}
                         </span>
-                        <span class="pt-0.5 text-gray-700">{{ line.trim() }}</span>
+                        <span class="pt-0.5 text-gray-700 dark:text-gray-200">{{ line.trim() }}</span>
                       </div>
                     </div>
                   </div>
@@ -843,7 +837,7 @@ onMounted(() => {
                     <div class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       <span>✅</span><span>证据</span>
                     </div>
-                    <div class="rounded-lg border border-green-200 bg-green-50 p-3 font-mono text-xs leading-relaxed text-green-700">
+                    <div class="rounded-lg border border-green-200 dark:border-green-500/40 bg-green-50 dark:bg-green-500/10 p-3 font-mono text-xs leading-relaxed text-green-700 dark:text-green-300">
                       {{ selectedVuln.exploit_evidence }}
                     </div>
                   </div>
@@ -865,10 +859,10 @@ onMounted(() => {
 
       <!-- Right: Thinking Flow -->
       <div
-        class="flex w-[320px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+        class="flex w-[320px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
       >
         <div
-          class="flex items-center gap-2 border-b border-gray-100 px-4 py-3"
+          class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3"
         >
           <span>🤖 思考流程</span>
           <span
@@ -903,15 +897,15 @@ onMounted(() => {
             >
               <div
                 v-if="item.type === 'merged-reasoning'"
-                class="rounded-lg border border-blue-100 bg-blue-50/60 p-3"
+                class="rounded-lg border border-blue-100 dark:border-blue-500/40 bg-blue-50/60 dark:bg-blue-500/10 p-3"
               >
                 <div class="mb-1.5 flex items-center gap-1.5 text-xs text-blue-400">
                   <span>💭</span><span>推理中</span>
                   <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400"></span>
                 </div>
-                <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2">
+                <div class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200 space-y-2">
                   <template v-for="(text, tIdx) in item.texts" :key="tIdx">
-                    <div v-if="text.trim()" class="text-gray-700">{{ text }}</div>
+                    <div v-if="text.trim()" class="text-gray-700 dark:text-gray-200">{{ text }}</div>
                   </template>
                   <span class="inline-block h-3.5 w-0.5 animate-pulse bg-blue-300 align-text-bottom"></span>
                 </div>
@@ -919,21 +913,21 @@ onMounted(() => {
 
               <div
                 v-if="item.type === 'tool'"
-                class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+                class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-3 shadow-sm"
               >
                 <div class="mb-1.5 flex items-center gap-2">
                   <span class="text-base">{{ toolStatusIcon[item.toolStatus || ''] || '🔧' }}</span>
-                  <span class="text-xs font-medium text-gray-500">{{ item.toolName || '工具调用' }}</span>
+                  <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ item.toolName || '工具调用' }}</span>
                   <Tag
                     v-if="item.toolStatus"
                     :color="item.toolStatus === 'completed' ? 'success' : item.toolStatus === 'running' ? 'processing' : 'default'"
                     class="!text-xs !px-1.5 !py-0"
                   >{{ item.toolStatus }}</Tag>
                 </div>
-                <div v-if="item.toolInput" class="mb-1 rounded bg-gray-100 p-2 text-xs text-gray-600 font-mono">
+                <div v-if="item.toolInput" class="mb-1 rounded bg-gray-100 dark:bg-gray-800 p-2 text-xs text-gray-600 dark:text-gray-300 font-mono">
                   {{ item.toolInput }}
                 </div>
-                <div v-if="item.toolOutput" class="rounded bg-green-50 p-2 text-xs text-green-700 font-mono whitespace-pre-wrap">
+                <div v-if="item.toolOutput" class="rounded bg-green-50 dark:bg-green-500/10 p-2 text-xs text-green-700 dark:text-green-300 font-mono whitespace-pre-wrap">
                   {{ item.toolOutput }}
                 </div>
               </div>
@@ -949,7 +943,7 @@ onMounted(() => {
 
               <div
                 v-if="item.type === 'message'"
-                class="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-xs text-gray-500"
+                class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 p-2.5 text-xs text-gray-500 dark:text-gray-400"
               >
                 {{ item.text }}
               </div>

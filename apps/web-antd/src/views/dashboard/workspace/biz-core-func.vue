@@ -5,12 +5,17 @@ import { moudles3dApi } from '#/api/core/resource';
 
 const props = defineProps<{ webId: string }>();
 
+interface FrontendFile {
+  frontend_file_path: string;
+  frontend_file_title?: string;
+  frontend_file_desc?: string;
+}
+
 interface CoreFunc {
   function: string;
-  function_desc?: string;
   core_function_reason?: string;
   file_path?: string;
-  frontend_file_path?: string[];
+  frontend_file?: FrontendFile[];
 }
 
 interface CoreModule {
@@ -49,11 +54,12 @@ const totalCoreFuncs = computed(() =>
 
 const visibleModules = computed(() => {
   const kw = search.value.trim().toLowerCase();
-  if (!kw) return modules.value;
-  return modules.value
+  const mods = modules.value.filter((m) => (m.core_functions || []).length > 0);
+  if (!kw) return mods;
+  return mods
     .map((m) => {
       const matched = (m.core_functions || []).filter((f) =>
-        `${f.function} ${f.function_desc || ''} ${f.core_function_reason || ''}`
+        `${f.function} ${f.core_function_reason || ''} ${f.file_path || ''}`
           .toLowerCase()
           .includes(kw),
       );
@@ -111,13 +117,12 @@ onMounted(() => {
     <template v-else>
       <div class="mb-3 flex flex-wrap items-center gap-3">
         <div class="rounded-lg border border-gray-700 bg-[#161b22]/80 px-4 py-2 text-xs text-gray-300">
-          🧩 <span class="text-blue-400">{{ modules.length }}</span> 模块 · ⚙️
-          <span class="text-emerald-400">{{ totalCoreFuncs }}</span> 核心功能
+          ⚙️ <span class="text-emerald-400">{{ totalCoreFuncs }}</span> 核心功能
         </div>
         <input
           v-model="search"
           type="text"
-          placeholder="搜索核心功能 / 模块..."
+          placeholder="搜索核心功能..."
           class="rounded-lg border border-gray-700 bg-[#161b22] px-3 py-1.5 text-xs text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500"
         />
       </div>
@@ -136,13 +141,6 @@ onMounted(() => {
       >
         <div class="flex items-center gap-2 border-b border-gray-800 px-4 py-2.5">
           <span class="text-sm font-semibold text-gray-100">{{ m.name }}</span>
-          <span
-            v-if="m.complexity"
-            class="rounded px-1.5 py-0.5 text-[10px]"
-            :class="m.complexity === 'high' ? 'bg-red-500/20 text-red-400' : m.complexity === 'medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'"
-          >
-            {{ m.complexity }}
-          </span>
           <span class="ml-auto text-[11px] text-gray-500">
             核心功能 {{ m.core_functions.length }}
           </span>
@@ -154,45 +152,50 @@ onMounted(() => {
             :key="i"
             class="rounded-lg border border-gray-700/70 bg-[#0d1117]/60 p-3"
           >
-            <div class="flex items-start gap-2">
-              <span class="mt-0.5 shrink-0 text-sm text-emerald-400">⚙️</span>
-              <div class="min-w-0 flex-1">
-                <div class="break-all font-mono text-xs font-semibold text-cyan-300">
-                  {{ f.function }}
+            <template v-if="f.frontend_file?.length">
+              <div
+                v-for="(ff, fi) in f.frontend_file"
+                :key="fi"
+                class="mb-3 last:mb-0"
+              >
+                <div class="break-all text-xs font-semibold text-cyan-300">
+                  {{ ff.frontend_file_title || f.function || '核心功能' }}
                 </div>
-                <div v-if="f.function_desc" class="mt-1 text-xs leading-relaxed text-gray-300">
-                  {{ f.function_desc }}
+                <div
+                  v-if="f.core_function_reason"
+                  class="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-gray-300"
+                >
+                  <span class="shrink-0 text-gray-500">📝 描述</span>
+                  <span class="min-w-0">{{ f.core_function_reason }}</span>
+                </div>
+                <div
+                  v-if="ff.frontend_file_path"
+                  class="mt-2 flex items-start gap-1.5 text-[11px] text-gray-500"
+                >
+                  <span class="shrink-0 text-gray-400">📄 入口文件</span>
+                  <span class="break-all">{{ ff.frontend_file_path }}</span>
                 </div>
               </div>
-            </div>
-
-            <div
-              v-if="f.core_function_reason"
-              class="mt-2 rounded bg-[#1a2030] px-2.5 py-2 text-[11px] leading-relaxed text-gray-400"
-            >
-              {{ f.core_function_reason }}
-            </div>
-
-            <div
-              v-if="f.file_path"
-              class="mt-2 flex items-start gap-1.5 text-[11px] text-gray-500"
-            >
-              <span class="shrink-0">📄</span>
-              <span class="break-all">{{ f.file_path }}</span>
-            </div>
-
-            <div
-              v-if="f.frontend_file_path?.length"
-              class="mt-1.5 flex flex-wrap gap-1"
-            >
-              <span
-                v-for="fp in f.frontend_file_path"
-                :key="fp"
-                class="rounded bg-[#0a0d14] px-1.5 py-0.5 text-[10px] text-fuchsia-400/90"
+            </template>
+            <template v-else>
+              <div class="break-all text-xs font-semibold text-cyan-300">
+                {{ f.function || '核心功能' }}
+              </div>
+              <div
+                v-if="f.core_function_reason"
+                class="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-gray-300"
               >
-                🖥️ {{ fp }}
-              </span>
-            </div>
+                <span class="shrink-0 text-gray-500">📝 描述</span>
+                <span class="min-w-0">{{ f.core_function_reason }}</span>
+              </div>
+              <div
+                v-if="f.file_path"
+                class="mt-2 flex items-start gap-1.5 text-[11px] text-gray-500"
+              >
+                <span class="shrink-0 text-gray-400">📄 入口文件</span>
+                <span class="break-all">{{ f.file_path }}</span>
+              </div>
+            </template>
           </div>
         </div>
       </div>
