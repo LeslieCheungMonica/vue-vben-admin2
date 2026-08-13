@@ -22,6 +22,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        name: 'BizSurveyIndex',
+        path: 'workspace/biz-survey',
+        component: () => import('#/views/dashboard/workspace/biz-survey-index.vue'),
+        meta: {
+          icon: 'carbon:map',
+          title: '业务测绘',
+        },
+      },
+      {
         name: 'Workspace',
         path: '/workspace',
         component: () => import('#/views/dashboard/workspace/index.vue'),
@@ -74,15 +83,6 @@ const routes: RouteRecordRaw[] = [
         meta: {
           hideInMenu: true,
           title: '复扫任务',
-        },
-      },
-      {
-        name: 'BizSurveyIndex',
-        path: 'workspace/biz-survey',
-        component: () => import('#/views/dashboard/workspace/biz-survey-index.vue'),
-        meta: {
-          icon: 'carbon:map',
-          title: '业务测绘',
         },
       },
       {
