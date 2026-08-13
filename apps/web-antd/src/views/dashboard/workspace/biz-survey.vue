@@ -8,6 +8,7 @@ import { getResourceListApi } from '#/api/core/resource';
 
 import AIChatPanel from './ai-chat-panel.vue';
 import Biz3dMap from './biz-3d-map.vue';
+import BizArch from './biz-arch.vue';
 import BizCoreFunc from './biz-core-func.vue';
 import BizModuleMap from './biz-module-map.vue';
 
@@ -682,6 +683,13 @@ onUnmounted(() => {
             </button>
             <button
               class="w-full rounded px-1 py-2 text-center text-xs font-medium leading-tight transition-colors"
+              :class="leftTab === 'bizarch' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:text-gray-200'"
+              @click="leftTab = 'bizarch'"
+            >
+              业务<br />架构
+            </button>
+            <button
+              class="w-full rounded px-1 py-2 text-center text-xs font-medium leading-tight transition-colors"
               :class="leftTab === 'modules' ? 'bg-blue-600/20 text-blue-400' : 'text-gray-400 hover:text-gray-200'"
               @click="leftTab = 'modules'"
             >
@@ -753,6 +761,11 @@ onUnmounted(() => {
           <template v-else-if="leftTab === 'biz3d'">
             <div class="absolute inset-y-0" style="left: 64px; right: 0">
               <Biz3dMap :web-id="taskId" />
+            </div>
+          </template>
+          <template v-else-if="leftTab === 'bizarch'">
+            <div class="absolute inset-y-0" style="left: 64px; right: 0">
+              <BizArch :web-id="taskId" />
             </div>
           </template>
           <template v-else-if="leftTab === 'modules'">

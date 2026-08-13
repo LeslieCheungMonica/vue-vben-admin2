@@ -138,7 +138,6 @@ const flowSteps = [
     icon: '🎯',
     children: [{ key: 'attack_graph', label: '攻击图谱', icon: '🗺️' }],
   },
-  { key: 'biz_surface', label: '业务面测绘', icon: '🏗️' },
   {
     key: 'auth',
     label: '认证漏洞扫描',
@@ -925,7 +924,7 @@ onUnmounted(() => {
                     :class="
                       activeStep === step.key
                         ? 'scale-110 bg-blue-500 text-white shadow-md'
-                        : 'bg-white text-gray-400 ring-1 ring-gray-300 hover:bg-blue-50 hover:text-blue-500 hover:ring-blue-300'
+                        : 'bg-white dark:bg-[#161b22] text-gray-400 ring-1 ring-gray-300 dark:ring-gray-600 hover:bg-blue-50 dark:hover:bg-blue-500/20 hover:text-blue-500 hover:ring-blue-300'
                     "
                   >
                     {{ step.icon }}
@@ -934,14 +933,14 @@ onUnmounted(() => {
                     class="ml-2 flex items-center gap-1 self-center text-xs font-medium leading-none transition-colors duration-200"
                     :class="
                       activeStep === step.key
-                        ? 'text-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
                     "
                   >
                     <span>{{ step.label }}</span>
                     <span
                       v-if="step.children?.length"
-                      class="cursor-pointer text-[10px] text-gray-400 hover:text-gray-600 transition-transform duration-200"
+                      class="cursor-pointer text-[10px] text-gray-400 hover:text-gray-600 dark:text-gray-300 transition-transform duration-200"
                       :class="{ 'rotate-90': !isCollapsed(step.key) }"
                       @click.stop="toggleCollapse(step.key)"
                     >
@@ -963,7 +962,7 @@ onUnmounted(() => {
                       :class="
                         activeStep === child.key
                           ? 'scale-110 bg-blue-400 text-white shadow-md'
-                          : 'bg-white text-gray-400 ring-1 ring-gray-300 hover:bg-blue-50 hover:text-blue-500 hover:ring-blue-300'
+                          : 'bg-white dark:bg-[#161b22] text-gray-400 ring-1 ring-gray-300 dark:ring-gray-600 hover:bg-blue-50 dark:hover:bg-blue-500/20 hover:text-blue-500 hover:ring-blue-300'
                       "
                     >
                       {{ child.icon }}
@@ -973,7 +972,7 @@ onUnmounted(() => {
                       :class="
                         activeStep === child.key
                           ? 'font-medium text-blue-500'
-                          : 'font-normal text-gray-400 hover:text-gray-600'
+                          : 'font-normal text-gray-400 hover:text-gray-600 dark:text-gray-300'
                       "
                     >
                       {{ child.label }}
@@ -1011,10 +1010,10 @@ onUnmounted(() => {
             </div>
             <div
               v-else-if="htmlUrl"
-              class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
+              class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200 dark:border-gray-700"
             >
               <div
-                class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
+                class="flex items-center gap-2 bg-gradient-to-r from-blue-50 dark:from-blue-500/20 to-blue-100/60 dark:to-blue-500/20 px-6 py-3 text-sm font-medium text-blue-700 dark:text-blue-300 border-b border-blue-100 dark:border-blue-500/40"
               >
                 <span>{{
                   activeStep === 'vuln_recon'
@@ -1067,9 +1066,9 @@ onUnmounted(() => {
                                         : 'XSS漏洞利用报告'
                 }}</span>
               </div>
-              <div class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0">
+              <div class="flex flex-1 flex-col bg-gray-50/50 dark:bg-gray-800/50 px-6 py-4 min-h-0">
                 <div
-                  class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0"
+                  class="mx-auto w-full max-w-5xl flex-1 rounded bg-white dark:bg-[#161b22] shadow-sm min-h-0"
                   style="display: flex; flex-direction: column"
                 >
                   <div style=" position: relative;flex: 1; min-height: 400px">
@@ -1095,11 +1094,11 @@ onUnmounted(() => {
             ></iframe>
             <div
               v-else
-              class="flex flex-1 items-center justify-center rounded border border-gray-200 bg-gray-50 text-sm text-gray-400"
+              class="flex flex-1 items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 text-sm text-gray-400"
             >
               <div class="text-center">
                 <div class="mb-1 text-lg">{{ getStepIcon(activeStep) }}</div>
-                <div class="font-medium text-gray-600">
+                <div class="font-medium text-gray-600 dark:text-gray-300">
                   {{ getStepTitle(activeStep) }}
                 </div>
                 <div class="mt-1 text-xs text-gray-400">
@@ -1130,13 +1129,13 @@ onUnmounted(() => {
                 <div
                   v-for="(modules, category) in group"
                   :key="category"
-                  class="rounded border border-gray-200 bg-white shadow-sm"
+                  class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
                 >
                   <div
                     class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
                     @click="toggleBizCollapse(gIdx + '-' + category)"
                   >
-                    <div class="text-sm font-medium text-gray-700 capitalize">
+                    <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
                       {{ String(category).replace(/_/g, ' ') }}
                       <span class="ml-2 text-xs font-normal text-gray-400"
                         >({{ modules.length }})</span
@@ -1153,16 +1152,16 @@ onUnmounted(() => {
                   </div>
                   <div
                     v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                    class="space-y-2 border-t border-gray-100 px-4 py-3"
+                    class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                   >
                     <div
                       v-for="(item, idx) in modules"
                       :key="idx"
-                      class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                      class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
                       :class="
                         bizVulnResSet.has(item.module_name)
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                          ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
+                          : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
                       "
                     >
                       <div class="font-medium">{{ item.module_name }}</div>
@@ -1187,7 +1186,7 @@ onUnmounted(() => {
               v-if="showBizReportModuleList"
               class="flex h-full flex-col overflow-y-auto p-4"
             >
-              <div class="mb-3 text-sm font-medium text-gray-700">
+              <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                 选择业务模块查看漏洞报告
               </div>
               <div
@@ -1207,13 +1206,13 @@ onUnmounted(() => {
                   <div
                     v-for="(modules, category) in group"
                     :key="category"
-                    class="rounded border border-gray-200 bg-white shadow-sm"
+                    class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
                   >
                     <div
                       class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
                       @click="toggleBizCollapse(gIdx + '-' + category)"
                     >
-                      <div class="text-sm font-medium text-gray-700 capitalize">
+                      <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
                         {{ String(category).replace(/_/g, ' ') }}
                         <span class="ml-2 text-xs font-normal text-gray-400"
                           >({{ modules.length }})</span
@@ -1230,16 +1229,16 @@ onUnmounted(() => {
                     </div>
                     <div
                       v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 px-4 py-3"
+                      class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                     >
                       <div
                         v-for="(item, idx) in modules"
                         :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
                         :class="
                           bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                            ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
+                            : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
                         "
                         @click="loadBizReportHtml(item.module_name)"
                       >
@@ -1258,15 +1257,15 @@ onUnmounted(() => {
             </div>
             <div v-else class="flex h-full flex-col">
               <div
-                class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2"
+                class="flex items-center gap-2 border-b bg-gray-50 dark:bg-gray-800/60 px-4 py-2"
               >
                 <button
-                  class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                  class="rounded px-2 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/20"
                   @click="backBizReportToModuleList"
                 >
                   ← 返回模块列表
                 </button>
-                <span class="text-xs font-medium text-gray-600">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {{ selectedBizReportName }} - 漏洞报告
                 </span>
               </div>
@@ -1278,19 +1277,19 @@ onUnmounted(() => {
               </div>
               <div
                 v-else-if="bizReportHtmlUrl"
-                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
+                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200 dark:border-gray-700"
               >
                 <div
-                  class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
+                  class="flex items-center gap-2 bg-gradient-to-r from-blue-50 dark:from-blue-500/20 to-blue-100/60 dark:to-blue-500/20 px-6 py-3 text-sm font-medium text-blue-700 dark:text-blue-300 border-b border-blue-100 dark:border-blue-500/40"
                 >
                   <span>⚙️</span>
                   <span>{{ selectedBizReportName }} - 漏洞报告</span>
                 </div>
                 <div
-                  class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0"
+                  class="flex flex-1 flex-col bg-gray-50/50 dark:bg-gray-800/50 px-6 py-4 min-h-0"
                 >
                   <div
-                    class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0"
+                    class="mx-auto w-full max-w-5xl flex-1 rounded bg-white dark:bg-[#161b22] shadow-sm min-h-0"
                     style="display: flex; flex-direction: column"
                   >
                     <div style=" position: relative;flex: 1; min-height: 400px">
@@ -1382,11 +1381,11 @@ onUnmounted(() => {
                         ? ssrfVulnList
                         : xssVulnList"
                 :key="vuln.id"
-                class="rounded border border-gray-200 bg-white p-4 shadow-sm"
+                class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-4 shadow-sm"
               >
                 <div class="mb-2 flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="font-mono text-sm font-medium text-gray-700">{{
+                    <span class="font-mono text-sm font-medium text-gray-700 dark:text-gray-200">{{
                       vuln.vuln_id
                     }}</span>
                     <Tag
@@ -1414,38 +1413,38 @@ onUnmounted(() => {
                     vuln.create_time
                   }}</span>
                 </div>
-                <div class="mb-2 text-sm font-medium text-gray-800">
+                <div class="mb-2 text-sm font-medium text-gray-800 dark:text-gray-100">
                   {{ vuln.title }}
                 </div>
-                <div class="mb-2 text-xs text-gray-500">
+                <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   <span class="font-medium">漏洞类型:</span>
                   {{ vuln.vuln_type }}
                 </div>
-                <div v-if="vuln.location" class="mb-2 text-xs text-gray-500">
+                <div v-if="vuln.location" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   <span class="font-medium">位置:</span> {{ vuln.location }}
                 </div>
                 <div
                   v-if="vuln.vuln_detail"
-                  class="mb-2 rounded bg-gray-50 p-2 text-xs text-gray-600"
+                  class="mb-2 rounded bg-gray-50 dark:bg-gray-800/60 p-2 text-xs text-gray-600 dark:text-gray-300"
                 >
                   <span class="font-medium">详情:</span> {{ vuln.vuln_detail }}
                 </div>
-                <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500">
+                <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   <span class="font-medium">影响:</span> {{ vuln.impact }}
                 </div>
                 <div
                   v-if="vuln.prerequisites"
-                  class="mb-2 text-xs text-gray-500"
+                  class="mb-2 text-xs text-gray-500 dark:text-gray-400"
                 >
                   <span class="font-medium">前置条件:</span>
                   {{ vuln.prerequisites }}
                 </div>
                 <div v-if="vuln.exploit_steps" class="mb-2">
-                  <div class="mb-1 text-xs font-medium text-gray-500">
+                  <div class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                     利用步骤:
                   </div>
                   <div
-                    class="rounded bg-gray-50 p-2 text-xs text-gray-600 space-y-1"
+                    class="rounded bg-gray-50 dark:bg-gray-800/60 p-2 text-xs text-gray-600 dark:text-gray-300 space-y-1"
                   >
                     <template
                       v-for="(line, idx) in vuln.exploit_steps.split(
@@ -1459,7 +1458,7 @@ onUnmounted(() => {
                           class="flex items-start gap-2"
                         >
                           <span
-                            class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] text-blue-600"
+                            class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20 text-[10px] text-blue-600 dark:text-blue-400"
                           >
                             {{ line.trim().charAt(0) }}
                           </span>
@@ -1476,7 +1475,7 @@ onUnmounted(() => {
                 </div>
                 <div
                   v-if="vuln.evidence"
-                  class="rounded bg-green-50 p-2 text-xs text-green-700"
+                  class="rounded bg-green-50 dark:bg-green-500/10 p-2 text-xs text-green-700 dark:text-green-300"
                 >
                   <span class="font-medium">证据:</span> {{ vuln.evidence }}
                 </div>
@@ -1489,7 +1488,7 @@ onUnmounted(() => {
             class="flex h-full w-full flex-1 flex-col overflow-y-auto"
           >
             <div v-if="showBizModuleList" class="p-4">
-              <div class="mb-3 text-sm font-medium text-gray-700">
+              <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                 选择业务模块查看漏洞
               </div>
               <div
@@ -1509,13 +1508,13 @@ onUnmounted(() => {
                   <div
                     v-for="(modules, category) in group"
                     :key="category"
-                    class="rounded border border-gray-200 bg-white shadow-sm"
+                    class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
                   >
                     <div
                       class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
                       @click="toggleBizCollapse(gIdx + '-' + category)"
                     >
-                      <div class="text-sm font-medium text-gray-700 capitalize">
+                      <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
                         {{ String(category).replace(/_/g, ' ') }}
                         <span class="ml-2 text-xs font-normal text-gray-400"
                           >({{ modules.length }})</span
@@ -1532,16 +1531,16 @@ onUnmounted(() => {
                     </div>
                     <div
                       v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 px-4 py-3"
+                      class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                     >
                       <div
                         v-for="(item, idx) in modules"
                         :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
                         :class="
                           bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                            ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
+                            : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
                         "
                         @click="loadBizVulnExploitList(item.module_name)"
                       >
@@ -1560,15 +1559,15 @@ onUnmounted(() => {
             </div>
             <div v-else class="flex h-full flex-col">
               <div
-                class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2"
+                class="flex items-center gap-2 border-b bg-gray-50 dark:bg-gray-800/60 px-4 py-2"
               >
                 <button
-                  class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                  class="rounded px-2 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/20"
                   @click="backToBizModuleList"
                 >
                   ← 返回模块列表
                 </button>
-                <span class="text-xs font-medium text-gray-600">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {{ selectedBizName }}
                 </span>
               </div>
@@ -1588,12 +1587,12 @@ onUnmounted(() => {
                 <div
                   v-for="vuln in bizVulnExploitList"
                   :key="vuln.id"
-                  class="rounded border border-gray-200 bg-white p-4 shadow-sm"
+                  class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-4 shadow-sm"
                 >
                   <div class="mb-2 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                       <span
-                        class="font-mono text-sm font-medium text-gray-700"
+                        class="font-mono text-sm font-medium text-gray-700 dark:text-gray-200"
                         >{{ vuln.vuln_id }}</span
                       >
                       <Tag
@@ -1626,42 +1625,42 @@ onUnmounted(() => {
                       vuln.create_time
                     }}</span>
                   </div>
-                  <div class="mb-2 text-sm font-medium text-gray-800">
+                  <div class="mb-2 text-sm font-medium text-gray-800 dark:text-gray-100">
                     {{ vuln.title }}
                   </div>
-                  <div class="mb-2 text-xs text-gray-500">
+                  <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                     <span class="font-medium">漏洞类型:</span>
                     {{ vuln.vuln_type }}
                   </div>
-                  <div v-if="vuln.category" class="mb-2 text-xs text-gray-500">
+                  <div v-if="vuln.category" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                     <span class="font-medium">分类:</span> {{ vuln.category }}
                   </div>
-                  <div v-if="vuln.location" class="mb-2 text-xs text-gray-500">
+                  <div v-if="vuln.location" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                     <span class="font-medium">位置:</span> {{ vuln.location }}
                   </div>
                   <div
                     v-if="vuln.vuln_detail"
-                    class="mb-2 rounded bg-gray-50 p-2 text-xs text-gray-600"
+                    class="mb-2 rounded bg-gray-50 dark:bg-gray-800/60 p-2 text-xs text-gray-600 dark:text-gray-300"
                   >
                     <span class="font-medium">详情:</span>
                     {{ vuln.vuln_detail }}
                   </div>
-                  <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500">
+                  <div v-if="vuln.impact" class="mb-2 text-xs text-gray-500 dark:text-gray-400">
                     <span class="font-medium">影响:</span> {{ vuln.impact }}
                   </div>
                   <div
                     v-if="vuln.prerequisites"
-                    class="mb-2 text-xs text-gray-500"
+                    class="mb-2 text-xs text-gray-500 dark:text-gray-400"
                   >
                     <span class="font-medium">前置条件:</span>
                     {{ vuln.prerequisites }}
                   </div>
                   <div v-if="vuln.exploit_steps" class="mb-2">
-                    <div class="mb-1 text-xs font-medium text-gray-500">
+                    <div class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                       利用步骤:
                     </div>
                     <div
-                      class="rounded bg-gray-50 p-2 text-xs text-gray-600 space-y-1"
+                      class="rounded bg-gray-50 dark:bg-gray-800/60 p-2 text-xs text-gray-600 dark:text-gray-300 space-y-1"
                     >
                       <template
                         v-for="(line, idx) in vuln.exploit_steps.split(
@@ -1675,7 +1674,7 @@ onUnmounted(() => {
                             class="flex items-start gap-2"
                           >
                             <span
-                              class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] text-blue-600"
+                              class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20 text-[10px] text-blue-600 dark:text-blue-400"
                             >
                               {{ line.trim().charAt(0) }}
                             </span>
@@ -1692,7 +1691,7 @@ onUnmounted(() => {
                   </div>
                   <div
                     v-if="vuln.evidence"
-                    class="rounded bg-green-50 p-2 text-xs text-green-700"
+                    class="rounded bg-green-50 dark:bg-green-500/10 p-2 text-xs text-green-700 dark:text-green-300"
                   >
                     <span class="font-medium">证据:</span> {{ vuln.evidence }}
                   </div>
@@ -1709,7 +1708,7 @@ onUnmounted(() => {
               v-if="showBizExploitModuleList"
               class="flex h-full flex-col overflow-y-auto p-4"
             >
-              <div class="mb-3 text-sm font-medium text-gray-700">
+              <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                 选择业务模块查看漏洞利用报告
               </div>
               <div
@@ -1729,13 +1728,13 @@ onUnmounted(() => {
                   <div
                     v-for="(modules, category) in group"
                     :key="category"
-                    class="rounded border border-gray-200 bg-white shadow-sm"
+                    class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
                   >
                     <div
                       class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
                       @click="toggleBizCollapse(gIdx + '-' + category)"
                     >
-                      <div class="text-sm font-medium text-gray-700 capitalize">
+                      <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
                         {{ String(category).replace(/_/g, ' ') }}
                         <span class="ml-2 text-xs font-normal text-gray-400"
                           >({{ modules.length }})</span
@@ -1752,16 +1751,16 @@ onUnmounted(() => {
                     </div>
                     <div
                       v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 px-4 py-3"
+                      class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                     >
                       <div
                         v-for="(item, idx) in modules"
                         :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600"
+                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
                         :class="
                           bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                            : 'bg-gray-50 text-gray-600 hover:bg-blue-50'
+                            ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
+                            : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
                         "
                         @click="loadBizExploitHtml(item.module_name)"
                       >
@@ -1780,15 +1779,15 @@ onUnmounted(() => {
             </div>
             <div v-else class="flex h-full flex-col">
               <div
-                class="flex items-center gap-2 border-b bg-gray-50 px-4 py-2"
+                class="flex items-center gap-2 border-b bg-gray-50 dark:bg-gray-800/60 px-4 py-2"
               >
                 <button
-                  class="rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                  class="rounded px-2 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/20"
                   @click="backBizExploitToModuleList"
                 >
                   ← 返回模块列表
                 </button>
-                <span class="text-xs font-medium text-gray-600">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {{ selectedBizExploitName }} - 漏洞利用报告
                 </span>
               </div>
@@ -1800,19 +1799,19 @@ onUnmounted(() => {
               </div>
               <div
                 v-else-if="bizExploitHtmlUrl"
-                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200"
+                class="flex h-full w-full flex-col overflow-hidden rounded border border-gray-200 dark:border-gray-700"
               >
                 <div
-                  class="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100/60 px-6 py-3 text-sm font-medium text-blue-700 border-b border-blue-100"
+                  class="flex items-center gap-2 bg-gradient-to-r from-blue-50 dark:from-blue-500/20 to-blue-100/60 dark:to-blue-500/20 px-6 py-3 text-sm font-medium text-blue-700 dark:text-blue-300 border-b border-blue-100 dark:border-blue-500/40"
                 >
                   <span>⚡</span>
                   <span>{{ selectedBizExploitName }} - 漏洞利用报告</span>
                 </div>
                 <div
-                  class="flex flex-1 flex-col bg-gray-50/50 px-6 py-4 min-h-0"
+                  class="flex flex-1 flex-col bg-gray-50/50 dark:bg-gray-800/50 px-6 py-4 min-h-0"
                 >
                   <div
-                    class="mx-auto w-full max-w-5xl flex-1 rounded bg-white shadow-sm min-h-0"
+                    class="mx-auto w-full max-w-5xl flex-1 rounded bg-white dark:bg-[#161b22] shadow-sm min-h-0"
                     style="display: flex; flex-direction: column"
                   >
                     <div style=" position: relative;flex: 1; min-height: 400px">
@@ -1842,10 +1841,10 @@ onUnmounted(() => {
           <div
             style="width: 100%"
             v-else
-            class="rounded border border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-400"
+            class="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-6 text-center text-sm text-gray-400"
           >
             <div class="mb-1 text-lg">{{ getStepIcon(activeStep) }}</div>
-            <div class="font-medium text-gray-600">
+            <div class="font-medium text-gray-600 dark:text-gray-300">
               {{ getStepTitle(activeStep) }}
             </div>
             <div class="mt-1 text-xs text-gray-400">
@@ -1857,7 +1856,7 @@ onUnmounted(() => {
 
       <div class="relative flex flex-col" :style="{ width: '0' }">
         <div
-          class="absolute -left-3 top-8 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-xs text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:text-blue-500 hover:shadow-md"
+          class="absolute -left-3 top-8 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] text-xs text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:text-blue-500 hover:shadow-md"
           :title="rightCollapsed ? '展开思考流程' : '收起思考流程'"
           @click="toggleRight"
         >
@@ -1872,7 +1871,7 @@ onUnmounted(() => {
         :style="rightPanelStyle"
       >
         <div
-          class="flex items-center gap-2 border-b bg-gray-50 px-4 py-3 text-sm font-medium"
+          class="flex items-center gap-2 border-b bg-gray-50 dark:bg-gray-800/60 px-4 py-3 text-sm font-medium"
         >
           <span>🤖 思考流程</span>
           <span
@@ -1908,7 +1907,7 @@ onUnmounted(() => {
               <!-- merged reasoning block -->
               <div
                 v-if="item.type === 'merged-reasoning'"
-                class="rounded-lg border border-blue-100 bg-blue-50/60 p-3"
+                class="rounded-lg border border-blue-100 dark:border-blue-500/40 bg-blue-50/60 dark:bg-blue-500/10 p-3"
               >
                 <div
                   class="mb-1.5 flex items-center gap-1.5 text-xs text-blue-400"
@@ -1920,10 +1919,10 @@ onUnmounted(() => {
                   ></span>
                 </div>
                 <div
-                  class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 space-y-2"
+                  class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200 space-y-2"
                 >
                   <template v-for="(text, tIdx) in item.texts" :key="tIdx">
-                    <div v-if="text.trim()" class="text-gray-700">
+                    <div v-if="text.trim()" class="text-gray-700 dark:text-gray-200">
                       {{ text }}
                     </div>
                   </template>
@@ -1936,13 +1935,13 @@ onUnmounted(() => {
               <!-- tool call block -->
               <div
                 v-if="item.type === 'tool'"
-                class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+                class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] p-3 shadow-sm"
               >
                 <div class="mb-1.5 flex items-center gap-2">
                   <span class="text-base">
                     {{ toolStatusIcon[item.toolStatus || ''] || '🔧' }}
                   </span>
-                  <span class="text-xs font-medium text-gray-500">
+                  <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
                     {{ item.toolName || '工具调用' }}
                   </span>
                   <Tag
@@ -1961,26 +1960,26 @@ onUnmounted(() => {
                 </div>
                 <div
                   v-if="item.toolInput && !item.hideContent"
-                  class="mb-1 rounded bg-gray-100 p-2 text-xs text-gray-600 font-mono"
+                  class="mb-1 rounded bg-gray-100 dark:bg-gray-800 p-2 text-xs text-gray-600 dark:text-gray-300 font-mono"
                 >
                   {{ item.toolInput }}
                 </div>
                 <div
                   v-if="item.toolInput && item.hideContent"
-                  class="mb-1 truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono"
+                  class="mb-1 truncate rounded bg-gray-50 dark:bg-gray-800/60 p-2 text-xs text-gray-400 font-mono"
                   :title="item.toolInput"
                 >
                   {{ item.toolInput.slice(0, 80) }}...
                 </div>
                 <div
                   v-if="item.toolOutput && !item.hideContent"
-                  class="rounded bg-green-50 p-2 text-xs text-green-700 font-mono whitespace-pre-wrap"
+                  class="rounded bg-green-50 dark:bg-green-500/10 p-2 text-xs text-green-700 dark:text-green-300 font-mono whitespace-pre-wrap"
                 >
                   {{ item.toolOutput }}
                 </div>
                 <div
                   v-if="item.toolOutput && item.hideContent"
-                  class="truncate rounded bg-gray-50 p-2 text-xs text-gray-400 font-mono"
+                  class="truncate rounded bg-gray-50 dark:bg-gray-800/60 p-2 text-xs text-gray-400 font-mono"
                   :title="item.toolOutput"
                 >
                   {{ item.toolOutput.slice(0, 80) }}...
@@ -2006,7 +2005,7 @@ onUnmounted(() => {
               <!-- info/message block -->
               <div
                 v-if="item.type === 'message'"
-                class="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-xs text-gray-500"
+                class="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 p-2.5 text-xs text-gray-500 dark:text-gray-400"
               >
                 {{ item.text }}
               </div>

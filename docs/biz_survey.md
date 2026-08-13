@@ -1626,6 +1626,35 @@
 
 ---
 
+## 15. 获取 HTML 报告
+
+**GET** `/wape/survey_report_html/{web_id}/{stage}`
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| web_id | string | 是 | 系统 ID，用于查找 biz_survey 记录 |
+| stage | string | 否 | 报告阶段，默认 `architecture` |
+
+### 逻辑
+
+1. 通过 `web_id` (resource_id) 查询 `biz_survey` 表，获取 `resource_path` 作为 `source_path`
+2. 拼接完整路径：`WAPE_RESOURCE_UPLOAD_ROOT_PATH + resource_path`
+3. 定位其下 `_deep-code-sdd` 目录，读取 `{stage}.html` 文件（默认 `architecture.html`）
+4. 以 `text/html` 返回该文件内容
+
+### 响应
+
+成功时直接返回 HTML 文件内容（`Content-Type: text/html`）。
+
+| 状态码 | 说明 |
+|------|------|
+| 200 | 返回 HTML 文件 |
+| 404 | 业务测绘记录不存在或报告文件不存在 |
+
+---
+
 
 ## 数据库表结构
 
