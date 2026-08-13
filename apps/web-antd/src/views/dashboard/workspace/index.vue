@@ -428,14 +428,6 @@ onMounted(() => {
               <Button
                 size="small"
                 @click="
-                  router.push(`/dashboard/task/biz-data/${record.task_id}`)
-                "
-                >
-业务范围
-</Button>
-              <Button
-                size="small"
-                @click="
                   router.push(`/dashboard/task/run-status/${record.task_id}`)
                 "
                 >
@@ -446,9 +438,9 @@ onMounted(() => {
                 @click="
                   router.push(`/dashboard/task/rescan/${record.task_id}`)
                 "
-              >
-                复扫任务
-              </Button>
+                >
+                  复扫
+                </Button>
               <Button size="small" @click="showDetail(record)">详情</Button>
               <Button size="small" @click="handleDownload(record)">下载</Button>
               <Button size="small" @click="openEditModal(record)">编辑</Button>
