@@ -1501,6 +1501,131 @@
 
 ---
 
+## 13. 保存核心功能列表
+
+**POST** `/wape/core_function_save`
+
+### 请求体
+
+```json
+{
+    "system_name": "",
+    "modules": [
+        {
+            "module_name": "",
+            "functions": [
+                {
+                    "fucntion_name":"",
+                    "file_path":"",
+                    "bizs": [
+                        {
+                            "biz_title": "",
+                            "biz_file_path": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| system_name | string | 系统名称 |
+| modules | object | 模块对象 |
+| modules.module_name | string | 模块名称 |
+| modules.functions | array | 功能列表 |
+| modules.functions[].fucntion_name | string | 功能名称 |
+| modules.functions[].file_path | string | 功能文件路径 |
+| modules.functions[].bizs | array | 业务列表 |
+| modules.functions[].bizs[].biz_title | string | 业务名称 |
+| modules.functions[].bizs[].biz_file_path | string | 业务文件入口 |
+
+### 逻辑
+
+1. 根据 `system_name` 删除 `biz_survey_core_function` 表中该系统的全部数据
+2. 将每个 `function × biz` 组合重新插入表中（每个组合生成一条记录）
+
+### 响应
+
+```json
+{
+  "status": "completed",
+  "message": "核心功能列表保存成功"
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| status | string | 状态，恒为 `completed` |
+| message | string | 提示信息 |
+
+---
+
+## 14. 核心功能列表查询
+
+**POST** `/wape/core_function_list`
+
+### 请求体
+
+```json
+{
+  "system_name": ""
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| system_name | string | 否 | 系统名称，为空时返回全部记录 |
+
+### 逻辑
+
+查询 `biz_survey_core_function` 表，按 `id` 降序返回记录；传入 `system_name` 时仅返回该系统的记录。
+
+### 响应
+
+```json
+{
+  "status": "completed",
+  "records": [
+    {
+      "id": 1,
+      "system_name": "订单系统",
+      "module_name": "entmembermgr",
+      "fucntion_name": "AddEnterpriseMemberSVC.doService",
+      "file_path": "src/.../AddEnterpriseMemberSVC.java",
+      "biz_title": "企业成员新增",
+      "biz_file_path": "html/.../AddEnterpriseMember.page",
+      "created_at": "2026-08-11 12:00:00"
+    }
+  ],
+  "message": "核心功能列表查询成功"
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| status | string | 状态，恒为 `completed` |
+| records | array | 核心功能记录数组 |
+| message | string | 提示信息 |
+
+`records` 中每项字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | int | 自增主键 |
+| system_name | string | 系统名称 |
+| module_name | string | 模块名称 |
+| fucntion_name | string | 功能名称 |
+| file_path | string | 功能文件路径 |
+| biz_title | string | 业务名称 |
+| biz_file_path | string | 业务文件入口 |
+| created_at | string | 创建时间 |
+
+---
+
 
 ## 数据库表结构
 

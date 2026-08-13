@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 
-import { sessionAbortApi, webServerCreateSessionApi, webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi } from '#/api/core/resource';
+import { sessionAbortApi, webServerCreateSessionApi, webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi, webServerStopApi } from '#/api/core/resource';
 
 const md = new MarkdownIt({
   highlight: function (str: string, lang: string) {
@@ -130,6 +130,13 @@ async function connect() {
       connectEventStream();
     } catch { /* ignore */ }
   }
+}
+
+function stop() {
+  if (!props.systemId) return;
+  webServerStopApi(props.systemId).catch(() => {});
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  connected.value = false;
 }
 
 function connectEventStream() {
@@ -309,9 +316,10 @@ onUnmounted(() => {
       <div class="flex items-center gap-1">
         <button
           class="rounded px-2 py-1 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
-          @click="connect"
+          :class="connected ? 'text-red-400 hover:text-red-300' : ''"
+          @click="connected ? stop() : connect()"
         >
-          连接
+          {{ connected ? '停止' : '连接' }}
         </button>
         <button
           class="rounded px-2 py-1 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"

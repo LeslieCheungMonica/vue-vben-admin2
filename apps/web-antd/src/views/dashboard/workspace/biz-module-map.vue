@@ -65,7 +65,7 @@ const visibleModules = computed(() => {
   });
 });
 
-const pageSize = 9;
+const pageSize = 12;
 const page = ref(1);
 
 const totalPages = computed(() =>

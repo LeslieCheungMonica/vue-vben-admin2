@@ -177,6 +177,11 @@ export async function webServerCreateSessionApi(web_id: string) {
   return data;
 }
 
+export async function webServerStopApi(web_id: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/web_server_stop', { web_id });
+  return data;
+}
+
 export async function sessionAbortApi(web_id: string) {
   const { data } = await baseRequestClient.post<ApiResponse<any>>('/wape/session_abort', { web_id });
   return data;
@@ -218,6 +223,60 @@ export async function bizSurveyUpdateApi(system_name: string, resource_id: numbe
   const { data } = await baseRequestClient.post<ApiResponse<BizSurveyUpdateResult>>(
     '/wape/biz_survery_update',
     { system_name, resource_id },
+  );
+  return data;
+}
+
+export interface CoreFunctionBiz {
+  biz_title: string;
+  biz_file_path: string;
+}
+
+export interface CoreFunctionItem {
+  fucntion_name: string;
+  file_path: string;
+  bizs: CoreFunctionBiz[];
+}
+
+export interface CoreFunctionModule {
+  module_name: string;
+  functions: CoreFunctionItem[];
+}
+
+export interface CoreFunctionSaveParams {
+  system_name: string;
+  modules: CoreFunctionModule[];
+}
+
+export async function coreFunctionSaveApi(params: CoreFunctionSaveParams) {
+  const { data } = await baseRequestClient.post<ApiResponse<any>>(
+    '/wape/core_function_save',
+    params,
+  );
+  return data;
+}
+
+export interface CoreFunctionRecord {
+  id: number;
+  system_name: string;
+  module_name: string;
+  fucntion_name: string;
+  file_path: string;
+  biz_title: string;
+  biz_file_path: string;
+  created_at?: string;
+}
+
+export interface CoreFunctionListResult {
+  status: string;
+  records: CoreFunctionRecord[];
+  message: string;
+}
+
+export async function coreFunctionListApi(system_name: string) {
+  const { data } = await baseRequestClient.post<ApiResponse<CoreFunctionListResult>>(
+    '/wape/core_function_list',
+    { system_name },
   );
   return data;
 }
