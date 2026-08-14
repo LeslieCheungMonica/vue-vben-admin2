@@ -426,6 +426,7 @@ onMounted(() => {
               </Tooltip>
               <span v-else class="text-gray-300 text-xs cursor-not-allowed">—</span>
               <Button
+                v-show="false"
                 size="small"
                 @click="
                   router.push(`/dashboard/task/run-status/${record.task_id}`)

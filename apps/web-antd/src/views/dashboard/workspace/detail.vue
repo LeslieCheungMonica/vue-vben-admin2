@@ -813,14 +813,18 @@ const groupedCoreFuncs = computed(() => {
 async function loadCoreFuncList() {
   const tid = route.params.taskId as string;
   if (!tid) return;
+  if (!task.value) {
+    await fetchTask();
+  }
   bizDataLoading.value = true;
   try {
+    const resourceId = task.value?.resource_id ?? tid;
     let system_name = '';
     try {
       const listRes = await bizSurveyListApi();
       const records = (listRes as any)?.records ?? [];
       const rec = records.find(
-        (r: any) => String(r.resource_id) === String(tid),
+        (r: any) => String(r.resource_id) === String(resourceId),
       );
       system_name = rec?.system_name || '';
     } catch {
