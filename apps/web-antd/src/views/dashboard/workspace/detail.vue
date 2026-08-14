@@ -12,8 +12,8 @@ import {
   getBizDataApi,
   getBizVulnListApi,
   getBizVulnExploitListApi,
-  getBizVulnScanScopeSelectListApi,
 } from '#/api/core/task';
+import { bizSurveyListApi, coreFunctionListApi } from '#/api/core/resource';
 import type { TaskApi } from '#/api/core/task';
 import type { AuthVulnItem } from '#/api/core/task';
 import type { BizVulnExploitItem } from '#/api/core/task';
@@ -795,15 +795,41 @@ async function loadBizData() {
   }
 }
 
-async function loadBizScopeSelectData() {
+const coreFuncRecords = ref<any[]>([]);
+
+const groupedCoreFuncs = computed(() => {
+  const map = new Map<string, any[]>();
+  coreFuncRecords.value.forEach((rec) => {
+    const key = rec.module_name || '其他';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(rec);
+  });
+  return [...map.entries()].map(([module_name, records]) => ({
+    module_name,
+    records,
+  }));
+});
+
+async function loadCoreFuncList() {
   const tid = route.params.taskId as string;
   if (!tid) return;
   bizDataLoading.value = true;
   try {
-    const res = await getBizVulnScanScopeSelectListApi(tid);
-    bizData.value = res.items || [];
+    let system_name = '';
+    try {
+      const listRes = await bizSurveyListApi();
+      const records = (listRes as any)?.records ?? [];
+      const rec = records.find(
+        (r: any) => String(r.resource_id) === String(tid),
+      );
+      system_name = rec?.system_name || '';
+    } catch {
+      system_name = '';
+    }
+    const res = await coreFunctionListApi(system_name);
+    coreFuncRecords.value = (res as any)?.records ?? [];
   } catch {
-    bizData.value = [];
+    coreFuncRecords.value = [];
   } finally {
     bizDataLoading.value = false;
   }
@@ -828,7 +854,7 @@ watch(activeStep, (step) => {
     loadBizData();
   }
   if (step === 'biz' || step === 'biz_vuln_list' || step === 'biz_exploit') {
-    loadBizScopeSelectData();
+    loadCoreFuncList();
   }
   if (step === 'biz') {
     loadBizVulnList();
@@ -1187,72 +1213,67 @@ onUnmounted(() => {
               class="flex h-full flex-col overflow-y-auto p-4"
             >
               <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-                选择业务模块查看漏洞报告
+                选择核心功能查看漏洞报告
               </div>
               <div
                 v-if="bizDataLoading"
                 class="flex items-center justify-center py-8 text-sm text-gray-400"
               >
-                加载业务数据中...
+                加载核心功能中...
               </div>
               <div
-                v-else-if="bizData.length === 0"
+                v-else-if="coreFuncRecords.length === 0"
                 class="flex items-center justify-center py-8 text-sm text-gray-400"
               >
-                暂无业务数据
+                暂无核心功能数据
               </div>
               <div v-else class="space-y-4">
-                <template v-for="(group, gIdx) in bizData" :key="gIdx">
+                <div
+                  v-for="(group, gIdx) in groupedCoreFuncs"
+                  :key="group.module_name"
+                  class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
+                >
                   <div
-                    v-for="(modules, category) in group"
-                    :key="category"
-                    class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
+                    class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
+                    @click="toggleBizCollapse('cf-' + gIdx)"
+                  >
+                    <div class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      {{ group.module_name }}
+                      <span class="ml-2 text-xs font-normal text-gray-400"
+                        >({{ group.records.length }})</span
+                      >
+                    </div>
+                    <span
+                      class="text-xs text-gray-400 transition-transform duration-200"
+                      :class="{
+                        'rotate-90': !bizCollapsed.has('cf-' + gIdx),
+                      }"
+                    >
+                      ▸
+                    </span>
+                  </div>
+                  <div
+                    v-if="!bizCollapsed.has('cf-' + gIdx)"
+                    class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                   >
                     <div
-                      class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
-                      @click="toggleBizCollapse(gIdx + '-' + category)"
+                      v-for="(rec, idx) in group.records"
+                      :key="idx"
+                      class="cursor-pointer rounded border border-gray-200/60 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 p-3 text-xs transition-colors hover:border-blue-400 dark:hover:border-blue-500/50"
+                      @click="loadBizReportHtml(rec.biz_title)"
                     >
-                      <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
-                        {{ String(category).replace(/_/g, ' ') }}
-                        <span class="ml-2 text-xs font-normal text-gray-400"
-                          >({{ modules.length }})</span
-                        >
+                      <div class="font-medium text-blue-600 dark:text-blue-400">
+                        {{ rec.biz_title }}
                       </div>
-                      <span
-                        class="text-xs text-gray-400 transition-transform duration-200"
-                        :class="{
-                          'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
-                        }"
-                      >
-                        ▸
-                      </span>
-                    </div>
-                    <div
-                      v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
-                    >
                       <div
-                        v-for="(item, idx) in modules"
-                        :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
-                        :class="
-                          bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
-                            : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
-                        "
-                        @click="loadBizReportHtml(item.module_name)"
+                        v-if="rec.file_path"
+                        class="mt-1 break-all font-mono text-gray-500 dark:text-gray-400"
                       >
-                        <div class="font-medium">{{ item.module_name }}</div>
-                        <div
-                          v-if="item.module_path"
-                          class="mt-1 font-mono text-gray-400"
-                        >
-                          {{ item.module_path }}
-                        </div>
+                        {{ rec.file_path }}
                       </div>
                     </div>
                   </div>
-                </template>
+                </div>
               </div>
             </div>
             <div v-else class="flex h-full flex-col">
@@ -1489,72 +1510,65 @@ onUnmounted(() => {
           >
             <div v-if="showBizModuleList" class="p-4">
               <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-                选择业务模块查看漏洞
+                选择核心功能查看漏洞
               </div>
               <div
                 v-if="bizDataLoading"
                 class="flex items-center justify-center py-8 text-sm text-gray-400"
               >
-                加载业务数据中...
+                加载核心功能中...
               </div>
               <div
-                v-else-if="bizData.length === 0"
+                v-else-if="coreFuncRecords.length === 0"
                 class="flex items-center justify-center py-8 text-sm text-gray-400"
               >
-                暂无业务数据
+                暂无核心功能数据
               </div>
               <div v-else class="space-y-4">
-                <template v-for="(group, gIdx) in bizData" :key="gIdx">
+                <div
+                  v-for="(group, gIdx) in groupedCoreFuncs"
+                  :key="group.module_name"
+                  class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
+                >
                   <div
-                    v-for="(modules, category) in group"
-                    :key="category"
-                    class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
+                    class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
+                    @click="toggleBizCollapse('cf-' + gIdx)"
+                  >
+                    <div class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      {{ group.module_name }}
+                      <span class="ml-2 text-xs font-normal text-gray-400"
+                        >({{ group.records.length }})</span
+                      >
+                    </div>
+                    <span
+                      class="text-xs text-gray-400 transition-transform duration-200"
+                      :class="{ 'rotate-90': !bizCollapsed.has('cf-' + gIdx) }"
+                    >
+                      ▸
+                    </span>
+                  </div>
+                  <div
+                    v-if="!bizCollapsed.has('cf-' + gIdx)"
+                    class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                   >
                     <div
-                      class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
-                      @click="toggleBizCollapse(gIdx + '-' + category)"
+                      v-for="(rec, idx) in group.records"
+                      :key="idx"
+                      class="cursor-pointer rounded border border-gray-200/60 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 p-3 text-xs transition-colors hover:border-blue-400 dark:hover:border-blue-500/50"
+                      @click="loadBizVulnExploitList(rec.biz_title)"
                     >
-                      <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
-                        {{ String(category).replace(/_/g, ' ') }}
-                        <span class="ml-2 text-xs font-normal text-gray-400"
-                          >({{ modules.length }})</span
-                        >
+                      <div class="font-medium text-blue-600 dark:text-blue-400">
+                        {{ rec.biz_title }}
                       </div>
-                      <span
-                        class="text-xs text-gray-400 transition-transform duration-200"
-                        :class="{
-                          'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
-                        }"
-                      >
-                        ▸
-                      </span>
-                    </div>
-                    <div
-                      v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
-                    >
                       <div
-                        v-for="(item, idx) in modules"
-                        :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
-                        :class="
-                          bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
-                            : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
-                        "
-                        @click="loadBizVulnExploitList(item.module_name)"
+                        v-if="rec.file_path"
+                        class="mt-1 break-all font-mono text-gray-500 dark:text-gray-400"
                       >
-                        <div class="font-medium">{{ item.module_name }}</div>
-                        <div
-                          v-if="item.module_path"
-                          class="mt-1 font-mono text-gray-400"
-                        >
-                          {{ item.module_path }}
-                        </div>
+                        {{ rec.file_path }}
                       </div>
                     </div>
                   </div>
-                </template>
+                </div>
               </div>
             </div>
             <div v-else class="flex h-full flex-col">
@@ -1709,72 +1723,65 @@ onUnmounted(() => {
               class="flex h-full flex-col overflow-y-auto p-4"
             >
               <div class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-                选择业务模块查看漏洞利用报告
+                选择核心功能查看漏洞利用报告
               </div>
               <div
                 v-if="bizDataLoading"
                 class="flex items-center justify-center py-8 text-sm text-gray-400"
               >
-                加载业务数据中...
+                加载核心功能中...
               </div>
               <div
-                v-else-if="bizData.length === 0"
+                v-else-if="coreFuncRecords.length === 0"
                 class="flex items-center justify-center py-8 text-sm text-gray-400"
               >
-                暂无业务数据
+                暂无核心功能数据
               </div>
               <div v-else class="space-y-4">
-                <template v-for="(group, gIdx) in bizData" :key="gIdx">
+                <div
+                  v-for="(group, gIdx) in groupedCoreFuncs"
+                  :key="group.module_name"
+                  class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
+                >
                   <div
-                    v-for="(modules, category) in group"
-                    :key="category"
-                    class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#161b22] shadow-sm"
+                    class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
+                    @click="toggleBizCollapse('cf-' + gIdx)"
+                  >
+                    <div class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      {{ group.module_name }}
+                      <span class="ml-2 text-xs font-normal text-gray-400"
+                        >({{ group.records.length }})</span
+                      >
+                    </div>
+                    <span
+                      class="text-xs text-gray-400 transition-transform duration-200"
+                      :class="{ 'rotate-90': !bizCollapsed.has('cf-' + gIdx) }"
+                    >
+                      ▸
+                    </span>
+                  </div>
+                  <div
+                    v-if="!bizCollapsed.has('cf-' + gIdx)"
+                    class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
                   >
                     <div
-                      class="flex cursor-pointer items-center justify-between px-4 py-3 select-none"
-                      @click="toggleBizCollapse(gIdx + '-' + category)"
+                      v-for="(rec, idx) in group.records"
+                      :key="idx"
+                      class="cursor-pointer rounded border border-gray-200/60 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 p-3 text-xs transition-colors hover:border-blue-400 dark:hover:border-blue-500/50"
+                      @click="loadBizExploitHtml(rec.biz_title)"
                     >
-                      <div class="text-sm font-medium text-gray-700 dark:text-gray-200 capitalize">
-                        {{ String(category).replace(/_/g, ' ') }}
-                        <span class="ml-2 text-xs font-normal text-gray-400"
-                          >({{ modules.length }})</span
-                        >
+                      <div class="font-medium text-blue-600 dark:text-blue-400">
+                        {{ rec.biz_title }}
                       </div>
-                      <span
-                        class="text-xs text-gray-400 transition-transform duration-200"
-                        :class="{
-                          'rotate-90': !bizCollapsed.has(gIdx + '-' + category),
-                        }"
-                      >
-                        ▸
-                      </span>
-                    </div>
-                    <div
-                      v-if="!bizCollapsed.has(gIdx + '-' + category)"
-                      class="space-y-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3"
-                    >
                       <div
-                        v-for="(item, idx) in modules"
-                        :key="idx"
-                        class="cursor-pointer rounded p-2 text-xs transition-colors hover:text-blue-600 dark:text-blue-400"
-                        :class="
-                          bizVulnResSet.has(item.module_name)
-                            ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/20'
-                            : 'bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/20'
-                        "
-                        @click="loadBizExploitHtml(item.module_name)"
+                        v-if="rec.file_path"
+                        class="mt-1 break-all font-mono text-gray-500 dark:text-gray-400"
                       >
-                        <div class="font-medium">{{ item.module_name }}</div>
-                        <div
-                          v-if="item.module_path"
-                          class="mt-1 font-mono text-gray-400"
-                        >
-                          {{ item.module_path }}
-                        </div>
+                        {{ rec.file_path }}
                       </div>
                     </div>
                   </div>
-                </template>
+                </div>
               </div>
             </div>
             <div v-else class="flex h-full flex-col">
