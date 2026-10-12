@@ -43,11 +43,16 @@
     "@vueuse/core": "catalog:",
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
+    "graphology": "^0.25.4",
+    "graphology-layout-forceatlas2": "^0.10.1",
+    "graphology-layout-noverlap": "^0.4.2",
+    "highlight.js": "^11.9.0",
+    "jszip": "^3.10.1",
+    "sigma": "^3.0.3",
+    "markdown-it": "^14.0.0",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:",
-    "highlight.js": "^11.9.0",
-    "markdown-it": "^14.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

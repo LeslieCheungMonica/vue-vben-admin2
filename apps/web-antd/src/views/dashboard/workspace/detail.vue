@@ -98,9 +98,9 @@ function toggleRight() {
 
 const leftPanelStyle = computed(() => {
   if (rightCollapsed.value) {
-    return { width: '100%', maxHeight: 'calc(100vh - 246px)' };
+    return { width: '100%', height: '100%' };
   }
-  return { width: `${leftWidth.value}%`, maxHeight: 'calc(100vh - 246px)' };
+  return { width: `${leftWidth.value}%`, height: '100%' };
 });
 
 const rightPanelStyle = computed(() => {
@@ -109,7 +109,7 @@ const rightPanelStyle = computed(() => {
   }
   return {
     width: `calc(${100 - leftWidth.value}%)`,
-    maxHeight: 'calc(100vh - 247px)',
+    height: '100%',
   };
 });
 
@@ -921,13 +921,13 @@ onUnmounted(() => {
 <template>
   <Page
     v-if="task"
+    auto-content-height
     description="任务详情与实时思考流程"
     :title="task.task_name"
   >
     <div
       ref="splitContainer"
-      class="flex gap-0 select-none"
-      style="min-height: 500px"
+      class="flex h-full gap-0 select-none"
     >
       <div
         class="flex flex-col overflow-hidden rounded border p-4"
