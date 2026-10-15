@@ -56,25 +56,24 @@ const totalCoreFuncs = computed(() =>
 
 const visibleModules = computed(() => {
   const kw = search.value.trim().toLowerCase();
-  const mods = modules.value
+  const match = (f: CoreFunc) => {
+    if (!kw) return true;
+    const ffText = (f.frontend_file || [])
+      .map(
+        (ff) =>
+          `${ff.frontend_file_title || ''} ${ff.frontend_file_desc || ''} ${ff.frontend_file_path || ''}`,
+      )
+      .join(' ');
+    return `${f.function} ${f.core_function_reason || ''} ${f.file_path || ''} ${ffText}`
+      .toLowerCase()
+      .includes(kw);
+  };
+  return modules.value
     .map((m) => ({
       ...m,
-      core_functions: (m.core_functions || []).filter(
-        (f) => (f.frontend_file?.length || 0) > 0,
-      ),
+      core_functions: (m.core_functions || []).filter(match),
     }))
     .filter((m) => m.core_functions.length > 0);
-  if (!kw) return mods;
-  return mods
-    .map((m) => {
-      const matched = m.core_functions.filter((f) =>
-        `${f.function} ${f.core_function_reason || ''} ${f.file_path || ''}`
-          .toLowerCase()
-          .includes(kw),
-      );
-      return matched.length ? { ...m, core_functions: matched } : null;
-    })
-    .filter((m): m is CoreModule => !!m);
 });
 
 const selectedKeys = ref<Set<string>>(new Set());
@@ -331,6 +330,29 @@ onMounted(async () => {
                       <span class="shrink-0 text-gray-400">📄 入口文件</span>
                       <span class="break-all">{{ ff.frontend_file_path }}</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="flex items-start gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="break-all text-xs font-semibold text-cyan-300">
+                    {{ f.function || '核心功能' }}
+                  </div>
+                  <div
+                    v-if="f.core_function_reason"
+                    class="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-gray-300"
+                  >
+                    <span class="shrink-0 text-gray-500">📝 说明</span>
+                    <span class="min-w-0">{{ f.core_function_reason }}</span>
+                  </div>
+                  <div
+                    v-if="f.file_path"
+                    class="mt-2 flex items-start gap-1.5 text-[11px] text-gray-500"
+                  >
+                    <span class="shrink-0 text-gray-400">📄 文件</span>
+                    <span class="break-all">{{ f.file_path }}</span>
                   </div>
                 </div>
               </div>

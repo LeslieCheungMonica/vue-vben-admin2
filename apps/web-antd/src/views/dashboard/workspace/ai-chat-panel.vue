@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
@@ -45,13 +45,29 @@ const connected = ref(false);
 const messages = ref<MessageData[]>([]);
 const inputText = ref('');
 const sending = ref(false);
+const scrollRef = ref<HTMLDivElement | null>(null);
 
 const MAX_HISTORY = 100;
+const FLUSH_INTERVAL = 80;
+const SAVE_INTERVAL = 2000;
+const STORAGE_PREFIX = 'codechat:messages:';
 
 let statusTimer: ReturnType<typeof setInterval> | null = null;
+let flushTimer: ReturnType<typeof setInterval> | null = null;
+let saveTimer: ReturnType<typeof setInterval> | null = null;
 let eventSource: EventSource | null = null;
 let currentAssistantId = '';
 let isComposing = false;
+
+const mdCache = new Map<string, string>();
+
+const streamParts = new Map<string, Part>();
+let streamOrder: string[] = [];
+let streamDirty = false;
+let messagesDirty = false;
+let stickToBottom = true;
+
+const BOTTOM_THRESHOLD = 40;
 
 function handleEnter(e: KeyboardEvent) {
   if (isComposing || e.isComposing) return;
@@ -86,7 +102,16 @@ function getToolInfo(tool: string) {
 }
 
 function renderMarkdown(text: string): string {
-  return md.render(text || '');
+  const key = text || '';
+  const cached = mdCache.get(key);
+  if (cached !== undefined) return cached;
+  const html = md.render(key);
+  if (mdCache.size > 500) {
+    const oldest = mdCache.keys().next().value;
+    if (oldest !== undefined) mdCache.delete(oldest);
+  }
+  mdCache.set(key, html);
+  return html;
 }
 
 function getMsgText(msg: MessageData): string {
@@ -101,11 +126,179 @@ function getMsgTools(msg: MessageData): Part[] {
   return msg.parts.filter((p) => p.type === 'tool');
 }
 
-function updateAssistant(patch: Partial<MessageData>) {
-  const idx = messages.value.findIndex((m) => m.id === currentAssistantId);
-  if (idx >= 0) {
-    messages.value[idx] = { ...messages.value[idx], ...patch };
+function formatQuestion(input: any): string {
+  if (!input || typeof input !== 'object') return '';
+  const items = Array.isArray(input.questions) ? input.questions : [];
+  if (items.length > 0) {
+    return items
+      .map((q: any, i: number) => {
+        if (typeof q === 'string') return `${i + 1}. ${q}`;
+        const header = typeof q?.header === 'string' && q.header ? `【${q.header}】` : '';
+        const body =
+          [q?.question, q?.text, q?.prompt, q?.message, q?.content].find(
+            (v) => typeof v === 'string' && v,
+          ) || '';
+        const lines = [`${i + 1}. ${header}${body}`];
+        if (Array.isArray(q?.options)) {
+          for (const opt of q.options) {
+            if (typeof opt === 'string') {
+              lines.push(`   - ${opt}`);
+            } else {
+              const label = opt?.label ?? opt?.text ?? '';
+              const desc = opt?.description ? `：${opt.description}` : '';
+              lines.push(`   - ${label}${desc}`);
+            }
+          }
+        }
+        return lines.join('\n');
+      })
+      .join('\n\n');
   }
+  const q =
+    input.question ?? input.text ?? input.prompt ?? input.message ?? input.content;
+  if (typeof q === 'string' && q) {
+    const lines = [q];
+    if (Array.isArray(input.options)) {
+      for (const opt of input.options) {
+        if (typeof opt === 'string') {
+          lines.push(`- ${opt}`);
+        } else {
+          const label = opt?.label ?? opt?.text ?? '';
+          const desc = opt?.description ? `：${opt.description}` : '';
+          lines.push(`- ${label}${desc}`);
+        }
+      }
+    }
+    return lines.join('\n');
+  }
+  return '';
+}
+
+function formatTodos(input: any): string {
+  const todos = input?.todos;
+  if (!Array.isArray(todos)) return '';
+  const icons: Record<string, string> = {
+    cancelled: '❌',
+    completed: '✅',
+    in_progress: '🔄',
+    pending: '⏳',
+  };
+  return todos
+    .map((t: any) =>
+      typeof t === 'string'
+        ? `- ${t}`
+        : `${icons[t?.status] || '•'} ${t?.content ?? t?.text ?? ''}`,
+    )
+    .join('\n');
+}
+
+function buildToolText(tool: string, partData: any): string {
+  const state = partData.state || {};
+  const input = state.input ?? partData.input ?? partData.state?.input;
+  let content = '';
+  if (tool === 'question') {
+    content = formatQuestion(input);
+  } else if (tool === 'todowrite') {
+    content = formatTodos(input);
+  }
+  if (!content && typeof input === 'string') content = input;
+  if (!content && input && typeof input === 'object') {
+    content = JSON.stringify(input, null, 2);
+  }
+  if (!content && typeof state.output === 'string') content = state.output;
+  if (!content && typeof state.raw === 'string') content = state.raw;
+  if (!content && typeof state.title === 'string' && state.title !== tool) {
+    content = state.title;
+  }
+  if (!content && typeof partData.text === 'string') content = partData.text;
+  return content;
+}
+
+function scrollToBottom() {
+  const el = scrollRef.value;
+  if (!el || !stickToBottom) return;
+  nextTick(() => {
+    el.scrollTop = el.scrollHeight;
+  });
+}
+
+function handleScroll() {
+  const el = scrollRef.value;
+  if (!el) return;
+  stickToBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_THRESHOLD;
+}
+
+function ensureAssistant(): number {
+  const idx = messages.value.findIndex((m) => m.id === currentAssistantId);
+  if (idx >= 0) return idx;
+  currentAssistantId = `assistant-${Date.now()}`;
+  messages.value.push({ id: currentAssistantId, role: 'assistant', parts: [] });
+  streamParts.clear();
+  streamOrder = [];
+  sending.value = true;
+  return messages.value.length - 1;
+}
+
+function getOrCreateStreamPart(id: string, type: PartType): Part {
+  let part = streamParts.get(id);
+  if (!part) {
+    part = { id, type, text: '' };
+    streamParts.set(id, part);
+    streamOrder.push(id);
+  }
+  return part;
+}
+
+function flushStream() {
+  if (!streamDirty) return;
+  streamDirty = false;
+  const idx = messages.value.findIndex((m) => m.id === currentAssistantId);
+  if (idx < 0) return;
+  const target = messages.value[idx];
+  if (!target) return;
+  const parts = streamOrder.map((id) => ({ ...streamParts.get(id)! }));
+  messages.value[idx] = { ...target, parts };
+  messagesDirty = true;
+  scrollToBottom();
+}
+
+function storageKey() {
+  return `${STORAGE_PREFIX}${props.systemId || 'default'}`;
+}
+
+function saveMessages() {
+  if (!props.systemId || !messagesDirty) return;
+  messagesDirty = false;
+  try {
+    trimHistory();
+    localStorage.setItem(storageKey(), JSON.stringify(messages.value));
+  } catch {
+    try {
+      localStorage.setItem(storageKey(), JSON.stringify(messages.value.slice(-20)));
+    } catch { /* ignore quota errors */ }
+  }
+}
+
+function loadMessages() {
+  if (!props.systemId) return;
+  try {
+    const raw = localStorage.getItem(storageKey());
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      messages.value = parsed.slice(-MAX_HISTORY);
+      currentAssistantId = '';
+      streamParts.clear();
+      streamOrder = [];
+      messagesDirty = false;
+    }
+  } catch { /* ignore corrupt cache */ }
+}
+
+function clearMessages() {
+  try {
+    localStorage.removeItem(storageKey());
+  } catch { /* ignore */ }
 }
 
 async function checkStatus() {
@@ -154,102 +347,58 @@ function connectEventStream() {
 function processEvent(data: any) {
   const type: string = data.type;
   const propsData = data.properties || {};
-  let idx = messages.value.findIndex((m) => m.id === currentAssistantId);
-  if (idx < 0) {
-    if (type === 'session.status') {
-      if (propsData.status?.type === 'idle') sending.value = false;
-      return;
+
+  if (type === 'session.status') {
+    if (propsData.status?.type === 'idle') {
+      flushStream();
+      sending.value = false;
+      saveMessages();
     }
-    if (type !== 'message.part.delta' && type !== 'message.part.updated') {
-      return;
-    }
-    currentAssistantId = `assistant-${Date.now()}`;
-    messages.value.push({ id: currentAssistantId, role: 'assistant', parts: [] });
-    idx = messages.value.length - 1;
-    sending.value = true;
+    return;
   }
+
+  if (type !== 'message.part.delta' && type !== 'message.part.updated') {
+    return;
+  }
+
+  ensureAssistant();
 
   if (type === 'message.part.delta' && propsData.field === 'text') {
     const partId = propsData.partID;
-    const parts = messages.value[idx].parts;
-    let part = parts.find((p) => p.id === partId);
-    if (!part) {
-      part = { id: partId, type: 'text', text: '' };
-      updateAssistant({ parts: [...parts, part] });
-    } else {
-      const delta = propsData.delta || '';
-      updateAssistant({
-        parts: parts.map((p) => (p.id === partId ? { ...p, text: (p.text || '') + delta } : p)),
-      });
-    }
+    if (!partId) return;
+    const part = getOrCreateStreamPart(partId, 'text');
+    part.text = (part.text || '') + (propsData.delta || '');
+    streamDirty = true;
     return;
   }
 
   if (type === 'message.part.updated') {
     const partData = propsData.part || {};
     const partId = partData.id || propsData.partID;
+    if (!partId) return;
     const partType: string = partData.type || '';
-    const parts = messages.value[idx].parts;
 
     if (partType === 'text') {
-      const existing = parts.find((p) => p.id === partId);
-      updateAssistant({
-        parts: existing
-          ? parts.map((p) => (p.id === partId ? { ...p, type: 'text', text: partData.text || p.text } : p))
-          : [...parts, { id: partId, type: 'text', text: partData.text || '' }],
-      });
+      const part = getOrCreateStreamPart(partId, 'text');
+      part.type = 'text';
+      part.text = partData.text || part.text || '';
     } else if (partType === 'reasoning') {
-      const existing = parts.find((p) => p.id === partId);
-      updateAssistant({
-        parts: existing
-          ? parts.map((p) => (p.id === partId ? { ...p, type: 'reasoning', text: partData.text || p.text } : p))
-          : [...parts, { id: partId, type: 'reasoning', text: partData.text || '' }],
-      });
+      const part = getOrCreateStreamPart(partId, 'reasoning');
+      part.type = 'reasoning';
+      part.text = partData.text || part.text || '';
     } else if (partType === 'tool') {
-      const existing = parts.find((p) => p.id === partId);
-      const toolPart: Part = {
-        id: partId,
-        type: 'tool',
-        tool: partData.tool,
-        status: partData.state?.status,
-        title: partData.state?.title || partData.tool,
-      };
-      if (partData.tool === 'question' || partData.tool === 'todowrite') {
-        const state = partData.state || {};
-        const input = state.input;
-        let content = '';
-        if (typeof input === 'string') {
-          content = input;
-        } else if (input && typeof input === 'object') {
-          const q = input.question ?? input.text;
-          if (typeof q === 'string' && q) {
-            content = q;
-          } else {
-            const keys = Object.keys(input);
-            if (keys.length > 0) content = JSON.stringify(input, null, 2);
-          }
-        }
-        if (!content && typeof state.raw === 'string' && state.raw) content = state.raw;
-        if (!content && typeof state.title === 'string' && state.title !== partData.tool) {
-          content = state.title;
-        }
-        if (!content && typeof partData.text === 'string') {
-          content = partData.text;
-        }
-        toolPart.text = content || existing?.text || '';
+      const part = getOrCreateStreamPart(partId, 'tool');
+      const tool = partData.tool || partData.toolName || part.tool || '';
+      part.type = 'tool';
+      part.tool = tool;
+      part.status = partData.state?.status;
+      part.title = partData.state?.title || tool;
+      if (tool === 'question' || tool === 'todowrite') {
+        const content = buildToolText(tool, partData);
+        if (content) part.text = content;
       }
-      updateAssistant({
-        parts: existing ? parts.map((p) => (p.id === partId ? toolPart : p)) : [...parts, toolPart],
-      });
     }
-    return;
-  }
-
-  if (type === 'session.status') {
-    if (propsData.status?.type === 'idle') {
-      sending.value = false;
-    }
-    return;
+    streamDirty = true;
   }
 }
 
@@ -271,8 +420,14 @@ async function sendMessage() {
     role: 'assistant',
     parts: [],
   });
+  streamParts.clear();
+  streamOrder = [];
+  streamDirty = false;
   trimHistory();
+  messagesDirty = true;
+  stickToBottom = true;
   await nextTick();
+  scrollToBottom();
 
   webServerSendMsgAsyncApi(props.systemId || '', text).catch(() => {});
 }
@@ -288,18 +443,36 @@ async function newSession() {
   if (!props.systemId) return;
   try {
     await webServerCreateSessionApi(props.systemId);
-    messages.value = [];
-    currentAssistantId = '';
-    sending.value = false;
   } catch { /* ignore */ }
+  messages.value = [];
+  currentAssistantId = '';
+  streamParts.clear();
+  streamOrder = [];
+  streamDirty = false;
+  messagesDirty = false;
+  sending.value = false;
+  stickToBottom = true;
+  mdCache.clear();
+  clearMessages();
 }
 
 statusTimer = setInterval(checkStatus, 3000);
+flushTimer = setInterval(flushStream, FLUSH_INTERVAL);
+saveTimer = setInterval(saveMessages, SAVE_INTERVAL);
+loadMessages();
 checkStatus();
+
+onMounted(() => {
+  scrollToBottom();
+});
 
 onUnmounted(() => {
   if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+  if (flushTimer) { clearInterval(flushTimer); flushTimer = null; }
+  if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
   if (eventSource) { eventSource.close(); eventSource = null; }
+  flushStream();
+  saveMessages();
 });
 </script>
 
@@ -330,7 +503,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+    <div ref="scrollRef" class="flex-1 overflow-y-auto px-4 py-3 space-y-4" @scroll="handleScroll">
       <div v-if="!connected" class="flex h-full items-center justify-center">
         <div class="text-center">
           <p class="text-sm text-gray-500">未连接到 CodeChat 服务器</p>
