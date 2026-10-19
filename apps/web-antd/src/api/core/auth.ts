@@ -1,9 +1,8 @@
-import { MOCK_CODES, MOCK_USERS } from '#/config/mock-data';
+import type { UserInfo } from '@vben/types';
 
-const MOCK_USERNAME_KEY = 'mock_current_username';
+import { fetchPublicKey, resetPublicKeyCache, rsaEncrypt } from '#/utils/rsa-encrypt';
 
-// 当前登录用户名（用于 mock 模式下获取用户信息和权限码），持久化到 localStorage
-let _currentUsername = localStorage.getItem(MOCK_USERNAME_KEY) ?? '';
+import { systemPost } from './system-common';
 
 export namespace AuthApi {
   /** 登录接口参数 */
@@ -23,57 +22,91 @@ export namespace AuthApi {
   }
 }
 
-/**
- * 登录（mock 模式，直接从 mock-data 读取数据）
- */
-export async function loginApi(data: AuthApi.LoginParams) {
-  const { password, username } = data;
-  if (!password || !username) {
-    throw new Error('Username and password are required');
-  }
-  const findUser = MOCK_USERS.find(
-    (item) => item.username === username && item.password === password,
-  );
-  if (!findUser) {
-    throw new Error('Username or password is incorrect.');
-  }
-  _currentUsername = findUser.username;
-  localStorage.setItem(MOCK_USERNAME_KEY, _currentUsername);
+/** /auth/user_info 的聚合结果：用户信息 + 权限码 + 菜单可见性数据 */
+export interface AuthUserInfoPayload {
+  accessCodes: string[];
+  managedMenuNames: string[];
+  userInfo: UserInfo;
+  visibleMenuNames: string[];
+}
+
+// 同一次登录会话内复用一次 /auth/user_info 请求（登录时 fetchUserInfo 与
+// getAccessCodesApi 会并行调用，避免重复请求）
+let userInfoPromise: null | Promise<AuthUserInfoPayload> = null;
+
+async function requestUserInfo(): Promise<AuthUserInfoPayload> {
+  const raw = await systemPost<any>('/auth/user_info', {});
+  const info = raw?.user_info ?? {};
   return {
-    ...findUser,
-    accessToken: `mock-access-token-${findUser.username}`,
+    accessCodes: raw?.access_codes ?? [],
+    managedMenuNames: raw?.managed_menu_names ?? [],
+    visibleMenuNames: raw?.visible_menu_names ?? [],
+    userInfo: {
+      avatar: '',
+      desc: '',
+      realName: info.real_name || info.username || '',
+      roles: info.roles ?? [],
+      token: '',
+      userId: String(info.user_id ?? ''),
+      username: info.username ?? '',
+    },
   };
 }
 
-/**
- * 刷新accessToken（mock 模式）
- */
-export async function refreshTokenApi() {
-  return {
-    data: `mock-access-token-${_currentUsername}`,
-    status: 0,
-  };
+export function getAuthUserInfo(): Promise<AuthUserInfoPayload> {
+  if (!userInfoPromise) {
+    userInfoPromise = requestUserInfo().catch((error) => {
+      userInfoPromise = null;
+      throw error;
+    });
+  }
+  return userInfoPromise;
+}
+
+export function resetAuthUserInfoCache() {
+  userInfoPromise = null;
 }
 
 /**
- * 退出登录（mock 模式）
+ * 登录
+ */
+export async function loginApi(
+  data: AuthApi.LoginParams,
+): Promise<AuthApi.LoginResult> {
+  // 获取 RSA 公钥并加密密码
+  await fetchPublicKey();
+  const encryptedPassword = rsaEncrypt(data.password ?? '');
+
+  const raw = await systemPost<any>('/auth/login', {
+    password: encryptedPassword,
+    username: data.username ?? '',
+  });
+  // 换账号后必须丢弃上一个账号的用户信息/菜单缓存
+  resetAuthUserInfoCache();
+  return { accessToken: raw?.access_token ?? '' };
+}
+
+/**
+ * 刷新 accessToken（refresh_token 走 HttpOnly Cookie，无需前端传参）
+ */
+export async function refreshTokenApi(): Promise<AuthApi.RefreshTokenResult> {
+  const raw = await systemPost<any>('/auth/refresh', {});
+  return { data: raw?.data ?? '', status: 0 };
+}
+
+/**
+ * 退出登录
  */
 export async function logoutApi() {
-  _currentUsername = '';
-  localStorage.removeItem(MOCK_USERNAME_KEY);
+  resetAuthUserInfoCache();
+  await systemPost('/auth/logout', {});
   return { data: null };
 }
 
-/** 获取当前登录用户名（供 mock 模式下其他接口使用） */
-export function getCurrentUsername() {
-  return _currentUsername;
-}
-
 /**
- * 获取用户权限码（mock 模式，直接从 mock-data 读取数据）
+ * 获取当前用户权限码
  */
-export async function getAccessCodesApi() {
-  const codes =
-    MOCK_CODES.find((item) => item.username === _currentUsername)?.codes ?? [];
-  return codes;
+export async function getAccessCodesApi(): Promise<string[]> {
+  const payload = await getAuthUserInfo();
+  return payload.accessCodes;
 }

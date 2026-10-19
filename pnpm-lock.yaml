@@ -725,6 +725,9 @@ importers:
       highlight.js:
         specifier: ^11.9.0
         version: 11.11.1
+      jsencrypt:
+        specifier: ^3.5.4
+        version: 3.5.4
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -8354,6 +8357,9 @@ packages:
   jsdoc-type-pratt-parser@7.1.1:
     resolution: {integrity: sha512-/2uqY7x6bsrpi3i9LVU6J89352C0rpMk0as8trXxCtvd4kPk1ke/Eyif6wqfSLvoNJqcDG9Vk4UsXgygzCt2xA==}
     engines: {node: '>=20.0.0'}
+
+  jsencrypt@3.5.4:
+    resolution: {integrity: sha512-kNjfYEMNASxrDGsmcSQh/rUTmcoRfSUkxnAz+MMywM8jtGu+fFEZ3nJjHM58zscVnwR0fYmG9sGkTDjqUdpiwA==}
 
   jsesc@3.1.0:
     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
@@ -17976,6 +17982,8 @@ snapshots:
       argparse: 2.0.1
 
   jsdoc-type-pratt-parser@7.1.1: {}
+
+  jsencrypt@3.5.4: {}
 
   jsesc@3.1.0: {}
 

@@ -18,7 +18,20 @@ interface WebAntdPreferencesExtension {
 export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
+    // 菜单权限由前端路由 + /auth/user_info 的菜单可见性共同决定
+    accessMode: 'backend',
+    // 开启后 accessToken 过期会先尝试用 refresh_token（HttpOnly Cookie）静默续期
+    enableRefreshToken: true,
     name: import.meta.env.VITE_APP_TITLE,
+  },
+  widget: {
+    fullscreen: false,
+    languageToggle: false,
+    notification: false,
+    timezone: false,
+  },
+  copyright: {
+    enable: false,
   },
 });
 

@@ -1,18 +1,10 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { $t } from '#/locales';
-
-const routes: RouteRecordRaw[] = [
-  {
-    name: 'Profile',
-    path: '/profile',
-    component: () => import('#/views/_core/profile/index.vue'),
-    meta: {
-      icon: 'lucide:user',
-      hideInMenu: true,
-      title: $t('page.auth.profile'),
-    },
-  },
-];
+/**
+ * Profile 已移入 coreRoutes（Root 子路由），
+ * 因为 backend 模式下 modules 路由会被后端接口替换，
+ * 而个人中心是内置功能页，不走后端菜单管理。
+ */
+const routes: RouteRecordRaw[] = [];
 
 export default routes;

@@ -47,10 +47,11 @@
     "graphology-layout-forceatlas2": "^0.10.1",
     "graphology-layout-noverlap": "^0.4.2",
     "highlight.js": "^11.9.0",
+    "jsencrypt": "^3.5.4",
     "jszip": "^3.10.1",
-    "sigma": "^3.0.3",
     "markdown-it": "^14.0.0",
     "pinia": "catalog:",
+    "sigma": "^3.0.3",
     "vue": "catalog:",
     "vue-router": "catalog:",
     "xlsx": "^0.18.5"

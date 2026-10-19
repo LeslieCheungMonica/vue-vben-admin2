@@ -5,8 +5,10 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { startProgress, stopProgress } from '@vben/utils';
 
+import { getAuthUserInfo } from '#/api';
 import { accessRoutes, coreRouteNames } from '#/router/routes';
 import { useAuthStore } from '#/store';
+import { getFirstAccessibleMenuPath } from '#/utils/menu-helper';
 
 import { generateAccess } from './access';
 
@@ -55,10 +57,38 @@ function setupAccessGuard(router: Router) {
       if (to.path === LOGIN_PATH && accessStore.accessToken) {
         return decodeURIComponent(
           (to.query?.redirect as string) ||
-            userStore.userInfo?.homePath ||
+            getFirstAccessibleMenuPath(accessStore.accessMenus) ||
             preferences.app.defaultHomePath,
         );
       }
+
+      // 已登录用户访问内置页面（如个人中心）时，若菜单尚未加载则触发加载，
+      // 避免刷新后侧边栏菜单消失
+      if (accessStore.accessToken && !accessStore.isAccessChecked) {
+        try {
+          const userInfo =
+            userStore.userInfo || (await authStore.fetchUserInfo());
+          const userRoles = userInfo.roles ?? [];
+          if (userRoles.length > 0) {
+            const payload = await getAuthUserInfo();
+            accessStore.setAccessCodes(payload.accessCodes);
+          }
+          const { accessibleMenus, accessibleRoutes } = await generateAccess({
+            roles: userRoles,
+            router,
+            routes: accessRoutes,
+          });
+          accessStore.setAccessMenus(accessibleMenus);
+          accessStore.setAccessRoutes(accessibleRoutes);
+          accessStore.setIsAccessChecked(true);
+        } catch (error) {
+          console.error('[router] 生成权限路由失败，将重新登录', error);
+          accessStore.setIsAccessChecked(false);
+          await authStore.logout();
+          return false;
+        }
+      }
+
       return true;
     }
 
@@ -95,21 +125,37 @@ function setupAccessGuard(router: Router) {
     const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
     const userRoles = userInfo.roles ?? [];
 
-    // 生成菜单和路由
-    const { accessibleMenus, accessibleRoutes } = await generateAccess({
-      roles: userRoles,
-      router,
-      // 则会在菜单中显示，但是访问会被重定向到403
-      routes: accessRoutes,
-    });
+    // 同步权限码（页面刷新后 accessCodes 走持久化，这里保持一致）
+    if (userRoles.length > 0) {
+      const payload = await getAuthUserInfo();
+      accessStore.setAccessCodes(payload.accessCodes);
+    }
+
+    // 生成菜单和路由，任何异常都降级为「重新登录」，避免白屏
+    let accessibleMenus;
+    let accessibleRoutes;
+    try {
+      ({ accessibleMenus, accessibleRoutes } = await generateAccess({
+        roles: userRoles,
+        router,
+        // 则会在菜单中显示，但是访问会被重定向到403
+        routes: accessRoutes,
+      }));
+    } catch (error) {
+      console.error('[router] 生成权限路由失败，将重新登录', error);
+      accessStore.setIsAccessChecked(false);
+      await authStore.logout();
+      return false;
+    }
 
     // 保存菜单信息和路由信息
     accessStore.setAccessMenus(accessibleMenus);
     accessStore.setAccessRoutes(accessibleRoutes);
     accessStore.setIsAccessChecked(true);
+    const firstMenuPath = getFirstAccessibleMenuPath(accessStore.accessMenus);
     const redirectPath = (from.query.redirect ??
       (to.path === preferences.app.defaultHomePath
-        ? userInfo.homePath || preferences.app.defaultHomePath
+        ? firstMenuPath || preferences.app.defaultHomePath
         : to.fullPath)) as string;
 
     return {

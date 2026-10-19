@@ -7,10 +7,16 @@ import { LOGIN_PATH } from '@vben/constants';
 import { preferences } from '@vben/preferences';
 import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 
-import { notification } from 'ant-design-vue';
+import { message, notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import {
+  extractApiError,
+  getAccessCodesApi,
+  getUserInfoApi,
+  loginApi,
+  logoutApi,
+} from '#/api';
 import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -55,9 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
         } else {
           onSuccess
             ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
+            : await router.push(preferences.app.defaultHomePath);
         }
 
         if (userInfo?.realName) {
@@ -68,6 +72,10 @@ export const useAuthStore = defineStore('auth', () => {
           });
         }
       }
+    } catch (error) {
+      // 登录页的 submit 事件不会处理 Promise 异常，必须在这里给出用户可见的提示
+      userInfo = null;
+      message.error(extractApiError(error, '登录失败，请检查用户名和密码'));
     } finally {
       loginLoading.value = false;
     }
