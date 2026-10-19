@@ -11,5 +11,20 @@
     "title": "Dashboard",
     "analytics": "Analytics",
     "workspace": "Workspace"
+  },
+  "cosmic": {
+    "title": "Cosmic Workspace",
+    "docs": "Documents",
+    "tasks": "Tasks"
+  },
+  "api": {
+    "title": "API Endpoint Workspace",
+    "tasks": "Tasks"
+  },
+  "system": {
+    "title": "System",
+    "user": "Users",
+    "role": "Roles",
+    "menu": "Menus"
   }
 }

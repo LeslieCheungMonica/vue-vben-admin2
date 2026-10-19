@@ -12,6 +12,7 @@ import {
   RequestClient,
 } from '@vben/request';
 import { useAccessStore } from '@vben/stores';
+import { LOGIN_PATH } from '@vben/constants';
 
 import { message } from 'ant-design-vue';
 
@@ -111,4 +112,51 @@ export const requestClient = createRequestClient(apiURL, {
   responseReturn: 'data',
 });
 
-export const baseRequestClient = new RequestClient({ baseURL: apiURL, timeout: 120_000 });
+/**
+ * 原始请求客户端：不做 `{code,data}` 信封解包，供 /auth 与 /system 使用。
+ * 仅补充鉴权请求头，不添加响应拦截器，避免影响 SSE / blob 等场景。
+ */
+export const baseRequestClient = new RequestClient({
+  baseURL: apiURL,
+  timeout: 120_000,
+});
+
+baseRequestClient.addRequestInterceptor({
+  fulfilled: async (config) => {
+    const accessStore = useAccessStore();
+    if (accessStore.accessToken) {
+      config.headers.Authorization = `Bearer ${accessStore.accessToken}`;
+    }
+    config.headers['Accept-Language'] = preferences.app.locale;
+    return config;
+  },
+});
+
+// 401 未登录 / token 过期自动跳转登录页
+baseRequestClient.addResponseInterceptor({
+  rejected: (error) => {
+    const status = error?.response?.status;
+    const url: string = error?.config?.url ?? '';
+    if (
+      status === 401 &&
+      (url.includes('/auth/') || url.includes('/system/')) &&
+      !url.includes('/auth/login') &&
+      !url.includes('/auth/public_key')
+    ) {
+      const accessStore = useAccessStore();
+      accessStore.setAccessToken(null);
+      if (
+        preferences.app.loginExpiredMode === 'modal' &&
+        accessStore.isAccessChecked
+      ) {
+        accessStore.setLoginExpired(true);
+      } else {
+        const redirect = encodeURIComponent(
+          window.location.pathname + window.location.search,
+        );
+        window.location.href = `${LOGIN_PATH}?redirect=${redirect}`;
+      }
+    }
+    return Promise.reject(error);
+  },
+});
