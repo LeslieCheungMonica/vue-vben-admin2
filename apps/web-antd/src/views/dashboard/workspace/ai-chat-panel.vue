@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
@@ -122,8 +122,22 @@ function getMsgReasoning(msg: MessageData): string {
   return msg.parts.filter((p) => p.type === 'reasoning').map((p) => p.text || '').join('\n');
 }
 
+const MAX_VISIBLE_TOOLS = 10;
+
+const visibleToolIds = computed<Set<string>>(() => {
+  const ids: string[] = [];
+  for (const m of messages.value) {
+    for (const p of m.parts) {
+      if (p.type === 'tool') ids.push(p.id);
+    }
+  }
+  return new Set(ids.slice(-MAX_VISIBLE_TOOLS));
+});
+
 function getMsgTools(msg: MessageData): Part[] {
-  return msg.parts.filter((p) => p.type === 'tool');
+  return msg.parts.filter(
+    (p) => p.type === 'tool' && visibleToolIds.value.has(p.id),
+  );
 }
 
 function formatQuestion(input: any): string {
@@ -192,21 +206,36 @@ function formatTodos(input: any): string {
     .join('\n');
 }
 
+function parseRaw(raw: any): any {
+  if (typeof raw !== 'string' || !raw.trim()) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 function buildToolText(tool: string, partData: any): string {
   const state = partData.state || {};
-  const input = state.input ?? partData.input ?? partData.state?.input;
+  const raw = parseRaw(state.raw);
+  const input = state.input ?? partData.input ?? partData.state?.input ?? raw;
   let content = '';
   if (tool === 'question') {
-    content = formatQuestion(input);
+    content = formatQuestion(input) || formatQuestion(raw);
   } else if (tool === 'todowrite') {
-    content = formatTodos(input);
+    content = formatTodos(input) || formatTodos(raw);
   }
   if (!content && typeof input === 'string') content = input;
-  if (!content && input && typeof input === 'object') {
+  if (
+    !content &&
+    input &&
+    typeof input === 'object' &&
+    Object.keys(input).length > 0
+  ) {
     content = JSON.stringify(input, null, 2);
   }
   if (!content && typeof state.output === 'string') content = state.output;
-  if (!content && typeof state.raw === 'string') content = state.raw;
+  if (!content && typeof state.raw === 'string' && !raw) content = state.raw;
   if (!content && typeof state.title === 'string' && state.title !== tool) {
     content = state.title;
   }
@@ -552,10 +581,16 @@ onUnmounted(() => {
                 <span v-else-if="tool.status === 'error'" class="text-xs text-red-500">✗</span>
               </div>
               <div
-                v-if="(tool.tool === 'question' || tool.tool === 'todowrite') && tool.text"
-                class="mt-1.5 whitespace-pre-wrap break-words rounded bg-black/20 px-2 py-1.5 text-xs leading-relaxed text-gray-300"
+                v-if="tool.tool === 'question' || tool.tool === 'todowrite'"
+                class="mt-1.5 whitespace-pre-wrap break-words rounded bg-black/20 px-2 py-1.5 text-xs leading-relaxed"
+                :class="tool.text ? 'text-gray-300' : 'italic text-gray-500'"
               >
-                {{ tool.text }}
+                {{
+                  tool.text ||
+                  (tool.status === 'pending' || tool.status === 'running'
+                    ? '正在生成内容…'
+                    : '（无内容）')
+                }}
               </div>
             </div>
           </div>

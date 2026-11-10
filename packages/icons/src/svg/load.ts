@@ -2,13 +2,16 @@ import type { IconifyIconStructure } from '@vben-core/icons';
 
 import { addIcon } from '@vben-core/icons';
 
-loadSvgIcons();
+// DOMParser/XMLSerializer only exist in the browser; skip registration during
+// SSR (e.g. VitePress/Vue SSR builds) where these globals are undefined.
+if (typeof DOMParser !== 'undefined') {
+  loadSvgIcons();
+}
 
 function parseSvg(svgData: string): IconifyIconStructure {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(svgData, 'image/svg+xml');
   const svgElement = xmlDoc.documentElement;
-
   // 提取 SVG 根元素的关键样式属性
   const getAttrs = (el: Element, attrs: string[]) =>
     attrs
