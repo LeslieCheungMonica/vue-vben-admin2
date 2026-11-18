@@ -8,9 +8,13 @@ import {
   shallowRef,
 } from 'vue';
 import { useRoute } from 'vue-router';
+
 import { Page } from '@vben/common-ui';
+
 import { Descriptions, message, Tag, Tree } from 'ant-design-vue';
-import { getCosmicTaskDetailApi, type CosmicApi } from '#/api/core/cosmic';
+
+import { authEventSourceUrl } from '#/api/auth-token';
+import { type CosmicApi, getCosmicTaskDetailApi } from '#/api/core/cosmic';
 
 interface PartState {
   id: string;
@@ -369,7 +373,7 @@ function processEvent(data: any) {
 }
 
 function connectEventStream() {
-  const url = `/api/wape/event_stream/${taskId}`;
+  const url = authEventSourceUrl(`/api/wape/event_stream/${taskId}`);
   eventSource = new EventSource(url);
   eventSource.onopen = () => {
     eventStreamConnected.value = true;

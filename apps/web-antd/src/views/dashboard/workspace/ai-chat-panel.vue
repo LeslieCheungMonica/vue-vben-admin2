@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 
-import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
-import 'highlight.js/styles/github-dark.css';
+import MarkdownIt from 'markdown-it';
 
+import { authEventSourceUrl } from '#/api/auth-token';
 import { sessionAbortApi, webServerCreateSessionApi, webServerSendMsgAsyncApi, webServerStartApi, webServerStatusApi, webServerStopApi } from '#/api/core/resource';
+
+import 'highlight.js/styles/github-dark.css';
 
 const md = new MarkdownIt({
   highlight: function (str: string, lang: string) {
@@ -334,7 +336,7 @@ function stop() {
 
 function connectEventStream() {
   if (eventSource) { eventSource.close(); eventSource = null; }
-  const url = `/api/wape/event_stream/web_${props.systemId}`;
+  const url = authEventSourceUrl(`/api/wape/event_stream/web_${props.systemId}`);
   eventSource = new EventSource(url);
   eventSource.onmessage = (event) => {
     try {

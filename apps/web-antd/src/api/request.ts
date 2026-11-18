@@ -160,3 +160,18 @@ baseRequestClient.addResponseInterceptor({
     return Promise.reject(error);
   },
 });
+
+/**
+ * 带鉴权的原生 fetch 封装。
+ * 用于不走 axios 的场景（报告下载、图片 base64 转换、SSE 等），
+ * 自动从 accessStore 读取 token 并注入 Authorization header。
+ */
+export function authFetch(input: RequestInfo | URL, init?: RequestInit) {
+  const accessStore = useAccessStore();
+  const token = accessStore.accessToken || '';
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return fetch(input, { ...init, headers });
+}

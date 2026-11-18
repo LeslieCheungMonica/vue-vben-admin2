@@ -23,6 +23,7 @@ import {
   uploadResourceApi,
 } from '#/api/core/resource';
 import type { ResourceApi } from '#/api/core/resource';
+import { authFetch } from '#/api/request';
 
 const UseModal = Modal.useModal();
 const [modalApi, contextHolder] = UseModal;
@@ -77,7 +78,7 @@ async function loadBizReconHtml(taskId: string) {
   bizReconTaskId.value = taskId;
   try {
     const url = `/api/wape/report_html/${taskId}/biz_recon?time=${new Date().getTime()}`;
-    const resp = await fetch(url);
+    const resp = await authFetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
     text = text.replace(

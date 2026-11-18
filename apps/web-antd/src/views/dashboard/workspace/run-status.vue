@@ -6,10 +6,11 @@ import { Page } from '@vben/common-ui';
 
 import { Modal, Tag } from 'ant-design-vue';
 
-import { baseRequestClient } from '#/api/request';
-import ExpandableMsg from './components/expandable-msg.vue';
+import { authEventSourceUrl } from '#/api/auth-token';
 import { getTaskListApi } from '#/api/core/task';
 import type { TaskApi } from '#/api/core/task';
+import { baseRequestClient } from '#/api/request';
+import ExpandableMsg from './components/expandable-msg.vue';
 import ThoughtChainFlow from './components/expandable-graph.vue';
 
 interface StageItem {
@@ -470,7 +471,7 @@ function connectEventStream(taskId: string) {
   flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL);
 
   const baseUrl = '/api';
-  const url = `${baseUrl}/wape/event_stream/${taskId}`;
+  const url = authEventSourceUrl(`${baseUrl}/wape/event_stream/${taskId}`);
   eventSource = new EventSource(url);
 
   eventSource.onopen = () => {
@@ -497,7 +498,7 @@ function connectKbEventStream(taskId: string) {
     kbEventSource.close();
     kbEventSource = null;
   }
-  const url = `/api/wape/kb_event_stream/${taskId}`;
+  const url = authEventSourceUrl(`/api/wape/kb_event_stream/${taskId}`);
   kbEventSource = new EventSource(url);
   kbEventSource.onmessage = (event) => {
     try {

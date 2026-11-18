@@ -6,6 +6,7 @@ import { Page } from '@vben/common-ui';
 
 import { Button, Checkbox, Input, message, Select, Tag } from 'ant-design-vue';
 
+import { authEventSourceUrl } from '#/api/auth-token';
 import { getRepeatTaskListApi, getVulnDetailListApi, updateRepeatTaskApi } from '#/api/core/task';
 import type { VulnDetailItem } from '#/api/core/task';
 
@@ -180,7 +181,7 @@ function connectEventStream(tid: string) {
   dirtyParts.clear();
   eventStreamConnected.value = false;
   flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL);
-  const url = `/api/wape/event_stream/${tid}`;
+  const url = authEventSourceUrl(`/api/wape/event_stream/${tid}`);
   eventSource = new EventSource(url);
   eventSource.onopen = () => { eventStreamConnected.value = true; };
   eventSource.onmessage = (event) => {

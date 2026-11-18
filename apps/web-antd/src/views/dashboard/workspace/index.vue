@@ -32,6 +32,7 @@ import {
   stopTaskApi,
   updateTaskApi,
 } from '#/api/core/task';
+import { authFetch } from '#/api/request';
 
 const router = useRouter();
 
@@ -262,11 +263,24 @@ async function handleUpdate() {
   }
 }
 
-function handleDownload(record: TaskApi.TaskItem) {
-  const a = document.createElement('a');
-  a.href = `/api/wape/download_report_zip/${record.task_id}`;
-  a.download = `${record.task_id}_report.zip`;
-  a.click();
+async function handleDownload(record: TaskApi.TaskItem) {
+  try {
+    const resp = await authFetch(
+      `/api/wape/download_report_zip/${record.task_id}`,
+    );
+    if (!resp.ok) {
+      throw new Error('下载失败');
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${record.task_id}_report.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    message.error('下载报告失败');
+  }
 }
 
 function handleDelete(record: TaskApi.TaskItem) {

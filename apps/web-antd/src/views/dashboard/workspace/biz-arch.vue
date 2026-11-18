@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { authFetch } from '#/api/request';
 
 const props = defineProps<{ webId: string }>();
 
@@ -20,7 +21,7 @@ async function replaceImagesWithBase64(html: string): Promise<string> {
   const replacements = await Promise.all(
     matches.map(async ([, src = '']) => {
       try {
-        const resp = await fetch('/api/wape/image_to_base64', {
+        const resp = await authFetch('/api/wape/image_to_base64', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ relative_path: src, task_id: props.webId }),
@@ -57,10 +58,10 @@ async function loadData() {
   htmlUrl.value = null;
   try {
     let url = `/api/wape/survey_report_html/${props.webId}?time=${new Date().getTime()}`;
-    let resp = await fetch(url);
+    let resp = await authFetch(url);
     if (!resp.ok) {
       url = `/api/wape/survey_report_html/${props.webId}/?time=${new Date().getTime()}`;
-      resp = await fetch(url);
+      resp = await authFetch(url);
     }
     if (!resp.ok) throw new Error('业务架构报告获取失败');
     let text = await resp.text();

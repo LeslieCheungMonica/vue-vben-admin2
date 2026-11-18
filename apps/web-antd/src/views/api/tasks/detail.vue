@@ -6,6 +6,7 @@ import { Page } from '@vben/common-ui';
 
 import { Card, message, Table, Tag } from 'ant-design-vue';
 
+import { authEventSourceUrl } from '#/api/auth-token';
 import { getApiEndpointTaskDetailApi, type ApiEndpointApi } from '#/api/core/apiEndpoint';
 
 interface PartState {
@@ -225,7 +226,7 @@ function processEvent(data: any) {
 }
 
 function connectEventStream() {
-  const url = `/api/wape/event_stream/${taskId}`;
+  const url = authEventSourceUrl(`/api/wape/event_stream/${taskId}`);
   eventSource = new EventSource(url);
   eventSource.onopen = () => {
     eventStreamConnected.value = true;

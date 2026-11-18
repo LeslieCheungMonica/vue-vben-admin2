@@ -6,8 +6,7 @@ import { Page } from '@vben/common-ui';
 
 import { Descriptions, Modal, Tag } from 'ant-design-vue';
 
-import { baseRequestClient } from '#/api/request';
-import ExpandableMsg from './components/expandable-msg.vue';
+import { authEventSourceUrl } from '#/api/auth-token';
 import {
   getTaskListApi,
   getBizDataApi,
@@ -18,6 +17,8 @@ import {
 import type { TaskApi } from '#/api/core/task';
 import type { AuthVulnItem } from '#/api/core/task';
 import type { BizVulnExploitItem } from '#/api/core/task';
+import { authFetch, baseRequestClient } from '#/api/request';
+import ExpandableMsg from './components/expandable-msg.vue';
 import ThoughtChainFlow from './components/expandable-graph.vue'
 
 const chainData = {
@@ -440,7 +441,7 @@ function connectEventStream(taskId: string) {
   flushTimer = setInterval(flushBuffer, FLUSH_INTERVAL);
 
   const baseUrl = '/api';
-  const url = `${baseUrl}/wape/event_stream/${taskId}`;
+  const url = authEventSourceUrl(`${baseUrl}/wape/event_stream/${taskId}`);
   eventSource = new EventSource(url);
 
   eventSource.onopen = () => {
@@ -518,7 +519,7 @@ async function loadPdf(stage: string) {
   pdfLoading.value = true;
   try {
     const url = getReportPdfUrl(taskId, stage);
-    const resp = await fetch(url);
+    const resp = await authFetch(url);
     if (!resp.ok) throw new Error('PDF not found');
     const blob = await resp.blob();
     pdfUrl.value = URL.createObjectURL(blob);
@@ -542,7 +543,7 @@ async function replaceImagesWithBase64(
   const replacements = await Promise.all(
     matches.map(async ([, src]) => {
       try {
-        const resp = await fetch('/api/wape/image_to_base64', {
+        const resp = await authFetch('/api/wape/image_to_base64', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ relative_path: src, task_id: taskId }),
@@ -580,7 +581,7 @@ async function loadHtml(stage: string) {
   htmlLoading.value = true;
   try {
     const url = getReportHtmlUrl(taskId, stage);
-    const resp = await fetch(url);
+    const resp = await authFetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
     text = await replaceImagesWithBase64(text, taskId);
@@ -687,7 +688,7 @@ async function loadBizExploitHtml(bizName: string) {
   bizExploitHtmlUrl.value = null;
   try {
     const url = `/api/wape/biz_exploit_report_html/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
-    const resp = await fetch(url);
+    const resp = await authFetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
     text = await replaceImagesWithBase64(text, taskId);
@@ -933,7 +934,7 @@ async function loadBizReportHtml(bizName: string) {
   bizReportHtmlUrl.value = null;
   try {
     const url = `/api/wape/biz_report_html/${taskId}/${encodeURIComponent(bizName)}?time=${new Date().getTime()}`;
-    const resp = await fetch(url);
+    const resp = await authFetch(url);
     if (!resp.ok) throw new Error('HTML not found');
     let text = await resp.text();
     text = await replaceImagesWithBase64(text, taskId);
